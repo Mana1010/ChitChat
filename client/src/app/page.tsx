@@ -1,7 +1,7 @@
 import React from "react";
 import Main from "./_components/Main";
 function Home() {
-  return <div>Main</div>;
+  return null;
 }
 
 export default Home;

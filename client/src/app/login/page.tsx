@@ -7,7 +7,7 @@ export const metadata = {
 };
 function Page() {
   return (
-    <div className="bg-tertiary w-full h-screen relative">
+    <div className="bg-[#E6E7E4] w-full h-screen relative">
       <Image
         src={conversationImg}
         width={300}
