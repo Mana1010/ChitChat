@@ -52,11 +52,12 @@ const authOptions: NextAuthOptions = {
       try {
         await connectDb();
         const getUser = await User.findOne({ authId: profile?.sub });
+
         if (!getUser) {
           await User.create({
             email: profile?.email,
             name: profile?.name,
-            profilePic: profile?.image,
+            profilePic: profile?.picture,
             authId: profile?.sub,
             provider: account?.provider,
           });

@@ -20,9 +20,9 @@ function Login() {
       },
     },
   };
-  const { status } = useSession();
+  const { status, data: session } = useSession();
   const router = useRouter();
-
+  if (session?.user) router.push("/chats/public");
   return (
     <motion.div
       variants={loginVariant}
@@ -57,7 +57,7 @@ function Login() {
           <div className="space-y-2 w-full items-center justify-center">
             <button
               onClick={() => {
-                signIn("google", { callbackUrl: "/chats/dsdds" });
+                signIn("google", { callbackUrl: "/chats/public" });
               }}
               className="flex space-x-2 py-2.5 px-4 items-center rounded-xl text-white font-semibold border border-[#6486FF] w-full justify-center"
             >
@@ -68,7 +68,7 @@ function Login() {
             </button>
             <button
               onClick={() => {
-                signIn("github");
+                signIn("github", { callbackUrl: "/chats/public" });
               }}
               className="flex space-x-2 py-2.5 px-4 items-center rounded-xl text-white font-semibold border border-[#6486FF] w-full justify-center"
             >

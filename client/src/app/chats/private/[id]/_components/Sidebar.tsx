@@ -11,14 +11,27 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-
+import { IoMegaphone } from "react-icons/io5";
+import { usePathname } from "next/navigation";
 function Sidebar() {
   const router = useRouter();
   const { data } = useSession();
+  const pathname = usePathname();
   return (
-    <div className=" flex justify-between items-center flex-col pt-4 h-full px-3">
+    <div className=" flex justify-between items-center flex-col pt-4 h-full px-2">
       <div className="flex flex-col items-center w-full justify-center">
-        <button className={`text-[#6486FF] text-2xl`}>
+        <button
+          className={`text-[#6486FF] text-2xl p-3 rounded-md ${
+            pathname === "/chats/public" && "bg-[#3A3B3C]"
+          }`}
+        >
+          <IoMegaphone />
+        </button>
+        <button
+          className={`text-[#6486FF] text-2xl p-3 ${
+            pathname.startsWith("/chats/private") && "bg-[#3A3B3C]"
+          }`}
+        >
           <AiFillMessage />
         </button>
       </div>
