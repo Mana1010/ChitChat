@@ -1,7 +1,8 @@
 import React from "react";
 import PublicChat from "./_components/PublicChat";
 import { TbMessages } from "react-icons/tb";
-function Public() {
+
+async function Page() {
   return (
     <div className="p-5 flex flex-col w-full space-y-2">
       <header>
@@ -25,4 +26,4 @@ function Public() {
   );
 }
 
-export default Public;
+export default Page;

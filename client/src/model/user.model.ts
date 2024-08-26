@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema(
     profilePic: { type: String },
     authId: { type: String },
     provider: { type: String },
+    status: { type: String },
   },
   {
     timestamps: true,

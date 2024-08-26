@@ -4,6 +4,7 @@ export interface User {
   email: string;
   id: string;
   provider: string;
+  userId: string;
 }
 
 declare module "next-auth" {

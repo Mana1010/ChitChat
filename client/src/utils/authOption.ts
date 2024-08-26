@@ -40,11 +40,13 @@ const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       await connectDb();
       const getUser = await User.findOne({ authId: token.sub });
+      console.log(getUser);
       if (getUser) {
         session.user.name = getUser.name;
         session.user.id = token.sub || "";
         session.user.image = getUser.profilePic;
         session.user.provider = getUser.provider;
+        session.user.userId = getUser._id;
       }
       return session;
     },

@@ -3,8 +3,10 @@ import express from "express";
 import morgan from "morgan";
 import { Server } from "socket.io";
 import "dotenv/config";
-import { instrument } from "@socket.io/admin-ui";
+import { publicChat } from "./listeners/publicChat.socket";
+import mongoose from "mongoose";
 import http from "http";
+import "dotenv/config";
 
 const app = express();
 const server = http.createServer(app);
@@ -23,37 +25,16 @@ app.use(
   })
 );
 
-// const messages: Messages = {
-//   public: [],
-//   private: {},
-// };
-io.use((socket, next) => {
-  console.log(socket.handshake.auth);
-  if (socket.handshake.auth.token) {
-    next();
-    return;
-  } else {
-    console.log("You are not authenticated yet!");
-    next(new Error("You are not authenticated yet!"));
+publicChat(io as any);
+async function connectDb() {
+  try {
+    await mongoose.connect(process.env.MONGO_URI!);
+    console.log("Connected to database");
+  } catch (err) {
+    process.exit(0);
   }
-});
-const messages: any[] = [];
-io.on("connection", (socket) => {
-  socket.on("chat_message", (message, room) => {
-    // messages.public.push({ name: socket.id, content: message });
-    messages.push({ name: socket.id, content: message });
-    if (room === "Public") {
-      socket.broadcast.emit("chat_message", messages);
-    } else {
-      socket.to(room).emit("chat_message", messages);
-    }
-  });
-  socket.on("join_room", (room, cb) => {
-    socket.join(room);
-    cb(`Welcome to room ${room} ${socket.id}`);
-  });
-});
-instrument(io, { auth: false });
+}
+connectDb();
 server.listen(PORT, () => {
   console.log(`The server is running on PORT ${PORT}`);
 });
