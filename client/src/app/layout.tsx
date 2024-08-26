@@ -18,7 +18,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <Toaster />
+      <Toaster
+        toastOptions={{
+          style: {
+            backgroundColor: "#3A3B3C",
+            border: "none",
+            color: "white",
+          },
+        }}
+      />
       <AuthProvider>
         <body className={inter.className}>{children}</body>
       </AuthProvider>

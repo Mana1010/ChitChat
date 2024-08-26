@@ -6,3 +6,7 @@ export const socket = io(URL, {
   autoConnect: false,
   auth: { token: false },
 });
+
+export const socketPrivate = io(`${URL}/private`, {
+  autoConnect: false,
+});
