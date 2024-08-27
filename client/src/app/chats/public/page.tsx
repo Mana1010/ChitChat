@@ -1,8 +1,11 @@
 import React from "react";
 import PublicChat from "./_components/PublicChat";
 import { TbMessages } from "react-icons/tb";
-
+import { getAllPublicMessages } from "@/lib/actions/publicMessage.actions";
+import { connectDb } from "@/lib/db";
+import { getServerSession } from "next-auth";
 async function Page() {
+  const data = await getAllPublicMessages();
   return (
     <div className="p-5 flex flex-col w-full space-y-2">
       <header>
@@ -21,7 +24,7 @@ async function Page() {
         </div>
       </header>
 
-      <PublicChat />
+      <PublicChat allMessage={data} />
     </div>
   );
 }

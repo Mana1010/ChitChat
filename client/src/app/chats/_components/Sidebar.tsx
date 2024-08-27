@@ -13,6 +13,7 @@ import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { IoMegaphone } from "react-icons/io5";
 import { usePathname } from "next/navigation";
+import pic from "../../../assets/images/conversation-icon.png";
 function Sidebar() {
   const router = useRouter();
   const { data } = useSession();
@@ -43,7 +44,7 @@ function Sidebar() {
           <DropdownMenuTrigger className="h-8 w-8 relative overflow-hidden rounded-full">
             {" "}
             <Image
-              src={data?.user.image ?? ""}
+              src={data?.user.image ?? pic}
               alt="profile-pic"
               sizes="100%"
               fill

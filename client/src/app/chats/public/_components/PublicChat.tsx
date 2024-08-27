@@ -8,31 +8,15 @@ import { Socket } from "socket.io-client";
 import { useQuery } from "react-query";
 import { serverUrl } from "@/utils/serverUrl";
 import axios from "axios";
-function PublicChat() {
+import { User } from "@/types/next-auth";
+function PublicChat({ allMessage }: any) {
   const [message, setMessage] = useState("");
-  const [onlineUser, setOnlineUser] = useState("");
-  const [allMessages, setAllMessages] = useState([]);
+  const [allMessages, setAllMessages] = useState<any>([]);
   const [socketPublic, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const { status, data: session } = useSession();
-
-  useQuery({
-    queryKey: ["messages"],
-    queryFn: async () => {
-      const response = await axios.get(`${serverUrl}/api/messages`);
-      setAllMessages(response.data.message);
-      return;
-    },
-    staleTime: Infinity,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-  });
   useEffect(() => {
-    const socket = initializeSocket(
-      session?.user.id as string,
-      status,
-      session?.user.userId as string
-    );
+    const socket = initializeSocket(session?.user as User);
     setSocket(socket);
     function onConnect() {
       setIsConnected(true);
@@ -44,21 +28,50 @@ function PublicChat() {
 
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
-
-    if (!isConnected && status === "authenticated") {
-      socket.connect();
-    }
     return () => {
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
     };
-  }, [isConnected, session?.user.id, session?.user.userId, status]);
-
+  }, [
+    isConnected,
+    session?.user,
+    session?.user.id,
+    session?.user.userId,
+    status,
+  ]);
+  useEffect(() => {
+    socketPublic?.on("get-message", (data: { message: string; data: User }) => {
+      setAllMessages((allMessage: any) => [...allMessage, data]);
+    });
+  }, [socketPublic]);
   console.log(allMessages);
-  // useEffect(() => {}, []);
   return (
     <div className="h-full relative">
-      <div className="h-[440px] bg-[#3A3B3C] w-full rounded-md"></div>
+      <div className="h-[440px] bg-[#3A3B3C] w-full rounded-md p-3 overflow-y-auto">
+        <div className="w-full space-y-2">
+          {allMessages.map((data: any) => (
+            <div
+              key={data._id}
+              className={`flex space-x-2 w-full ${
+                data.data.id === session?.user.id
+                  ? "justify-end items-end"
+                  : "justify-start items-start"
+              }`}
+            >
+              {/* ChatBox */}
+              <div
+                className={`p-2 rounded-md ${
+                  data.data.id === session?.user.id
+                    ? "bg-[#6486FF]"
+                    : "bg-[#171717]"
+                }`}
+              >
+                <span className="text-white">{data.message}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
       <form
         onSubmit={(e) => {
           e.preventDefault();

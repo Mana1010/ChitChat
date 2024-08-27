@@ -5,7 +5,7 @@ import mongoose, { Schema } from "mongoose";
 // })
 const messageSchema = new mongoose.Schema(
   {
-    userInfo: {},
+    userId: { type: Schema.Types.ObjectId, ref: "User" },
     message: { type: String },
     isMessageDeleted: { type: Boolean, default: false },
   },
