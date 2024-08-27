@@ -3,6 +3,8 @@ import GoogleProvider from "next-auth/providers/google";
 import GithubProvider from "next-auth/providers/github";
 import { connectDb } from "@/lib/db";
 import { User } from "@/model/user.model";
+import axios, { AxiosResponse } from "axios";
+import { serverUrl } from "./serverUrl";
 const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -38,35 +40,43 @@ const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      await connectDb();
-      const getUser = await User.findOne({ authId: token.sub });
-      console.log(getUser);
-      if (getUser) {
-        session.user.name = getUser.name;
+      const getUser: AxiosResponse<any, any> = await axios.get(
+        `${serverUrl}/api/auth/checkUser/${token.sub}`
+      );
+      const data = getUser.data.message;
+      console.log(data);
+      if (data) {
+        session.user.name = data.name;
         session.user.id = token.sub || "";
-        session.user.image = getUser.profilePic;
-        session.user.provider = getUser.provider;
-        session.user.userId = getUser._id;
+        session.user.image = data.profilePic;
+        session.user.provider = data.provider;
+        session.user.userId = data._id;
       }
       return session;
     },
     async signIn({ profile, account }) {
       try {
-        await connectDb();
-        const getUser = await User.findOne({ authId: profile?.sub });
-
-        if (!getUser) {
-          await User.create({
-            email: profile?.email,
-            name: profile?.name,
-            profilePic: profile?.picture,
-            authId: profile?.sub,
-            provider: account?.provider,
-          });
+        const checkUser: AxiosResponse<any, any> = await axios.get(
+          `${serverUrl}/api/auth/checkUser/${profile?.sub}`
+        );
+        const payload = {
+          email: profile?.email,
+          name: profile?.name,
+          profilePic: profile?.picture,
+          authId: profile?.sub,
+          provider: account?.provider,
+        };
+        if (!Boolean(checkUser.data.message)) {
+          console.log(payload);
+          const response = await axios.post(
+            `${serverUrl}/api/auth/createUser`,
+            payload
+          );
+          console.log(response.data.message);
         }
         return true;
-      } catch (err: any) {
-        console.log(err);
+      } catch (err) {
+        console.log("Please try again!");
         return false;
       }
     },

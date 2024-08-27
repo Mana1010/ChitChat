@@ -7,6 +7,8 @@ import { publicChat } from "./listeners/publicChat.socket";
 import mongoose from "mongoose";
 import http from "http";
 import "dotenv/config";
+import { router as messageRoute } from "./routes/message.route";
+import { router as authRoute } from "./routes/auth.route";
 
 const app = express();
 const server = http.createServer(app);
@@ -17,14 +19,15 @@ const io = new Server(server, {
     credentials: true,
   },
 });
+app.use(express.json());
 app.use(morgan("dev"));
 app.use(
   cors({
-    origin: "*",
+    origin: ["http://localhost:3000"],
     credentials: true,
   })
 );
-
+app.use("/api", messageRoute, authRoute);
 publicChat(io as any);
 async function connectDb() {
   try {

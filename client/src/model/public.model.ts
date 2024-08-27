@@ -1,8 +1,11 @@
 import mongoose, { Schema } from "mongoose";
 
+// const userInfo = new Schema({
+//   id:
+// })
 const messageSchema = new mongoose.Schema(
   {
-    userId: { type: Schema.Types.ObjectId, ref: "User" },
+    userInfo: {},
     message: { type: String },
     isMessageDeleted: { type: Boolean, default: false },
   },

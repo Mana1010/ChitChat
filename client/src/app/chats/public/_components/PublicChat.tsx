@@ -5,14 +5,28 @@ import { initializeSocket } from "@/utils/socket";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import { Socket } from "socket.io-client";
+import { useQuery } from "react-query";
+import { serverUrl } from "@/utils/serverUrl";
+import axios from "axios";
 function PublicChat() {
   const [message, setMessage] = useState("");
   const [onlineUser, setOnlineUser] = useState("");
-  const [users, setUsers] = useState([]);
+  const [allMessages, setAllMessages] = useState([]);
   const [socketPublic, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const { status, data: session } = useSession();
 
+  useQuery({
+    queryKey: ["messages"],
+    queryFn: async () => {
+      const response = await axios.get(`${serverUrl}/api/messages`);
+      setAllMessages(response.data.message);
+      return;
+    },
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
   useEffect(() => {
     const socket = initializeSocket(
       session?.user.id as string,
@@ -40,6 +54,7 @@ function PublicChat() {
     };
   }, [isConnected, session?.user.id, session?.user.userId, status]);
 
+  console.log(allMessages);
   // useEffect(() => {}, []);
   return (
     <div className="h-full relative">
