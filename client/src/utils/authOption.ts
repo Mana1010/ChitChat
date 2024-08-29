@@ -1,9 +1,7 @@
 import { type NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import GithubProvider from "next-auth/providers/github";
-import { connectDb } from "@/lib/db";
-import { User } from "../../server/src/model/user.model";
-import axios, { AxiosResponse } from "axios";
+import axios from "axios";
 import { serverUrl } from "./serverUrl";
 const authOptions: NextAuthOptions = {
   providers: [
@@ -39,23 +37,27 @@ const authOptions: NextAuthOptions = {
     async jwt({ token }) {
       return token;
     },
-    async session({ session, token }) {
-      await connectDb();
-      const getUser = await User.findOne({ authId: token.sub });
-      if (getUser) {
-        session.user.name = getUser.name;
-        session.user.id = token.sub || "";
-        session.user.image = getUser.profilePic;
-        session.user.provider = getUser.provider;
-        session.user.userId = getUser._id;
+    async session({ session, token, user }) {
+      const checkUser = await axios.get(
+        `${serverUrl}/api/auth/checkUser/${token?.sub}`
+      );
+      const data = checkUser.data.message;
+      if (data) {
+        session.user.name = data.name;
+        session.user.id = token?.sub || "";
+        session.user.image = data.profilePic;
+        session.user.provider = data.provider;
+        session.user.userId = data._id;
       }
+
       return session;
     },
     async signIn({ profile, account }) {
       try {
-        await connectDb();
-        const checkUser = await User.findOne({ authId: profile?.sub });
-        if (!checkUser) {
+        const checkUser = await axios.get(
+          `${serverUrl}/api/auth/checkUser/${profile?.sub}`
+        );
+        if (!checkUser.data.message) {
           const payload = {
             email: profile?.email,
             name: profile?.name,
@@ -63,10 +65,15 @@ const authOptions: NextAuthOptions = {
             authId: profile?.sub,
             provider: account?.provider,
           };
-          await User.create(payload);
+          const message = await axios.post(
+            `${serverUrl}/api/auth/createUser`,
+            payload
+          );
+          console.log(message.data.message);
         }
         return true;
       } catch (err) {
+        console.log(JSON.stringify(err));
         return false;
       }
     },

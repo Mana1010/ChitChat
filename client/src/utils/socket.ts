@@ -14,14 +14,11 @@
 import { User } from "@/types/next-auth";
 import { io, Socket } from "socket.io-client";
 
-const URL = "http://localhost:3000";
+const URL = "http://localhost:5000";
 
 export const initializeSocket = (data: User): Socket => {
   return io(URL, {
-    autoConnect: true,
-    auth: {
-      data,
-    },
+    auth: { data },
   });
 };
 

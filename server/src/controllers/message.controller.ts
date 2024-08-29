@@ -4,11 +4,13 @@ import { Public } from "../model/public.model";
 
 export const getAllPublicMessages = asyncHandler(
   async (req: Request, res: Response) => {
-    console.log("Running the backend");
-    const getAllMessages = await Public.find().populate({
-      path: "userId",
-      select: ["name", "profilePic"],
-    });
+    const getAllMessages = await Public.find()
+      .populate({
+        path: "userId",
+        select: ["-createdAt", "-updatedAt", "-__v"],
+      })
+
+      .select(["message", "isMessageDeleted"]);
     if (getAllMessages.length === 0) {
       res.status(200).json({ message: [] });
       return;
