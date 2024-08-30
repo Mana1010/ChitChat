@@ -17,14 +17,16 @@ function PublicChat() {
   const [allMessages, setAllMessages] = useState<any>([]);
   // const [socketPublic, setSocket] = useState<Socket | null>(null);
   const socketRef = useRef<Socket | null>();
+
   const [isConnected, setIsConnected] = useState(false);
   const { status, data: session } = useSession();
+  const [scrollPosition, setScrollPosition] = useState();
+  const scrollRef = useRef<any>();
   const getAllMessage = useQuery({
     queryKey: ["public-messages"],
     queryFn: async () => {
       const response = await axios.get(`${serverUrl}/api/messages/public`);
       setAllMessages(response.data.message);
-      console.log(response.data.message);
       return;
     },
   });
@@ -35,9 +37,10 @@ function PublicChat() {
     }
 
     if (!socketRef.current && session?.user) {
-      const socket = initializeSocket(session?.user as User);
+      const socket = initializeSocket(session.user.userId as string);
       socket.on("connect", () => {
         socketRef.current = socket;
+        setIsConnected(true);
       });
       socket.on("disconnect", onDisconnect);
     }
@@ -48,16 +51,44 @@ function PublicChat() {
     };
   }, [session?.user]);
   useEffect(() => {
-    // if (!socketRef.current) return;
-    socketRef.current?.on("get-message", (data: User) => {
+    if (!socketRef.current) return;
+    console.log("Effect running, socketRef.current:", socketRef.current);
+    socketRef.current.on("get-message", (data: User) => {
       setAllMessages((messages: any) => [...messages, data]);
     });
+
+    socketRef.current.on("display-status", (data) => {
+      toast.message(`${data.name} is ${data.status}`);
+    });
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socketRef.current]);
+
+  // useEffect(() => {
+  //   function sendStatus(status: string) {
+  //     socketRef.current?.emit("send-status", {
+  //       status,
+  //       name: session?.user.name,
+  //     });
+  //   }
+  //   if (isConnected && socketRef.current) {
+  //     let interval = setInterval(() => {
+  //       sendStatus("Online");
+  //     }, 1000);
+  //     alert("Running asf");
+  //   }
+  //   return () => {
+  //     sendStatus("Offline");
+  //   };
+  // }, [isConnected, session?.user.name]);
+
+  useEffect(() => {
+    window.addEventListener("mousemove", (e) => {});
+  }, []);
+
   if (getAllMessage.isLoading) {
     return <h1>Loading</h1>;
   }
-  console.log(allMessages);
   const userData = {
     name: session?.user.name,
     email: session?.user.email,
@@ -69,7 +100,10 @@ function PublicChat() {
   return (
     <div className="h-full">
       <div className="h-[440px] bg-[#3A3B3C] w-full rounded-md relative">
-        <div className="w-full space-y-2 p-3 overflow-y-auto h-full">
+        <div
+          ref={scrollRef}
+          className="w-full space-y-2 p-3 overflow-y-auto h-full"
+        >
           {allMessages.map((data: any) => (
             <div
               key={data._id}
@@ -96,7 +130,7 @@ function PublicChat() {
                   {/* ChatBox */}
 
                   <div
-                    className={`p-2 rounded-md ${
+                    className={`p-2 rounded-md flex items-center justify-center ${
                       data.userId?._id === session?.user.userId
                         ? "bg-[#6486FF]"
                         : "bg-[#171717]"
@@ -108,7 +142,7 @@ function PublicChat() {
                   </div>
                 </div>
                 <Image
-                  src={data.userId?.profilePic ?? ""}
+                  src={data.userId?.profilePic ?? themeImg}
                   alt="profile-pic"
                   width={32}
                   height={32}
@@ -123,9 +157,9 @@ function PublicChat() {
           <Image
             src={themeImg}
             alt="chat-bot-img"
-            priority
             width={200}
             height={200}
+            priority
           />
         </div>
       </div>

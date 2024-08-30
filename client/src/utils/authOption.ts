@@ -69,7 +69,6 @@ const authOptions: NextAuthOptions = {
             `${serverUrl}/api/auth/createUser`,
             payload
           );
-          console.log(message.data.message);
         }
         return true;
       } catch (err) {

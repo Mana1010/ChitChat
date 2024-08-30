@@ -16,9 +16,9 @@ import { io, Socket } from "socket.io-client";
 
 const URL = "http://localhost:5000";
 
-export const initializeSocket = (data: User): Socket => {
+export const initializeSocket = (userId: string): Socket => {
   return io(URL, {
-    auth: { data },
+    auth: { userId },
   });
 };
 

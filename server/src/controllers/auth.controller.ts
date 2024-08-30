@@ -8,8 +8,6 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
 
 export const checkUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  console.log(id);
   const checkUserExist = await User.findOne({ authId: id });
-
   res.status(200).json({ message: checkUserExist });
 });

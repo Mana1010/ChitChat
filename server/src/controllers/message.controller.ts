@@ -15,7 +15,6 @@ export const getAllPublicMessages = asyncHandler(
       res.status(200).json({ message: [] });
       return;
     }
-    console.log(getAllMessages);
     res.status(200).json({ message: getAllMessages });
   }
 );
