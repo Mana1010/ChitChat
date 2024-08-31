@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useId, useRef, useState } from "react";
 import { LuSend } from "react-icons/lu";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
@@ -12,15 +12,17 @@ import authOptions from "@/utils/authOption";
 import { initializeSocket } from "@/utils/socket";
 import Image from "next/image";
 import themeImg from "../../../../assets/images/theme-img.png";
+import { MdEmojiEmotions } from "react-icons/md";
+import Picker from "emoji-picker-react";
 function PublicChat() {
   const [message, setMessage] = useState("");
   const [allMessages, setAllMessages] = useState<any>([]);
   // const [socketPublic, setSocket] = useState<Socket | null>(null);
   const socketRef = useRef<Socket | null>();
-
-  const [isConnected, setIsConnected] = useState(false);
   const { status, data: session } = useSession();
   const [scrollPosition, setScrollPosition] = useState();
+  const [openEmoji, setOpenEmoji] = useState(false);
+  const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const scrollRef = useRef<any>();
   const getAllMessage = useQuery({
     queryKey: ["public-messages"],
@@ -33,59 +35,34 @@ function PublicChat() {
 
   useEffect(() => {
     function onDisconnect() {
-      setIsConnected(false);
+      socketRef.current?.emit("user-disconnect", { status: "Offline" });
     }
 
     if (!socketRef.current && session?.user) {
       const socket = initializeSocket(session.user.userId as string);
       socket.on("connect", () => {
         socketRef.current = socket;
-        setIsConnected(true);
       });
       socket.on("disconnect", onDisconnect);
     }
-
-    return () => {
-      // socket.off("connect", onConnect);
-      // socket.off("disconnect", onDisconnect);
-    };
   }, [session?.user]);
   useEffect(() => {
     if (!socketRef.current) return;
-    console.log("Effect running, socketRef.current:", socketRef.current);
     socketRef.current.on("get-message", (data: User) => {
       setAllMessages((messages: any) => [...messages, data]);
     });
 
-    socketRef.current.on("display-status", (data) => {
-      toast.message(`${data.name} is ${data.status}`);
+    socketRef.current.once("display-status", (data) => {
+      toast.message(`${data.name} is ${data.status}`, {
+        position: "top-right",
+      });
+    });
+    socketRef.current.on("display-during-typing", (data) => {
+      setTypingUsers(data);
     });
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socketRef.current]);
-
-  // useEffect(() => {
-  //   function sendStatus(status: string) {
-  //     socketRef.current?.emit("send-status", {
-  //       status,
-  //       name: session?.user.name,
-  //     });
-  //   }
-  //   if (isConnected && socketRef.current) {
-  //     let interval = setInterval(() => {
-  //       sendStatus("Online");
-  //     }, 1000);
-  //     alert("Running asf");
-  //   }
-  //   return () => {
-  //     sendStatus("Offline");
-  //   };
-  // }, [isConnected, session?.user.name]);
-
-  useEffect(() => {
-    window.addEventListener("mousemove", (e) => {});
-  }, []);
-
   if (getAllMessage.isLoading) {
     return <h1>Loading</h1>;
   }
@@ -95,63 +72,94 @@ function PublicChat() {
     profilePic: session?.user.image,
     authId: session?.user.id,
     provider: session?.user.provider,
+    status: "Online",
     _id: session?.user.userId,
   };
   return (
-    <div className="h-full">
+    <div className="h-full" onClick={() => setOpenEmoji(false)}>
       <div className="h-[440px] bg-[#3A3B3C] w-full rounded-md relative">
-        <div
-          ref={scrollRef}
-          className="w-full space-y-2 p-3 overflow-y-auto h-full"
-        >
+        <div className="w-full space-y-2 p-3 overflow-y-auto h-full">
           {allMessages.map((data: any) => (
             <div
               key={data._id}
-              className={`flex space-x-2 w-full relative z-10 ${
+              className={`flex space-x-2 w-full relative z-10  ${
                 data.userId?._id === session?.user.userId
                   ? "justify-end"
                   : "justify-start"
               }`}
             >
               <div
-                className={`flex items-end gap-1 ${
-                  data.userId?._id !== session?.user.userId &&
-                  "flex-row-reverse"
+                className={`w-1/2 flex ${
+                  data.userId?._id === session?.user.userId
+                    ? "justify-end"
+                    : "justify-start"
                 }`}
               >
-                <div className="flex flex-col">
-                  <small
-                    className={`font-semibold text-[0.7rem] text-white ${
-                      data.userId?._id === session?.user.userId && "text-end"
-                    }`}
-                  >
-                    {data.userId?.name.split(" ")[0]}
-                  </small>
-                  {/* ChatBox */}
+                <div
+                  className={`flex items-end gap-1  ${
+                    data.userId?._id !== session?.user.userId &&
+                    "flex-row-reverse"
+                  }`}
+                >
+                  <div className="flex flex-col">
+                    <small
+                      className={`font-semibold text-[0.7rem] text-white ${
+                        data.userId?._id === session?.user.userId && "text-end"
+                      }`}
+                    >
+                      {data.userId?.name.split(" ")[0] ?? ""}
+                    </small>
+                    {/* ChatBox */}
 
-                  <div
-                    className={`p-2 rounded-md flex items-center justify-center ${
-                      data.userId?._id === session?.user.userId
-                        ? "bg-[#6486FF]"
-                        : "bg-[#171717]"
-                    }`}
-                  >
-                    <span className="text-white text-center">
-                      {data?.message}
-                    </span>
+                    <div
+                      className={`p-2 rounded-md flex items-center justify-center break-words ${
+                        data.userId?._id === session?.user.userId
+                          ? "bg-[#6486FF]"
+                          : "bg-[#171717]"
+                      }`}
+                    >
+                      <span className="text-white">{data?.message}</span>
+                    </div>
+                  </div>
+                  <div className="w-[32px] h-[32px] rounded-full relative px-4 py-2">
+                    <Image
+                      src={data.userId?.profilePic ?? themeImg}
+                      alt="profile-pic"
+                      fill
+                      sizes="100%"
+                      className="rounded-full absolute"
+                      priority
+                    />
+                    <span
+                      className={`w-2 h-2 ${
+                        data.userId.status === "Online"
+                          ? "bg-green-500"
+                          : "bg-slate-500"
+                      } rounded-full absolute right-[1px] bottom-[2px]`}
+                    ></span>
                   </div>
                 </div>
-                <Image
-                  src={data.userId?.profilePic ?? themeImg}
-                  alt="profile-pic"
-                  width={32}
-                  height={32}
-                  className="rounded-full "
-                  priority
-                />
               </div>
             </div>
           ))}
+          <div className="flex relative p-2">
+            {typingUsers?.map((userImg, index) => (
+              <div
+                key={index}
+                className="w-[32px] h-[32px] rounded-full relative px-4 py-2"
+              >
+                <Image
+                  src={userImg ?? ""}
+                  alt="profile-picture"
+                  fill
+                  sizes="100%"
+                  className="rounded-full absolute"
+                  priority
+                />
+              </div>
+            ))}
+            is typing....
+          </div>
         </div>
         <div className="absolute bottom-3 right-2 opacity-60">
           <Image
@@ -177,12 +185,60 @@ function PublicChat() {
         className="flex-grow flex space-x-2 items-center pt-3 justify-between"
       >
         <input
-          onChange={(e) => setMessage(e.target.value)}
+          onChange={(e) => {
+            setMessage(e.target.value);
+          }}
+          onFocus={() => {
+            socketRef.current?.emit("during-typing", {
+              userImg: session?.user.image,
+              socketId: socketRef.current.id,
+            });
+          }}
+          onBlur={() => {
+            socketRef.current?.emit("stop-typing", {
+              socketId: socketRef.current.id,
+            });
+          }}
           value={message}
           type="text"
           placeholder="Send a message"
           className="text-zinc-100 placeholder:text-zinc-300 py-3 rounded-md bg-[#3A3B3C] px-3 flex-grow"
         />
+        {/* For Emoji */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpenEmoji((prev) => !prev);
+            }}
+            className={`px-4 flex  py-3.5 rounded-md items-center text-[#6486FF] text-xl ${
+              openEmoji ? "bg-[#6486FF]/20" : "bg-[#3A3B3C]"
+            }`}
+          >
+            <MdEmojiEmotions />
+          </button>
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          >
+            <Picker
+              style={{
+                position: "absolute",
+                bottom: "52px",
+                right: "0",
+                zIndex: "100000",
+              }}
+              onEmojiClick={(emoji) => {
+                setMessage((prev) => `${prev}${emoji.emoji}`);
+              }}
+              open={openEmoji}
+              theme="dark"
+            />
+          </div>
+        </div>
+        {/* End For Emoji */}
         <button
           type="submit"
           disabled={!message.trim()}
@@ -191,7 +247,7 @@ function PublicChat() {
           <span>
             <LuSend />
           </span>
-          <span className="font-bold">Send Message</span>
+          <span className="font-bold">Send</span>
         </button>
       </form>
     </div>

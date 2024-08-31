@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema(
     profilePic: { type: String },
     authId: { type: String },
     provider: { type: String },
-    status: { type: String, default: "Online" },
+    status: { type: String, default: "Offline" },
   },
   {
     timestamps: true,
