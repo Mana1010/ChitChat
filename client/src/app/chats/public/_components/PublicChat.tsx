@@ -1,28 +1,29 @@
 "use client";
-import React, { useEffect, useId, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { LuSend } from "react-icons/lu";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
-import { io, Socket } from "socket.io-client";
+import { Socket } from "socket.io-client";
 import { useQuery } from "react-query";
 import { serverUrl } from "@/utils/serverUrl";
 import axios from "axios";
 import { User } from "@/types/next-auth";
-import authOptions from "@/utils/authOption";
 import { initializeSocket } from "@/utils/socket";
 import Image from "next/image";
 import themeImg from "../../../../assets/images/theme-img.png";
 import { MdEmojiEmotions } from "react-icons/md";
 import Picker from "emoji-picker-react";
+
 function PublicChat() {
   const [message, setMessage] = useState("");
   const [allMessages, setAllMessages] = useState<any>([]);
-  // const [socketPublic, setSocket] = useState<Socket | null>(null);
   const socketRef = useRef<Socket | null>();
   const { status, data: session } = useSession();
   const [scrollPosition, setScrollPosition] = useState();
   const [openEmoji, setOpenEmoji] = useState(false);
-  const [typingUsers, setTypingUsers] = useState<string[]>([]);
+  const [typingUsers, setTypingUsers] = useState<
+    { socketId: string; userImg: string }[]
+  >([]);
   const scrollRef = useRef<any>();
   const getAllMessage = useQuery({
     queryKey: ["public-messages"],
@@ -34,6 +35,7 @@ function PublicChat() {
   });
 
   useEffect(() => {
+    //To activate the dotWave animation
     function onDisconnect() {
       socketRef.current?.emit("user-disconnect", { status: "Offline" });
     }
@@ -58,9 +60,9 @@ function PublicChat() {
       });
     });
     socketRef.current.on("display-during-typing", (data) => {
+      console.log(data);
       setTypingUsers(data);
     });
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socketRef.current]);
   if (getAllMessage.isLoading) {
@@ -142,24 +144,30 @@ function PublicChat() {
               </div>
             </div>
           ))}
-          <div className="flex relative p-2">
-            {typingUsers?.map((userImg, index) => (
-              <div
-                key={index}
-                className="w-[32px] h-[32px] rounded-full relative px-4 py-2"
-              >
-                <Image
-                  src={userImg ?? ""}
-                  alt="profile-picture"
-                  fill
-                  sizes="100%"
-                  className="rounded-full absolute"
-                  priority
-                />
+          {typingUsers.length !== 0 && (
+            <div className="flex space-x-1 items-center">
+              <div className="flex relative items-center">
+                {typingUsers?.map((data, index) => (
+                  <div key={index} className={`${index === 0 ? "" : "-m-1.5"}`}>
+                    <div
+                      className={
+                        "w-[32px] h-[32px] rounded-full relative px-4 py-2"
+                      }
+                    >
+                      <Image
+                        src={data.userImg ?? themeImg}
+                        alt="profile-picture"
+                        fill
+                        sizes="100%"
+                        className="rounded-full absolute"
+                        priority
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-            is typing....
-          </div>
+            </div>
+          )}
         </div>
         <div className="absolute bottom-3 right-2 opacity-60">
           <Image
@@ -190,7 +198,7 @@ function PublicChat() {
           }}
           onFocus={() => {
             socketRef.current?.emit("during-typing", {
-              userImg: session?.user.image,
+              userImg: session?.user?.image,
               socketId: socketRef.current.id,
             });
           }}

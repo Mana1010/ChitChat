@@ -3,9 +3,10 @@ import { Public } from "../model/public.model";
 import { User } from "../model/user.model";
 
 export function publicChat(io: Socket) {
+  let typingUsers: { socketId: string; userImg: string }[] = [];
   io.on("connection", async (socket: Socket) => {
     const { userId } = socket.handshake.auth;
-    const typingUsers = new Map();
+
     const getInfo = await User.findById(userId).select(["name", "status"]);
     if (getInfo.status === "Offline") {
       getInfo.status = "Online";
@@ -34,33 +35,30 @@ export function publicChat(io: Socket) {
       });
     });
     socket.on("during-typing", ({ userImg, socketId }) => {
-      if (!typingUsers.has(socketId) && typingUsers.size <= 10) {
-        typingUsers.set(socketId, userImg);
+      const checkSocketId = typingUsers.some(
+        (typeUser) => typeUser.socketId === socketId
+      );
+      if (!checkSocketId && typingUsers.length < 10) {
+        typingUsers.push({ socketId, userImg });
       }
-      const emittedUsers = [];
-      for (const [key, value] of typingUsers) {
-        //To check and filtered out
-        if (key !== socketId) {
-          emittedUsers.push(value);
-        }
-      }
-      socket.emit(
+      socket.broadcast.emit(
         "display-during-typing",
-        emittedUsers //This will retrieve the values only in Map and transformed it into an array.
+        typingUsers //This will retrieve the values only in Map and transformed it into an array.
       );
     });
     socket.on("stop-typing", ({ socketId }) => {
-      if (typingUsers.has(socketId)) {
-        typingUsers.delete(socketId);
-      }
-      socket.broadcast.emit("display-during-typing", new Array(typingUsers));
+      typingUsers.splice(
+        typingUsers.findIndex((user) => user.socketId === socketId),
+        1
+      );
+      console.log(typingUsers);
+      socket.broadcast.emit("display-during-typing", typingUsers);
     });
     socket.on("disconnect", async () => {
       const disconnectUser = await User.findById(userId).select([
         "name",
         "status",
       ]);
-
       console.log("User is disconnected");
       if (disconnectUser === "Online") {
         console.log("User is disco-nnected");
