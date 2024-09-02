@@ -2,6 +2,20 @@ import { Socket } from "socket.io";
 import { Public } from "../model/public.model";
 import { User } from "../model/user.model";
 
+function stopTyping(
+  socket: Socket,
+  typingUsers: { socketId: string; userImg: string }[]
+) {
+  socket.on("stop-typing", ({ socketId }) => {
+    const findIndex = typingUsers.findIndex(
+      (user) => user.socketId === socketId
+    );
+    if (findIndex !== -1) {
+      typingUsers.splice(findIndex, 1);
+    }
+    socket.broadcast.emit("display-during-typing", typingUsers);
+  });
+}
 export function publicChat(io: Socket) {
   let typingUsers: { socketId: string; userImg: string }[] = [];
   io.on("connection", async (socket: Socket) => {
@@ -46,15 +60,9 @@ export function publicChat(io: Socket) {
         typingUsers //This will retrieve the values only in Map and transformed it into an array.
       );
     });
-    socket.on("stop-typing", ({ socketId }) => {
-      typingUsers.splice(
-        typingUsers.findIndex((user) => user.socketId === socketId),
-        1
-      );
-      console.log(typingUsers);
-      socket.broadcast.emit("display-during-typing", typingUsers);
-    });
+    stopTyping(socket, typingUsers);
     socket.on("disconnect", async () => {
+      stopTyping(socket, typingUsers);
       const disconnectUser = await User.findById(userId).select([
         "name",
         "status",

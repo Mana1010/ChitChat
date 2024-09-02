@@ -13,6 +13,7 @@ import Image from "next/image";
 import themeImg from "../../../../assets/images/theme-img.png";
 import { MdEmojiEmotions } from "react-icons/md";
 import Picker from "emoji-picker-react";
+import typingChatAnimation from "../../../../assets/images/typing-chat-animation.gif";
 
 function PublicChat() {
   const [message, setMessage] = useState("");
@@ -165,6 +166,15 @@ function PublicChat() {
                     </div>
                   </div>
                 ))}
+                <div className="pl-2 pt-2">
+                  <Image
+                    src={typingChatAnimation}
+                    alt="typing-animation"
+                    width={25}
+                    height={25}
+                    priority
+                  />
+                </div>
               </div>
             </div>
           )}
