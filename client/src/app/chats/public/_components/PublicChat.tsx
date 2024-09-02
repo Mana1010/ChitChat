@@ -13,8 +13,9 @@ import Image from "next/image";
 import themeImg from "../../../../assets/images/theme-img.png";
 import { MdEmojiEmotions } from "react-icons/md";
 import Picker from "emoji-picker-react";
-import typingChatAnimation from "../../../../assets/images/typing-chat-animation.gif";
-
+import typingChatAnimation from "../../../../assets/images/gif-animation/typing-chat-animation.gif";
+import chatLoadingAnimation from "../../../../assets/images/gif-animation/chat-loading.gif";
+import { HiOutlineDotsVertical } from "react-icons/hi";
 function PublicChat() {
   const [message, setMessage] = useState("");
   const [allMessages, setAllMessages] = useState<any>([]);
@@ -34,7 +35,9 @@ function PublicChat() {
       return;
     },
   });
-
+  useEffect(() => {
+    scrollRef.current?.scrollIntoView({ block: "end" });
+  }, [allMessages, typingUsers]);
   useEffect(() => {
     //To activate the dotWave animation
     function onDisconnect() {
@@ -54,7 +57,6 @@ function PublicChat() {
     socketRef.current.on("get-message", (data: User) => {
       setAllMessages((messages: any) => [...messages, data]);
     });
-
     socketRef.current.once("display-status", (data) => {
       toast.message(`${data.name} is ${data.status}`, {
         position: "top-right",
@@ -66,9 +68,6 @@ function PublicChat() {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socketRef.current]);
-  if (getAllMessage.isLoading) {
-    return <h1>Loading</h1>;
-  }
   const userData = {
     name: session?.user.name,
     email: session?.user.email,
@@ -81,104 +80,122 @@ function PublicChat() {
   return (
     <div className="h-full" onClick={() => setOpenEmoji(false)}>
       <div className="h-[440px] bg-[#3A3B3C] w-full rounded-md relative">
-        <div className="w-full space-y-2 p-3 overflow-y-auto h-full">
-          {allMessages.map((data: any) => (
-            <div
-              key={data._id}
-              className={`flex space-x-2 w-full relative z-10  ${
-                data.userId?._id === session?.user.userId
-                  ? "justify-end"
-                  : "justify-start"
-              }`}
-            >
+        {getAllMessage.isLoading ? (
+          <div className="flex w-full items-center justify-center h-full">
+            <Image
+              src={chatLoadingAnimation}
+              width={30}
+              height={30}
+              alt="chat-loading"
+              priority
+            />
+          </div>
+        ) : (
+          <div className="w-full space-y-2 p-3 overflow-y-auto h-full relative">
+            {allMessages.map((data: any) => (
               <div
-                className={`w-1/2 flex ${
+                key={data._id}
+                className={`flex space-x-2 w-full relative z-10 ${
                   data.userId?._id === session?.user.userId
                     ? "justify-end"
                     : "justify-start"
                 }`}
               >
                 <div
-                  className={`flex items-end gap-1  ${
-                    data.userId?._id !== session?.user.userId &&
-                    "flex-row-reverse"
+                  className={`w-1/2 flex ${
+                    data.userId?._id === session?.user.userId
+                      ? "justify-end"
+                      : "justify-start"
                   }`}
                 >
-                  <div className="flex flex-col">
-                    <small
-                      className={`font-semibold text-[0.7rem] text-white ${
-                        data.userId?._id === session?.user.userId && "text-end"
-                      }`}
-                    >
-                      {data.userId?.name.split(" ")[0] ?? ""}
-                    </small>
-                    {/* ChatBox */}
+                  <div
+                    className={`flex items-end gap-1  ${
+                      data.userId?._id !== session?.user.userId &&
+                      "flex-row-reverse"
+                    }`}
+                  >
+                    <div className="flex flex-col">
+                      <small
+                        className={`font-semibold text-[0.7rem] text-white ${
+                          data.userId?._id === session?.user.userId &&
+                          "text-end"
+                        }`}
+                      >
+                        {data.userId?.name.split(" ")[0] ?? ""}
+                      </small>
+                      {/* ChatBox */}
 
-                    <div
-                      className={`p-2 rounded-md flex items-center justify-center break-words ${
-                        data.userId?._id === session?.user.userId
-                          ? "bg-[#6486FF]"
-                          : "bg-[#171717]"
-                      }`}
-                    >
-                      <span className="text-white">{data?.message}</span>
+                      <div
+                        className={`p-2 rounded-md flex items-center justify-center break-words ${
+                          data.userId?._id === session?.user.userId
+                            ? "bg-[#6486FF]"
+                            : "bg-[#171717]"
+                        }`}
+                      >
+                        <span className="text-white">{data?.message}</span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="w-[32px] h-[32px] rounded-full relative px-4 py-2">
-                    <Image
-                      src={data.userId?.profilePic ?? themeImg}
-                      alt="profile-pic"
-                      fill
-                      sizes="100%"
-                      className="rounded-full absolute"
-                      priority
-                    />
-                    <span
-                      className={`w-2 h-2 ${
-                        data.userId.status === "Online"
-                          ? "bg-green-500"
-                          : "bg-slate-500"
-                      } rounded-full absolute right-[1px] bottom-[2px]`}
-                    ></span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-          {typingUsers.length !== 0 && (
-            <div className="flex space-x-1 items-center">
-              <div className="flex relative items-center">
-                {typingUsers?.map((data, index) => (
-                  <div key={index} className={`${index === 0 ? "" : "-m-1.5"}`}>
-                    <div
-                      className={
-                        "w-[32px] h-[32px] rounded-full relative px-4 py-2"
-                      }
-                    >
+                    <div className="w-[32px] h-[32px] rounded-full relative px-4 py-2">
                       <Image
-                        src={data.userImg ?? themeImg}
-                        alt="profile-picture"
+                        src={data.userId?.profilePic ?? themeImg}
+                        alt="profile-pic"
                         fill
                         sizes="100%"
                         className="rounded-full absolute"
                         priority
                       />
+                      <span
+                        className={`w-2 h-2 ${
+                          data.userId.status === "Online"
+                            ? "bg-green-500"
+                            : "bg-slate-500"
+                        } rounded-full absolute right-[1px] bottom-[2px]`}
+                      ></span>
                     </div>
                   </div>
-                ))}
-                <div className="pl-2 pt-2">
-                  <Image
-                    src={typingChatAnimation}
-                    alt="typing-animation"
-                    width={25}
-                    height={25}
-                    priority
-                  />
                 </div>
               </div>
-            </div>
-          )}
-        </div>
+            ))}
+            {typingUsers.length !== 0 && (
+              <div className="flex space-x-1 items-center">
+                <div className="flex relative items-center">
+                  {typingUsers?.map((data, index) => (
+                    <div
+                      key={index}
+                      className={`${index === 0 ? "" : "-m-1.5"}`}
+                    >
+                      <div
+                        className={
+                          "w-[32px] h-[32px] rounded-full relative px-4 py-2"
+                        }
+                      >
+                        <Image
+                          src={data.userImg ?? themeImg}
+                          alt="profile-picture"
+                          fill
+                          sizes="100%"
+                          className="rounded-full absolute"
+                          priority
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  <div className="pl-2 pt-2">
+                    <Image
+                      src={typingChatAnimation}
+                      alt="typing-animation"
+                      width={25}
+                      height={25}
+                      priority
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+            <div ref={scrollRef} className="relative top-5"></div>
+          </div>
+        )}
+
         <div className="absolute bottom-3 right-2 opacity-60">
           <Image
             src={themeImg}

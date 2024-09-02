@@ -62,12 +62,10 @@ export function publicChat(io: Socket) {
     });
     stopTyping(socket, typingUsers);
     socket.on("disconnect", async () => {
-      stopTyping(socket, typingUsers);
       const disconnectUser = await User.findById(userId).select([
         "name",
         "status",
       ]);
-      console.log("User is disconnected");
       if (disconnectUser === "Online") {
         console.log("User is disco-nnected");
         disconnectUser.status = "Offline";
