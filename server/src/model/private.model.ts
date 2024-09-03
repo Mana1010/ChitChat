@@ -3,8 +3,10 @@ import mongoose, { Schema } from "mongoose";
 // const chatSchema =
 const messageSchema = new mongoose.Schema(
   {
-    userId: { type: Schema.Types.ObjectId, ref: "User" },
-    message: [],
+    conversationId: { type: Schema.Types.ObjectId, ref: "Conversation" },
+    sender: { type: Schema.Types.ObjectId, ref: "User" },
+    message: { type: String, required: true },
+    isRead: { type: Boolean, default: false },
   },
   {
     timestamps: true,

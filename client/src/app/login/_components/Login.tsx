@@ -32,7 +32,7 @@ function Login() {
     >
       <header className="w-full py-4 px-4">
         <div className="flex items-center space-x-2">
-          <span className="text-primary text-xl">
+          <span className="text-[#6486FF] text-xl">
             <TbMessages />
           </span>
           <h3 className="text-white tracking-wide text-xl font-semibold">

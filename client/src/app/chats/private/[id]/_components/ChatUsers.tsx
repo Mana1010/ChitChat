@@ -2,9 +2,19 @@
 import React from "react";
 import { TbMessage } from "react-icons/tb";
 import { MdManageSearch } from "react-icons/md";
+import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import ChatList from "./ChatList";
+import UserList from "./UserList";
 function ChatUsers() {
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
+  const type = searchParams.get("type");
+
   return (
-    <div className="bg-[#222222] col-span-2 basis-[25%] rounded-md">
+    <div className="bg-[#222222] col-span-2 basis-[25%] rounded-md flex flex-col">
       <header className="w-full p-2.5 space-y-2 ">
         <div className="flex items-center space-x-2">
           <span className="text-[#6486FF] text-xl">
@@ -25,6 +35,25 @@ function ChatUsers() {
           />
         </div>
       </header>
+      <div className="p-2 flex items-center w-full justify-between">
+        <button
+          onClick={() => router.push(`${pathname}?type=chats`)}
+          className={`px-3 py-1.5 hover:bg-[#3A3B3C] text-[#6486FF] rounded-lg w-1/2 transition ease-in duration-100 ${
+            type === "chats" && "bg-[#3A3B3C]"
+          }`}
+        >
+          Chats
+        </button>
+        <button
+          onClick={() => router.push(`${pathname}?type=users`)}
+          className={`px-3 py-1.5 hover:bg-[#3A3B3C] text-[#6486FF] rounded-lg w-1/2 transition ease-in duration-100 ${
+            type === "users" && "bg-[#3A3B3C]"
+          }`}
+        >
+          Users
+        </button>
+      </div>
+      {type === "chats" ? <ChatList /> : <UserList />}
     </div>
   );
 }

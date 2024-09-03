@@ -20,7 +20,6 @@ export function publicChat(io: Socket) {
   let typingUsers: { socketId: string; userImg: string }[] = [];
   io.on("connection", async (socket: Socket) => {
     const { userId } = socket.handshake.auth;
-
     const getInfo = await User.findById(userId).select(["name", "status"]);
     if (getInfo.status === "Offline") {
       getInfo.status = "Online";
@@ -55,19 +54,15 @@ export function publicChat(io: Socket) {
       if (!checkSocketId && typingUsers.length < 10) {
         typingUsers.push({ socketId, userImg });
       }
-      socket.broadcast.emit(
-        "display-during-typing",
-        typingUsers //This will retrieve the values only in Map and transformed it into an array.
-      );
+      socket.broadcast.emit("display-during-typing", typingUsers);
     });
     stopTyping(socket, typingUsers);
-    socket.on("disconnect", async () => {
+    socket.on("user-disconnect", async () => {
       const disconnectUser = await User.findById(userId).select([
         "name",
         "status",
       ]);
       if (disconnectUser === "Online") {
-        console.log("User is disco-nnected");
         disconnectUser.status = "Offline";
         await disconnectUser.save();
         socket.broadcast.emit("display-status", {

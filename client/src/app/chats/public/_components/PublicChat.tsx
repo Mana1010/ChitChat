@@ -19,14 +19,15 @@ import { HiOutlineDotsVertical } from "react-icons/hi";
 function PublicChat() {
   const [message, setMessage] = useState("");
   const [allMessages, setAllMessages] = useState<any>([]);
-  const socketRef = useRef<Socket | null>();
   const { status, data: session } = useSession();
   const [scrollPosition, setScrollPosition] = useState();
   const [openEmoji, setOpenEmoji] = useState(false);
+  const socketRef = useRef<Socket | null>();
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
   const [typingUsers, setTypingUsers] = useState<
     { socketId: string; userImg: string }[]
   >([]);
-  const scrollRef = useRef<any>();
   const getAllMessage = useQuery({
     queryKey: ["public-messages"],
     queryFn: async () => {
@@ -39,7 +40,6 @@ function PublicChat() {
     scrollRef.current?.scrollIntoView({ block: "end" });
   }, [allMessages, typingUsers]);
   useEffect(() => {
-    //To activate the dotWave animation
     function onDisconnect() {
       socketRef.current?.emit("user-disconnect", { status: "Offline" });
     }
@@ -91,7 +91,7 @@ function PublicChat() {
             />
           </div>
         ) : (
-          <div className="w-full space-y-2 p-3 overflow-y-auto h-full relative">
+          <div className="chat-div w-full space-y-2 p-3 overflow-y-auto h-full relative">
             {allMessages.map((data: any) => (
               <div
                 key={data._id}
@@ -234,6 +234,7 @@ function PublicChat() {
               socketId: socketRef.current.id,
             });
           }}
+          ref={inputRef}
           value={message}
           type="text"
           placeholder="Send a message"

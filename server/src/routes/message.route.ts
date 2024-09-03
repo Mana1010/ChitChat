@@ -1,5 +1,11 @@
 import express from "express";
-import { getAllPublicMessages } from "../controllers/message.controller";
+import {
+  getAllPublicMessages,
+  getAllUsers,
+  getAllUsersConversation,
+} from "../controllers/message.controller";
 export const router = express.Router();
 
 router.get("/messages/public", getAllPublicMessages);
+router.get("/messages/chat-list", getAllUsersConversation);
+router.get("/messages/user-list", getAllUsers);
