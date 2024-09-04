@@ -30,7 +30,7 @@ function Sidebar() {
           <IoMegaphone />
         </button>
         <button
-          onClick={() => router.push("/chats/private/wdd")}
+          onClick={() => router.push(`/chats/private/wdd?type=chats`)}
           className={`text-[#6486FF] text-2xl p-3 rounded-md ${
             pathname.startsWith("/chats/private") && "bg-[#3A3B3C]"
           }`}

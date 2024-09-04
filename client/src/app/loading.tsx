@@ -3,7 +3,7 @@ import loadingAnimation from "../assets/images/gif-animation/component-loading.g
 import Image from "next/image";
 function Loading() {
   return (
-    <div className="flex items-center justify-center w-full h-screen">
+    <div className="flex items-center justify-center w-full h-screen bg-[#171717]">
       <Image src={loadingAnimation} alt="loading-animation" priority />
     </div>
   );
