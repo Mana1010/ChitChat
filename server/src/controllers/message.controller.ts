@@ -40,7 +40,28 @@ export const getAllUsersConversation = asyncHandler(
     const { id } = req.params;
     const getAllUsers = await Conversation.find({
       participants: { $in: [id] },
+    }).populate<
+      { _id: string; profilePic: string; name: string; status: string }[]
+    >({
+      path: "participants",
+      select: ["profilePic", "name", "status"],
     });
     res.status(200).json({ message: getAllUsers });
   }
 );
+export const chatUser = asyncHandler(async (req: Request, res: Response) => {
+  const { senderId, receiverId } = req.body; //userId is an id for the receiver
+
+  const checkExistingConversation = await Conversation.findOne({
+    participants: { $all: [senderId, receiverId] },
+  });
+  if (!checkExistingConversation) {
+    const addConversation = await Conversation.create({
+      userId: senderId,
+      participants: [senderId, receiverId],
+    });
+    res.status(201).json({ message: addConversation._id });
+    return;
+  }
+  res.status(201).json({ message: checkExistingConversation._id });
+});

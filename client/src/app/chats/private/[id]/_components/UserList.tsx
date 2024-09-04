@@ -1,6 +1,11 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { useQuery, UseQueryResult } from "react-query";
+import {
+  useMutation,
+  useQuery,
+  UseQueryResult,
+  useQueryClient,
+} from "react-query";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
@@ -8,7 +13,7 @@ import axios, { AxiosError } from "axios";
 import { serverUrl } from "@/utils/serverUrl";
 import { User } from "@/types/UserTypes";
 import noSearchFoundImg from "../../../../../assets/images/not-found.png";
-import { PiHandWavingThin } from "react-icons/pi";
+import { toast } from "sonner";
 function UserList({ searchUser }: { searchUser: string }) {
   const router = useRouter();
   const { data: session } = useSession();
@@ -24,6 +29,23 @@ function UserList({ searchUser }: { searchUser: string }) {
       return response.data.message;
     },
   });
+  const queryClient = useQueryClient();
+  const chatUser = useMutation({
+    mutationFn: async (data: { senderId: string; receiverId: string }) => {
+      const response = await axios.post(
+        `${serverUrl}/api/messages/newChat`,
+        data
+      );
+      return response.data.message;
+    },
+    onSuccess: (id) => {
+      queryClient.invalidateQueries("chat-list");
+      router.push(`/chats/private/${id}?type=chats`);
+    },
+    onError: (err: AxiosError<{ message: string }>) => {
+      toast.error(err.response?.data.message);
+    },
+  });
   useEffect(() => {
     const searchResult = displayAllUsers.data?.filter((user) =>
       new RegExp(searchUser, "i").test(user.name as string)
@@ -35,9 +57,9 @@ function UserList({ searchUser }: { searchUser: string }) {
     new RegExp(searchUser, "i").test(user.name as string)
   );
   return (
-    <div className=" flex flex-grow w-full">
+    <div className="flex-grow w-full flex">
       {searchResult?.length === 0 ? (
-        <div className=" flex w-full items-center justify-center flex-col space-y-2 px-2">
+        <div className="flex w-full items-center justify-center flex-col space-y-2 px-2">
           <Image
             src={noSearchFoundImg}
             width={100}
@@ -79,8 +101,16 @@ function UserList({ searchUser }: { searchUser: string }) {
                   {user._id === session?.user.userId ? "You" : user.name}
                 </h1>
               </div>
-              <button className="bg-[#3A3B3C] py-1.5 px-3 rounded-md text-yellow-400 text-xl">
-                <PiHandWavingThin />
+              <button
+                onClick={() => {
+                  chatUser.mutate({
+                    senderId: session?.user.userId as string,
+                    receiverId: user._id,
+                  });
+                }}
+                className="bg-[#3A3B3C] py-1.5 px-3 rounded-md text-white"
+              >
+                Chat
               </button>
             </div>
           ))}{" "}

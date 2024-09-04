@@ -8,7 +8,7 @@ import { useQuery } from "react-query";
 import { serverUrl } from "@/utils/serverUrl";
 import axios from "axios";
 import { User } from "@/types/next-auth";
-import { initializeSocket } from "@/utils/socket";
+import { initializePublicChatSocket } from "@/utils/socket";
 import Image from "next/image";
 import themeImg from "../../../../assets/images/theme-img.png";
 import { MdEmojiEmotions } from "react-icons/md";
@@ -45,7 +45,7 @@ function PublicChat() {
     }
 
     if (!socketRef.current && session?.user) {
-      const socket = initializeSocket(session.user.userId as string);
+      const socket = initializePublicChatSocket(session.user.userId as string);
       socket.on("connect", () => {
         socketRef.current = socket;
       });
@@ -54,18 +54,33 @@ function PublicChat() {
   }, [session?.user]);
   useEffect(() => {
     if (!socketRef.current) return;
-    socketRef.current.on("get-message", (data: User) => {
+    const handleGetMessages = (data: User) => {
       setAllMessages((messages: any) => [...messages, data]);
-    });
-    socketRef.current.once("display-status", (data) => {
+    };
+    const handleDisplayStatus = (data: { name: string; status: string }) => {
       toast.message(`${data.name} is ${data.status}`, {
         position: "top-right",
       });
-    });
-    socketRef.current.on("display-during-typing", (data) => {
-      console.log(data);
+    };
+    const handleDisplayDuringTyping = (
+      data: {
+        socketId: string;
+        userImg: string;
+      }[]
+    ) => {
       setTypingUsers(data);
-    });
+    };
+    socketRef.current.on("get-message", handleGetMessages);
+    socketRef.current.once("display-status", handleDisplayStatus);
+    socketRef.current.on("display-during-typing", handleDisplayDuringTyping);
+    return () => {
+      socketRef.current?.off("get-message", handleGetMessages);
+      socketRef.current?.off("display-status", handleDisplayStatus);
+      socketRef.current?.off(
+        "display-during-typing",
+        handleDisplayDuringTyping
+      );
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socketRef.current]);
   const userData = {

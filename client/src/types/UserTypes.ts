@@ -4,3 +4,8 @@ export interface User {
   _id: string;
   status: string;
 }
+
+export interface Conversation {
+  userId: User;
+  lastMessage: string;
+}

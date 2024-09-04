@@ -1,7 +1,7 @@
 import React from "react";
-
-function Chatboard() {
-  return <div>Chatboard</div>;
+import { useQuery } from "react-query";
+function Chatboard({ conversationId }: { conversationId: string }) {
+  return <div className="text-white">{conversationId}</div>;
 }
 
 export default Chatboard;
