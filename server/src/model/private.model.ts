@@ -3,7 +3,11 @@ import mongoose, { Schema } from "mongoose";
 // const chatSchema =
 const messageSchema = new mongoose.Schema(
   {
-    conversationId: { type: Schema.Types.ObjectId, ref: "Conversation" },
+    conversationId: {
+      type: Schema.Types.ObjectId,
+      ref: "Conversation",
+      required: true,
+    },
     sender: { type: Schema.Types.ObjectId, ref: "User" },
     message: { type: String, required: true },
     isRead: { type: Boolean, default: false },

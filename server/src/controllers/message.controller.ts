@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import { Public } from "../model/public.model";
 import { User } from "../model/user.model";
 import { Conversation } from "../model/conversation.model";
+import { Private } from "../model/private.model";
 
 export const getAllPublicMessages = asyncHandler(
   async (req: Request, res: Response) => {
@@ -39,29 +40,55 @@ export const getAllUsersConversation = asyncHandler(
   async (req: Request, res: Response) => {
     const { id } = req.params;
     const getAllUsers = await Conversation.find({
-      participants: { $in: [id] },
-    }).populate<
-      { _id: string; profilePic: string; name: string; status: string }[]
-    >({
-      path: "participants",
-      select: ["profilePic", "name", "status"],
-    });
+      sender: id,
+    })
+      .populate<
+        { _id: string; profilePic: string; name: string; status: string }[]
+      >({
+        path: "receiver",
+        select: ["profilePic", "name", "status"],
+      })
+      .select(["lastMessage", "receiver"]);
     res.status(200).json({ message: getAllUsers });
   }
 );
 export const chatUser = asyncHandler(async (req: Request, res: Response) => {
   const { senderId, receiverId } = req.body; //userId is an id for the receiver
 
+  if (!senderId || !receiverId) {
+    res.status(401).json({ message: "Please provide senderId and receiverId" });
+    return;
+  }
   const checkExistingConversation = await Conversation.findOne({
-    participants: { $all: [senderId, receiverId] },
+    sender: senderId,
+    receiver: receiverId,
   });
   if (!checkExistingConversation) {
     const addConversation = await Conversation.create({
-      userId: senderId,
-      participants: [senderId, receiverId],
+      sender: senderId,
+      receiver: receiverId,
     });
     res.status(201).json({ message: addConversation._id });
     return;
   }
   res.status(201).json({ message: checkExistingConversation._id });
 });
+
+export const getReceiverInfo = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { conversationId } = req.params;
+    const getUserInfo = await Conversation.findById(conversationId)
+      .populate({
+        path: "receiver",
+        select: ["name", "status", "profilePic"],
+      })
+      .select("receiver");
+    const getMessages = await Private.find({ conversationId });
+    res.status(200).json({
+      message: {
+        getUserInfo,
+        getMessages,
+      },
+    });
+  }
+);

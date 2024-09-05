@@ -6,6 +6,8 @@ export interface User {
 }
 
 export interface Conversation {
-  userId: User;
+  receiver: User;
+  userId: string;
+  _id: string;
   lastMessage: string;
 }

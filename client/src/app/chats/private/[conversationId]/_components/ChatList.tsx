@@ -10,7 +10,7 @@ import emptyChatImg from "../../../../../assets/images/empty-chat.png";
 import noSearchFoundImg from "../../../../../assets/images/not-found.png";
 import Image from "next/image";
 function ChatList({ searchChat }: { searchChat: string }) {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [chats, setChats] = useState<Conversation[]>([]);
   const displayAllChats: UseQueryResult<
     Conversation[],
@@ -24,15 +24,16 @@ function ChatList({ searchChat }: { searchChat: string }) {
       setChats(response.data.message);
       return response.data.message;
     },
+    enabled: status === "authenticated",
   });
   useEffect(() => {
     const searchResult = displayAllChats.data?.filter((user) =>
-      new RegExp(searchChat, "i").test(user.userId.name as string)
+      new RegExp(searchChat, "i").test(user.receiver.name as string)
     );
     setChats(searchResult as Conversation[]);
   }, [searchChat, displayAllChats.data]);
   const searchResult = displayAllChats.data?.filter((user) =>
-    new RegExp(searchChat, "i").test(user.userId.name as string)
+    new RegExp(searchChat, "i").test(user.receiver.name as string)
   );
   return (
     <div className="w-full flex-grow flex">
@@ -76,7 +77,7 @@ function ChatList({ searchChat }: { searchChat: string }) {
               <div className="flex items-center space-x-2">
                 <div className="w-[40px] h-[40px] relative rounded-full">
                   <Image
-                    src={user.userId.profilePic}
+                    src={user.receiver.profilePic}
                     alt="profile-pic"
                     fill
                     sizes="100%"
@@ -85,16 +86,16 @@ function ChatList({ searchChat }: { searchChat: string }) {
                   />
                   <span
                     className={`${
-                      user.userId.status === "Online"
+                      user.receiver.status === "Online"
                         ? "bg-green-500"
                         : "bg-zinc-500"
                     } absolute bottom-[3px] right-[2px] w-2 h-2 rounded-full`}
                   ></span>
                 </div>{" "}
                 <h1 className="text-white font-bold text-sm break-all">
-                  {user.userId._id === session?.user.userId
+                  {user.receiver._id === session?.user.userId
                     ? "You"
-                    : user.userId.name}
+                    : user.receiver.name}
                 </h1>
               </div>
             </div>

@@ -46,9 +46,8 @@ function PublicChat() {
 
     if (!socketRef.current && session?.user) {
       const socket = initializePublicChatSocket(session.user.userId as string);
-      socket.on("connect", () => {
-        socketRef.current = socket;
-      });
+      socketRef.current = socket;
+      socket.on("connect", () => console.log("Connected Successfully"));
       socket.on("disconnect", onDisconnect);
     }
   }, [session?.user]);
