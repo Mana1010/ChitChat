@@ -9,9 +9,18 @@ import { Conversation } from "@/types/UserTypes";
 import emptyChatImg from "../../../../../assets/images/empty-chat.png";
 import noSearchFoundImg from "../../../../../assets/images/not-found.png";
 import Image from "next/image";
-function ChatList({ searchChat }: { searchChat: string }) {
+import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+function ChatList({
+  searchChat,
+  conversationId,
+}: {
+  searchChat: string;
+  conversationId: string;
+}) {
   const { data: session, status } = useSession();
   const [chats, setChats] = useState<Conversation[]>([]);
+  const router = useRouter();
   const displayAllChats: UseQueryResult<
     Conversation[],
     AxiosError<{ message: string }>
@@ -68,11 +77,16 @@ function ChatList({ searchChat }: { searchChat: string }) {
           </h2>
         </div>
       ) : (
-        <div className="pt-2 flex flex-col w-full overflow-y-auto h-full items-center">
+        <div className="pt-2 flex flex-col w-full overflow-y-auto h-full items-center px-1.5">
           {chats?.map((user: Conversation, index: number) => (
-            <div
+            <button
+              onClick={() =>
+                router.push(`/chats/private/${user._id}?type=chats`)
+              }
               key={index}
-              className="flex items-center w-full p-3.5 cursor-pointer hover:bg-black/40 rounded-lg justify-between"
+              className={`flex items-center w-full p-3.5 cursor-pointer hover:bg-[#414141] rounded-lg justify-between ${
+                user._id === conversationId && "bg-[#414141]"
+              }`}
             >
               <div className="flex items-center space-x-2">
                 <div className="w-[40px] h-[40px] relative rounded-full">
@@ -98,7 +112,7 @@ function ChatList({ searchChat }: { searchChat: string }) {
                     : user.receiver.name}
                 </h1>
               </div>
-            </div>
+            </button>
           ))}{" "}
         </div>
       )}

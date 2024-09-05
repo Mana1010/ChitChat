@@ -42,6 +42,7 @@ export const getAllUsersConversation = asyncHandler(
     const getAllUsers = await Conversation.find({
       sender: id,
     })
+      .sort({ updatedAt: -1 })
       .populate<
         { _id: string; profilePic: string; name: string; status: string }[]
       >({
@@ -82,13 +83,33 @@ export const getReceiverInfo = asyncHandler(
         path: "receiver",
         select: ["name", "status", "profilePic"],
       })
-      .select("receiver");
+      .select(["receiver", "-_id"]);
     const getMessages = await Private.find({ conversationId });
+    console.log(getUserInfo.receiver);
     res.status(200).json({
       message: {
-        getUserInfo,
+        getUserInfo: getUserInfo.receiver,
         getMessages,
       },
     });
+  }
+);
+
+export const getChatNotifications = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { senderId } = req.params;
+    const checkIfNewUser = await Conversation.findOne({ sender: senderId }); //Checking if the user already have a conversation or chatmate
+    if (checkIfNewUser) {
+      const getLatestConversationId = await Conversation.find({
+        sender: senderId,
+      })
+        .sort({ updatedAt: -1 })
+        .limit(1)
+        .select("_id"); //Will sort descending by updatedAt and get the very first index using limit
+      res.status(200).json({ message: getLatestConversationId[0]._id });
+      return;
+    }
+
+    res.status(200).json({ message: null }); //If the user is new and have no conversation made with other
   }
 );

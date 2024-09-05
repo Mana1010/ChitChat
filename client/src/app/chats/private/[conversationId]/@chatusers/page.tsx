@@ -1,10 +1,16 @@
 import React from "react";
 import ChatUsers from "../_components/ChatUsers";
 
-function Page() {
+function Page({
+  params,
+}: {
+  params: {
+    conversationId: string;
+  };
+}) {
   return (
     <>
-      <ChatUsers />
+      <ChatUsers conversationId={params.conversationId} />
     </>
   );
 }

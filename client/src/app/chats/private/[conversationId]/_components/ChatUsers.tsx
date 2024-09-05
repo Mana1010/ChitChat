@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import ChatList from "./ChatList";
 import UserList from "./UserList";
-function ChatUsers() {
+function ChatUsers({ conversationId }: { conversationId: string }) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
@@ -56,7 +56,7 @@ function ChatUsers() {
         </button>
       </div>
       {type === "chats" ? (
-        <ChatList searchChat={search} />
+        <ChatList searchChat={search} conversationId={conversationId} />
       ) : (
         <UserList searchUser={search} />
       )}

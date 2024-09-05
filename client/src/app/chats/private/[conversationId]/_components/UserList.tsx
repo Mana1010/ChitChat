@@ -14,6 +14,7 @@ import { serverUrl } from "@/utils/serverUrl";
 import { User } from "@/types/UserTypes";
 import noSearchFoundImg from "../../../../../assets/images/not-found.png";
 import { toast } from "sonner";
+import { TbMessage2 } from "react-icons/tb";
 function UserList({ searchUser }: { searchUser: string }) {
   const router = useRouter();
   const { data: session } = useSession();
@@ -75,11 +76,11 @@ function UserList({ searchUser }: { searchUser: string }) {
           </h2>
         </div>
       ) : (
-        <div className="pt-2 flex flex-col w-full overflow-y-auto h-full items-center">
+        <div className="pt-2 flex flex-col w-full overflow-y-auto h-full items-center px-1.5">
           {users?.map((user: User, index: number) => (
             <div
               key={index}
-              className="flex items-center w-full p-3.5 cursor-pointer hover:bg-black/40 rounded-lg justify-between"
+              className="flex items-center w-full p-3.5 cursor-pointer hover:bg-[#414141] rounded-lg justify-between"
             >
               <div className="flex items-center space-x-2">
                 <div className="w-[40px] h-[40px] relative rounded-full">
@@ -108,9 +109,10 @@ function UserList({ searchUser }: { searchUser: string }) {
                     receiverId: user._id,
                   });
                 }}
-                className="bg-[#3A3B3C] py-1.5 px-3 rounded-md text-white"
+                aria-label="Start chatting"
+                className="bg-[#6486FF] p-2.5 rounded-full text-white text-lg"
               >
-                Chat
+                <TbMessage2 />
               </button>
             </div>
           ))}{" "}
