@@ -9,9 +9,9 @@ function Page({
   };
 }) {
   return (
-    <>
+    <div className="w-full h-full">
       <ChatUsers conversationId={params.conversationId} />
-    </>
+    </div>
   );
 }
 

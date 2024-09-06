@@ -7,7 +7,7 @@ interface Routes {
 }
 function PrivateLayout({ chatboard, chatusers, children }: Routes) {
   return (
-    <div className="space-x-3 flex h-full w-full">
+    <div className="space-x-3 grid grid-cols-3 h-full w-full">
       {chatusers}
       {chatboard}
     </div>

@@ -10,14 +10,13 @@ export const initializePublicChatSocket = (userId: string): Socket => {
 
 export const initializePrivateChatSocket = (userId: string): Socket => {
   return io(`${URL}/private`, {
-    autoConnect: false,
     auth: {
       userId,
     },
   });
 };
 export const initializeNotificationSocket = (userId: string): Socket => {
-  return io(`${URL}/private`, {
+  return io(`${URL}/group`, {
     autoConnect: false,
     auth: {
       userId,

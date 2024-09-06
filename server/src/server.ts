@@ -10,6 +10,7 @@ import "dotenv/config";
 import { router as messageRoute } from "./routes/message.route";
 import { router as authRoute } from "./routes/auth.route";
 import { errorHandle } from "./middleware/error.handling";
+import { privateChat } from "./socket/privateChat.socket";
 
 const app = express();
 const server = http.createServer(app);
@@ -30,6 +31,7 @@ app.use(
 app.use("/api", messageRoute, authRoute);
 app.use(errorHandle);
 publicChat(io as any);
+privateChat(io as any);
 async function connectDb() {
   try {
     await mongoose.connect(process.env.MONGO_URI!);
