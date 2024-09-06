@@ -4,6 +4,8 @@ import { Public } from "../model/public.model";
 import { User } from "../model/user.model";
 import { Conversation } from "../model/conversation.model";
 import { Private } from "../model/private.model";
+import { ObjectId } from "mongodb";
+import mongoose from "mongoose";
 
 export const getAllPublicMessages = asyncHandler(
   async (req: Request, res: Response) => {
@@ -78,14 +80,21 @@ export const chatUser = asyncHandler(async (req: Request, res: Response) => {
 export const getReceiverInfo = asyncHandler(
   async (req: Request, res: Response) => {
     const { conversationId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(conversationId)) {
+      res.status(404);
+      throw new Error("User not found");
+    }
     const getUserInfo = await Conversation.findById(conversationId)
       .populate({
         path: "receiver",
         select: ["name", "status", "profilePic"],
       })
       .select(["receiver", "-_id"]);
+    if (!getUserInfo) {
+      res.status(404);
+      throw new Error("User not found");
+    }
     const getMessages = await Private.find({ conversationId });
-    console.log(getUserInfo.receiver);
     res.status(200).json({
       message: {
         getUserInfo: getUserInfo.receiver,

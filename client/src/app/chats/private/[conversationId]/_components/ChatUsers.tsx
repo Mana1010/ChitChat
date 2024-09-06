@@ -13,6 +13,7 @@ function ChatUsers({ conversationId }: { conversationId: string }) {
   const router = useRouter();
   const type = searchParams.get("type");
   const [search, setSearch] = useState<string>("");
+
   return (
     <div className="bg-[#222222] col-span-2 basis-[25%] rounded-md flex flex-col">
       <header className="w-full p-2.5 space-y-2 ">

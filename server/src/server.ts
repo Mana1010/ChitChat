@@ -9,6 +9,7 @@ import http from "http";
 import "dotenv/config";
 import { router as messageRoute } from "./routes/message.route";
 import { router as authRoute } from "./routes/auth.route";
+import { errorHandle } from "./middleware/error.handling";
 
 const app = express();
 const server = http.createServer(app);
@@ -27,6 +28,7 @@ app.use(
   })
 );
 app.use("/api", messageRoute, authRoute);
+app.use(errorHandle);
 publicChat(io as any);
 async function connectDb() {
   try {

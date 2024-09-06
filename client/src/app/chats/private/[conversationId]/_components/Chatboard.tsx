@@ -1,5 +1,5 @@
 "use client";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import React, { useEffect, useRef, useState } from "react";
 import { useQuery } from "react-query";
 import { initializePrivateChatSocket } from "@/utils/socket";
@@ -8,6 +8,9 @@ import { useSession } from "next-auth/react";
 import { serverUrl } from "@/utils/serverUrl";
 import Image from "next/image";
 import { HiOutlineDotsCircleHorizontal } from "react-icons/hi";
+import NewUser from "./NewUser";
+import UserNotFound from "./UserNotFound";
+import emptyChat from "../../../../../assets/images/empty-chat.png";
 function Chatboard({ conversationId }: { conversationId: string }) {
   const [getAllMessage, setGetAllMessage] = useState([]);
   const socketRef = useRef<Socket | null>(null);
@@ -22,6 +25,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       setGetAllMessage(response.data.message.getMessages);
       return response.data.message.getUserInfo;
     },
+    refetchOnWindowFocus: false,
   });
 
   useEffect(() => {
@@ -31,18 +35,40 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       socket.on("connect", () => console.log("Connected Successfully"));
     }
   }, [session?.user, status]);
+  if (getReceiverInfoAndChats.isLoading) {
+    return <h1>Loading asf</h1>;
+  }
+  if (conversationId.toLowerCase() === "new") {
+    return <NewUser />;
+  }
+  if (getReceiverInfoAndChats.isError) {
+    const error = getReceiverInfoAndChats.error as AxiosError;
+    console.log(error);
+    if (error.response?.status === 404) {
+      return <UserNotFound />;
+    }
+  }
   return (
     <div className="flex flex-grow w-full h-full flex-col">
       <header className="w-full shadow-md py-3 px-4 flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <Image
-            src={getReceiverInfoAndChats.data?.profilePic || ""}
-            alt="profile-image"
-            width={40}
-            height={40}
-            priority
-            className="rounded-full"
-          />
+          <div className="w-[40px] h-[40px] relative rounded-full">
+            <Image
+              src={getReceiverInfoAndChats.data?.profilePic || emptyChat}
+              alt="profile-image"
+              fill
+              sizes="100%"
+              priority
+              className="rounded-full absolute"
+            />
+            <span
+              className={`${
+                getReceiverInfoAndChats.data?.status === "Online"
+                  ? "bg-green-500"
+                  : "bg-zinc-500"
+              } absolute bottom-[2px] right-[2px] w-2 h-2 rounded-full`}
+            ></span>
+          </div>
           <div>
             <h3 className="text-white text-sm">
               {getReceiverInfoAndChats.data?.name}
