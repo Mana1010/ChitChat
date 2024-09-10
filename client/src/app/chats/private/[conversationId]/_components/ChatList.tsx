@@ -37,13 +37,14 @@ function ChatList({
   });
   useEffect(() => {
     const searchResult = displayAllChats.data?.filter((user) =>
-      new RegExp(searchChat, "i").test(user.receiver.name as string)
+      new RegExp(searchChat, "i").test(user.receiver_details.name as string)
     );
     setChats(searchResult as Conversation[]);
   }, [searchChat, displayAllChats.data]);
   const searchResult = displayAllChats.data?.filter((user) =>
-    new RegExp(searchChat, "i").test(user.receiver.name as string)
+    new RegExp(searchChat, "i").test(user.receiver_details.name as string)
   );
+
   return (
     <div className="w-full flex-grow flex">
       {displayAllChats.data?.length === 0 && searchChat.length === 0 ? (
@@ -91,7 +92,7 @@ function ChatList({
               <div className="flex items-center space-x-2">
                 <div className="w-[40px] h-[40px] relative rounded-full">
                   <Image
-                    src={user.receiver.profilePic}
+                    src={user.receiver_details.profilePic}
                     alt="profile-pic"
                     fill
                     sizes="100%"
@@ -100,16 +101,16 @@ function ChatList({
                   />
                   <span
                     className={`${
-                      user.receiver.status === "Online"
+                      user.receiver_details.status === "Online"
                         ? "bg-green-500"
                         : "bg-zinc-500"
                     } absolute bottom-[3px] right-[2px] w-2 h-2 rounded-full`}
                   ></span>
                 </div>{" "}
                 <h1 className="text-white font-bold text-sm break-all">
-                  {user.receiver._id === session?.user.userId
+                  {user.receiver_details?._id === session?.user.userId
                     ? "You"
-                    : user.receiver.name}
+                    : user.receiver_details.name}
                 </h1>
               </div>
             </button>

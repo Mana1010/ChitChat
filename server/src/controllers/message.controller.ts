@@ -41,17 +41,29 @@ export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
 export const getAllUsersConversation = asyncHandler(
   async (req: Request, res: Response) => {
     const { id } = req.params;
-    const getAllUsers = await Conversation.find({
-      sender: id,
-    })
-      .sort({ updatedAt: -1 })
-      .populate<
-        { _id: string; profilePic: string; name: string; status: string }[]
-      >({
-        path: "receiver",
-        select: ["profilePic", "name", "status"],
-      })
-      .select(["lastMessage", "receiver"]);
+    const getAllUsers = await Conversation.aggregate([
+      { $match: { participants: new mongoose.Types.ObjectId(id) } },
+      { $unwind: "$participants" },
+      { $match: { participants: { $ne: new mongoose.Types.ObjectId(id) } } },
+      {
+        $lookup: {
+          from: "users",
+          localField: "participants",
+          foreignField: "_id",
+          as: "receiver_details",
+        },
+      },
+      {
+        $sort: { updatedAt: -1 },
+      },
+      {
+        $project: {
+          receiver_details: { $arrayElemAt: ["$receiver_details", 0] },
+          _id: 1,
+          lastMessage: 1,
+        },
+      },
+    ]);
     res.status(200).json({ message: getAllUsers });
   }
 );
@@ -63,13 +75,11 @@ export const chatUser = asyncHandler(async (req: Request, res: Response) => {
     return;
   }
   const checkExistingConversation = await Conversation.findOne({
-    sender: senderId,
-    receiver: receiverId,
+    participants: { $all: [senderId, receiverId] },
   });
   if (!checkExistingConversation) {
     const addConversation = await Conversation.create({
-      sender: senderId,
-      receiver: receiverId,
+      participants: [senderId, receiverId],
     });
     res.status(201).json({ message: addConversation._id });
     return;
@@ -86,15 +96,18 @@ export const getReceiverInfo = asyncHandler(
     }
     const getUserInfo = await Conversation.findById(conversationId)
       .populate({
-        path: "receiver",
+        path: "participants",
         select: ["name", "status", "profilePic"],
       })
-      .select(["receiver", "-_id"]);
+      .select(["participants", "-_id"]);
     if (!getUserInfo) {
       res.status(404);
       throw new Error("User not found");
     }
-    const getMessages = await Private.find({ conversationId });
+    const getMessages = await Private.find({ conversationId })
+      .populate([{ path: "sender", select: ["name", "profilePic", "status"] }])
+      .select(["sender", "message", "isRead"]);
+    console.log(getMessages);
     res.status(200).json({
       message: {
         getUserInfo: getUserInfo.receiver,
@@ -107,10 +120,12 @@ export const getReceiverInfo = asyncHandler(
 export const getChatNotifications = asyncHandler(
   async (req: Request, res: Response) => {
     const { senderId } = req.params;
-    const checkIfNewUser = await Conversation.findOne({ sender: senderId }); //Checking if the user already have a conversation or chatmate
+    const checkIfNewUser = await Conversation.findOne({
+      participants: { $in: [senderId] },
+    }); //Checking if the user already have a conversation or chatmate
     if (checkIfNewUser) {
       const getLatestConversationId = await Conversation.find({
-        sender: senderId,
+        participants: { $in: [senderId] },
       })
         .sort({ updatedAt: -1 })
         .limit(1)

@@ -44,6 +44,7 @@ function UserList({ searchUser }: { searchUser: string }) {
       router.push(`/chats/private/${id}?type=chats`);
     },
     onError: (err: AxiosError<{ message: string }>) => {
+      console.log(err.response?.data.message);
       toast.error(err.response?.data.message);
     },
   });
@@ -57,6 +58,7 @@ function UserList({ searchUser }: { searchUser: string }) {
   const searchResult = displayAllUsers.data?.filter((user) =>
     new RegExp(searchUser, "i").test(user.name as string)
   );
+  console.log(displayAllUsers.data);
   return (
     <div className="flex-grow w-full flex">
       {searchResult?.length === 0 ? (

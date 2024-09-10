@@ -2,9 +2,7 @@ import mongoose, { mongo, Schema } from "mongoose";
 
 const conversationSchema = new mongoose.Schema(
   {
-    sender: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    receiver: { type: Schema.Types.ObjectId, ref: "User", required: true },
-
+    participants: [{ type: Schema.Types.ObjectId, ref: "User" }],
     lastMessage: { type: Schema.Types.ObjectId, ref: "Private" },
   },
   {

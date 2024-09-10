@@ -12,16 +12,13 @@ export function privateChat(io: Server) {
           sender: userId,
           message,
         });
-        console.log(createMessage);
         const getProfile = await Private.findById(createMessage._id)
           .populate([
             { path: "sender", select: ["profilePic", "name", "status"] },
           ])
           .select(["isRead", "message", "sender"]);
         console.log(getProfile);
-        socket
-          .to(conversationId)
-          .emit("display-message", { message: getProfile.message });
+        socket.to(conversationId).emit("display-message", getProfile);
       }
     });
   });

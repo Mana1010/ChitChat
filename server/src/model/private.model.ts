@@ -8,7 +8,7 @@ const messageSchema = new mongoose.Schema(
       ref: "Conversation",
       required: true,
     },
-    sender: { type: Schema.Types.ObjectId, ref: "User" },
+    sender: { type: Schema.Types.ObjectId, ref: "User", required: true },
     message: { type: String, required: true },
     isRead: { type: Boolean, default: false },
   },

@@ -6,8 +6,14 @@ export interface User {
 }
 
 export interface Conversation {
-  receiver: User;
-  userId: string;
+  receiver_details: User;
   _id: string;
-  lastMessage: string;
+  lastMessage?: string;
+}
+
+export interface Messages {
+  _id?: string;
+  sender: User;
+  message: string;
+  isRead: boolean;
 }

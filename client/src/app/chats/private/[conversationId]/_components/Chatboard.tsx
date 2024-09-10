@@ -1,7 +1,7 @@
 "use client";
 import axios, { AxiosError } from "axios";
 import React, { useEffect, useRef, useState } from "react";
-import { useQuery } from "react-query";
+import { useQuery, UseQueryResult } from "react-query";
 import { initializePrivateChatSocket } from "@/utils/socket";
 import { Socket } from "socket.io-client";
 import { useSession } from "next-auth/react";
@@ -14,6 +14,7 @@ import emptyChat from "../../../../../assets/images/empty-chat.png";
 import Picker from "emoji-picker-react";
 import { MdEmojiEmotions } from "react-icons/md";
 import { LuSend } from "react-icons/lu";
+import { Messages } from "@/types/UserTypes";
 
 function Chatboard({ conversationId }: { conversationId: string }) {
   const [getAllMessage, setGetAllMessage] = useState<any[]>([]);
@@ -22,13 +23,16 @@ function Chatboard({ conversationId }: { conversationId: string }) {
   const [message, setMessage] = useState<string>("");
   const [openEmoji, setOpenEmoji] = useState(false);
   const { data: session, status } = useSession();
-  const getReceiverInfoAndChats = useQuery({
+  const getReceiverInfoAndChats: UseQueryResult<
+    any,
+    AxiosError<{ message: string }>
+  > = useQuery({
     queryKey: ["message", conversationId],
     queryFn: async () => {
       const response = await axios.get(
         `${serverUrl}/api/messages/receiver-info/${conversationId}`
       );
-      // setGetAllMessage(response.data.message.getMessages);
+      setGetAllMessage(response.data.message.getMessages);
       return response.data.message.getUserInfo;
     },
     refetchOnWindowFocus: false,
@@ -42,6 +46,14 @@ function Chatboard({ conversationId }: { conversationId: string }) {
     }
   }, [session?.user]);
 
+  useEffect(() => {
+    if (!socketRef.current) return;
+    socketRef.current.on("display-message", (data: Messages) => {
+      console.log(data);
+      setGetAllMessage((prevMessages) => [...prevMessages, data]);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [socketRef.current]);
   if (getReceiverInfoAndChats.isLoading) {
     return <h1>Loading asf</h1>;
   }
@@ -55,7 +67,6 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       return <UserNotFound />;
     }
   }
-  console.log(getAllMessage);
   return (
     <div
       onClick={() => setOpenEmoji(false)}
@@ -96,41 +107,42 @@ function Chatboard({ conversationId }: { conversationId: string }) {
         </button>
       </header>
       <div className="flex-grow w-full p-3">
-        <div className="w-full max-h-[430px] overflow-y-auto flex flex-col space-y-2">
-          {getAllMessage.map((data: any) => (
+        <div className="w-full max-h-[430px] overflow-y-auto flex flex-col space-y-3">
+          {getAllMessage.map((data: Messages) => (
             <div
               key={data._id}
               className={`flex space-x-2 w-full relative z-10 ${
-                data.sender === session?.user.userId
+                data.sender._id === session?.user.userId
                   ? "justify-end"
                   : "justify-start"
               }`}
             >
               <div
                 className={`w-1/2 flex ${
-                  data.sender === session?.user.userId
+                  data.sender._id === session?.user.userId
                     ? "justify-end"
                     : "justify-start"
                 }`}
               >
                 <div
                   className={`flex items-end gap-1  ${
-                    data.sender !== session?.user.userId && "flex-row-reverse"
+                    data.sender._id !== session?.user.userId &&
+                    "flex-row-reverse"
                   }`}
                 >
                   <div className="flex flex-col">
                     <small
                       className={`font-semibold text-[0.7rem] text-white ${
-                        data.sender === session?.user.userId && "text-end"
+                        data.sender._id === session?.user.userId && "text-end"
                       }`}
                     >
-                      {data?.name?.split(" ")[0] ?? ""}
+                      {data?.sender?.name.split(" ")[0] ?? ""}
                     </small>
                     {/* ChatBox */}
 
                     <div
                       className={`p-2 rounded-md flex items-center justify-center break-all ${
-                        data.sender === session?.user.userId
+                        data.sender._id === session?.user.userId
                           ? "bg-[#6486FF]"
                           : "bg-[#222222]"
                       }`}
@@ -140,7 +152,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                   </div>
                   <div className="w-[32px] h-[32px] rounded-full relative px-4 py-2">
                     <Image
-                      src={data.profilePic ?? emptyChat}
+                      src={data.sender.profilePic ?? emptyChat}
                       alt="profile-pic"
                       fill
                       sizes="100%"
@@ -149,7 +161,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                     />
                     <span
                       className={`w-2 h-2 ${
-                        data.status === "Online"
+                        data.sender.status === "Online"
                           ? "bg-green-500"
                           : "bg-slate-500"
                       } rounded-full absolute right-[1px] bottom-[2px]`}
@@ -173,10 +185,13 @@ function Chatboard({ conversationId }: { conversationId: string }) {
               ...prevMessage,
               {
                 message,
-                name: session?.user.name.split(" ")[0],
-                status: "Online",
-                profilePic: session?.user.image,
-                sender: session?.user.userId,
+                sender: {
+                  name: session?.user.name.split(" ")[0],
+                  status: "Online",
+                  profilePic: session?.user.image,
+                  _id: session?.user.userId,
+                },
+                isRead: false,
               },
             ]);
             setMessage("");
