@@ -34,9 +34,42 @@ export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
     "profilePic",
     "status",
   ]);
-  res
-    .status(200)
-    .json({ message: [...getAllOnlineUsers, ...getAllOfflineUsers] });
+
+  // const getAllUsers = await User.aggregate([
+  //   {
+  //     $group: {
+  //       _id: "$status",
+  //       allUsers: {
+  //         $push: {
+  //           _id: "$_id",
+  //           name: "$name",
+  //           profilePic: "$profilePic",
+  //           status: "$status",
+  //         },
+  //       },
+  //     },
+  //   },
+  //   {
+  //     $sort: {
+  //       _id: -1, //Sort it based on the status (online to offline) but it will really sort out based on alphabetically
+  //     },
+  //   },
+  //   {
+  //     $group: {
+  //       _id: null,
+  //       userStatuses: { $push: "$allUsers" },
+  //     },
+  //   },
+  //   {
+  //     $project: {
+  //       _id: 0,
+  //       userStatuses: 1,
+  //     },
+  //   },
+  // ]);
+  res.status(200).json({
+    message: [...getAllOnlineUsers, ...getAllOfflineUsers],
+  });
 });
 export const getAllUsersConversation = asyncHandler(
   async (req: Request, res: Response) => {
@@ -44,7 +77,9 @@ export const getAllUsersConversation = asyncHandler(
     const getAllUsers = await Conversation.aggregate([
       { $match: { participants: new mongoose.Types.ObjectId(id) } },
       { $unwind: "$participants" },
-      { $match: { participants: { $ne: new mongoose.Types.ObjectId(id) } } },
+      {
+        $match: { participants: { $ne: new mongoose.Types.ObjectId(id) } },
+      },
       {
         $lookup: {
           from: "users",
@@ -53,14 +88,17 @@ export const getAllUsersConversation = asyncHandler(
           as: "receiver_details",
         },
       },
+
       {
         $sort: { updatedAt: -1 },
       },
+
       {
         $project: {
           receiver_details: { $arrayElemAt: ["$receiver_details", 0] },
           _id: 1,
           lastMessage: 1,
+          shouldUnwind: 1,
         },
       },
     ]);
@@ -69,7 +107,6 @@ export const getAllUsersConversation = asyncHandler(
 );
 export const chatUser = asyncHandler(async (req: Request, res: Response) => {
   const { senderId, receiverId } = req.body; //userId is an id for the receiver
-
   if (!senderId || !receiverId) {
     res.status(401).json({ message: "Please provide senderId and receiverId" });
     return;
@@ -89,17 +126,49 @@ export const chatUser = asyncHandler(async (req: Request, res: Response) => {
 
 export const getReceiverInfo = asyncHandler(
   async (req: Request, res: Response) => {
-    const { conversationId } = req.params;
+    const { userId, conversationId } = req.params;
     if (!mongoose.Types.ObjectId.isValid(conversationId)) {
       res.status(404);
       throw new Error("User not found");
     }
-    const getUserInfo = await Conversation.findById(conversationId)
-      .populate({
-        path: "participants",
-        select: ["name", "status", "profilePic"],
-      })
-      .select(["participants", "-_id"]);
+
+    const getUserInfo = await Conversation.aggregate([
+      {
+        $match: { _id: new mongoose.Types.ObjectId(conversationId) },
+      },
+      {
+        $unwind: "$participants",
+      },
+      {
+        $match: {
+          participants: { $ne: new mongoose.Types.ObjectId(userId) },
+        },
+      },
+
+      {
+        $lookup: {
+          from: "users",
+          localField: "participants",
+          foreignField: "_id",
+          as: "receiver_details",
+        },
+      },
+      {
+        $addFields: {
+          receiver_details: { $first: "$receiver_details" }, //Retrieve the chatmate's details from the array.
+        },
+      },
+      {
+        $project: {
+          receiver_details: {
+            name: "$receiver_details.name",
+            _id: "$receiver_details._id",
+            profilePic: "$receiver_details.profilePic",
+            status: "$receiver_details.status",
+          },
+        },
+      },
+    ]);
     if (!getUserInfo) {
       res.status(404);
       throw new Error("User not found");
@@ -107,10 +176,9 @@ export const getReceiverInfo = asyncHandler(
     const getMessages = await Private.find({ conversationId })
       .populate([{ path: "sender", select: ["name", "profilePic", "status"] }])
       .select(["sender", "message", "isRead"]);
-    console.log(getMessages);
     res.status(200).json({
       message: {
-        getUserInfo: getUserInfo.receiver,
+        getUserInfo: getUserInfo[0],
         getMessages,
       },
     });

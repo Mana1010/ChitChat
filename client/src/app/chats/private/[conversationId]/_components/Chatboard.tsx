@@ -14,7 +14,7 @@ import emptyChat from "../../../../../assets/images/empty-chat.png";
 import Picker from "emoji-picker-react";
 import { MdEmojiEmotions } from "react-icons/md";
 import { LuSend } from "react-icons/lu";
-import { Messages } from "@/types/UserTypes";
+import { Conversation, Messages } from "@/types/UserTypes";
 
 function Chatboard({ conversationId }: { conversationId: string }) {
   const [getAllMessage, setGetAllMessage] = useState<any[]>([]);
@@ -24,18 +24,19 @@ function Chatboard({ conversationId }: { conversationId: string }) {
   const [openEmoji, setOpenEmoji] = useState(false);
   const { data: session, status } = useSession();
   const getReceiverInfoAndChats: UseQueryResult<
-    any,
+    Conversation,
     AxiosError<{ message: string }>
   > = useQuery({
     queryKey: ["message", conversationId],
     queryFn: async () => {
       const response = await axios.get(
-        `${serverUrl}/api/messages/receiver-info/${conversationId}`
+        `${serverUrl}/api/messages/receiver-info/${session?.user.userId}/conversation/${conversationId}`
       );
       setGetAllMessage(response.data.message.getMessages);
       return response.data.message.getUserInfo;
     },
     refetchOnWindowFocus: false,
+    enabled: status === "authenticated",
   });
 
   useEffect(() => {
@@ -76,7 +77,10 @@ function Chatboard({ conversationId }: { conversationId: string }) {
         <div className="flex items-center space-x-3">
           <div className="w-[40px] h-[40px] relative rounded-full">
             <Image
-              src={getReceiverInfoAndChats.data?.profilePic || emptyChat}
+              src={
+                getReceiverInfoAndChats.data?.receiver_details.profilePic ||
+                emptyChat
+              }
               alt="profile-image"
               fill
               sizes="100%"
@@ -85,7 +89,8 @@ function Chatboard({ conversationId }: { conversationId: string }) {
             />
             <span
               className={`${
-                getReceiverInfoAndChats.data?.status === "Online"
+                getReceiverInfoAndChats.data?.receiver_details.status ===
+                "Online"
                   ? "bg-green-500"
                   : "bg-zinc-500"
               } absolute bottom-[2px] right-[2px] w-2 h-2 rounded-full`}
@@ -93,10 +98,11 @@ function Chatboard({ conversationId }: { conversationId: string }) {
           </div>
           <div>
             <h3 className="text-white text-sm">
-              {getReceiverInfoAndChats.data?.name}
+              {getReceiverInfoAndChats.data?.receiver_details.name}
             </h3>
             <small className="text-slate-300">
-              {getReceiverInfoAndChats.data?.status === "Online"
+              {getReceiverInfoAndChats.data?.receiver_details.status ===
+              "Online"
                 ? "Active Now"
                 : "Offline"}
             </small>
@@ -144,7 +150,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                       className={`p-2 rounded-md flex items-center justify-center break-all ${
                         data.sender._id === session?.user.userId
                           ? "bg-[#6486FF]"
-                          : "bg-[#222222]"
+                          : "bg-[#171717]"
                       }`}
                     >
                       <span className="text-white">{data?.message}</span>
@@ -177,6 +183,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
         onSubmit={(e) => {
           e.preventDefault();
           if (socketRef.current) {
+            socketRef.current.emit("join-room", conversationId);
             socketRef.current.emit("send-message", {
               message,
               conversationId,

@@ -112,7 +112,9 @@ function UserList({ searchUser }: { searchUser: string }) {
                   });
                 }}
                 aria-label="Start chatting"
-                className="bg-[#6486FF] p-2.5 rounded-full text-white text-lg"
+                className={`bg-[#6486FF] p-2.5 rounded-full text-white text-lg ${
+                  user._id === session?.user.userId && "hidden"
+                }`}
               >
                 <TbMessage2 />
               </button>
