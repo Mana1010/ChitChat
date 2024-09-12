@@ -11,6 +11,8 @@ import noSearchFoundImg from "../../../../../assets/images/not-found.png";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
+import { useSocketStore } from "@/utils/store/socket.store";
+import { motion } from "framer-motion";
 function ChatList({
   searchChat,
   conversationId,
@@ -18,6 +20,7 @@ function ChatList({
   searchChat: string;
   conversationId: string;
 }) {
+  const { socket } = useSocketStore();
   const { data: session, status } = useSession();
   const [chats, setChats] = useState<Conversation[]>([]);
   const router = useRouter();
@@ -36,6 +39,32 @@ function ChatList({
     enabled: status === "authenticated",
   });
   useEffect(() => {
+    if (!socket || status === "unauthenticated") return;
+    socket.on("display-updated-chatlist", ({ newMessage, conversationId }) => {
+      setChats((chatList) =>
+        chatList
+          .map((chat) => {
+            if (chat._id === conversationId) {
+              return {
+                ...chat,
+                lastMessage: newMessage,
+                updatedAt: new Date().toString(),
+              };
+            } else {
+              return chat;
+            }
+          })
+          .sort(
+            (a, b) =>
+              new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+          )
+      );
+    });
+    return () => {
+      socket.off("display-updated-chatlist");
+    };
+  }, [socket, status]);
+  useEffect(() => {
     const searchResult = displayAllChats.data?.filter((user) =>
       new RegExp(searchChat, "i").test(user.receiver_details.name as string)
     );
@@ -44,7 +73,6 @@ function ChatList({
   const searchResult = displayAllChats.data?.filter((user) =>
     new RegExp(searchChat, "i").test(user.receiver_details.name as string)
   );
-
   return (
     <div className="w-full flex-grow flex">
       {displayAllChats.data?.length === 0 && searchChat.length === 0 ? (
@@ -80,10 +108,11 @@ function ChatList({
       ) : (
         <div className="pt-2 flex flex-col w-full overflow-y-auto h-full items-center px-1.5">
           {chats?.map((user: Conversation, index: number) => (
-            <button
+            <motion.button
               onClick={() =>
                 router.push(`/chats/private/${user._id}?type=chats`)
               }
+              layout
               key={index}
               className={`flex items-center w-full p-3.5 cursor-pointer hover:bg-[#414141] rounded-lg justify-between ${
                 user._id === conversationId && "bg-[#414141]"
@@ -107,13 +136,18 @@ function ChatList({
                     } absolute bottom-[3px] right-[2px] w-2 h-2 rounded-full`}
                   ></span>
                 </div>{" "}
-                <h1 className="text-white font-bold text-sm break-all">
-                  {user.receiver_details?._id === session?.user.userId
-                    ? "You"
-                    : user.receiver_details.name}
-                </h1>
+                <div className="flex justify-start flex-col items-start">
+                  <h1 className="text-white font-bold text-sm break-all">
+                    {user.receiver_details?._id === session?.user.userId
+                      ? "You"
+                      : user.receiver_details.name}
+                  </h1>
+                  <small className="text-zinc-300 text-[0.75rem]">
+                    {user.lastMessage}
+                  </small>
+                </div>
               </div>
-            </button>
+            </motion.button>
           ))}{" "}
         </div>
       )}

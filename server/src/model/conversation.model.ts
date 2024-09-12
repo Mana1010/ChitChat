@@ -1,9 +1,9 @@
-import mongoose, { mongo, Schema } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 const conversationSchema = new mongoose.Schema(
   {
     participants: [{ type: Schema.Types.ObjectId, ref: "User" }],
-    lastMessage: { type: Schema.Types.ObjectId, ref: "Private" },
+    lastMessage: { type: String, default: "Start chatting" },
   },
   {
     timestamps: true,

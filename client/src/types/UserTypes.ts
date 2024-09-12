@@ -8,7 +8,8 @@ export interface User {
 export interface Conversation {
   receiver_details: User;
   _id: string;
-  lastMessage?: string;
+  lastMessage: string;
+  updatedAt: string;
 }
 
 export interface Messages {

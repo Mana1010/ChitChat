@@ -68,7 +68,6 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       return <UserNotFound />;
     }
   }
-  console.log(socket);
   return (
     <div
       onClick={() => setOpenEmoji(false)}

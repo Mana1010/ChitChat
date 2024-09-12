@@ -99,6 +99,7 @@ export const getAllUsersConversation = asyncHandler(
           _id: 1,
           lastMessage: 1,
           shouldUnwind: 1,
+          updatedAt: 1,
         },
       },
     ]);
