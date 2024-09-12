@@ -5,12 +5,7 @@ export function privateChat(io: Server) {
   const privateSocket = io.of("/private");
   privateSocket.on("connection", (socket) => {
     const { userId } = socket.handshake.auth;
-    socket.on("join-room", (conversationId) => {
-      socket.join(conversationId);
-      console.log(`Joined room ${conversationId}`);
-    });
     socket.on("send-message", async ({ message, conversationId }) => {
-      console.log("Running hehe");
       if (conversationId) {
         const createMessage = await Private.create({
           conversationId,
@@ -24,6 +19,10 @@ export function privateChat(io: Server) {
           .select(["isRead", "message", "sender"]);
         socket.broadcast.to(conversationId).emit("display-message", getProfile);
       }
+    });
+    socket.on("join-room", (conversationId) => {
+      socket.join(conversationId);
+      console.log(`Joined room ${conversationId}`);
     });
   });
 }

@@ -2,8 +2,6 @@
 import axios, { AxiosError } from "axios";
 import React, { useEffect, useRef, useState } from "react";
 import { useQuery, UseQueryResult } from "react-query";
-import { initializePrivateChatSocket } from "@/utils/socket";
-import { Socket } from "socket.io-client";
 import { useSession } from "next-auth/react";
 import { serverUrl } from "@/utils/serverUrl";
 import Image from "next/image";
@@ -15,10 +13,11 @@ import Picker from "emoji-picker-react";
 import { MdEmojiEmotions } from "react-icons/md";
 import { LuSend } from "react-icons/lu";
 import { Conversation, Messages } from "@/types/UserTypes";
+import { useSocketStore } from "@/utils/store/socket.store";
 
 function Chatboard({ conversationId }: { conversationId: string }) {
+  const { socket } = useSocketStore();
   const [getAllMessage, setGetAllMessage] = useState<any[]>([]);
-  const socketRef = useRef<Socket | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [message, setMessage] = useState<string>("");
   const [openEmoji, setOpenEmoji] = useState(false);
@@ -38,23 +37,24 @@ function Chatboard({ conversationId }: { conversationId: string }) {
     refetchOnWindowFocus: false,
     enabled: status === "authenticated",
   });
+  useEffect(() => {
+    scrollRef.current?.scrollIntoView({ block: "end" });
+  }, [getAllMessage]);
+  useEffect(() => {
+    if (!socket) return;
+    socket.emit("join-room", conversationId);
+  }, [conversationId, socket]);
 
   useEffect(() => {
-    if (!socketRef.current && session?.user) {
-      const socket = initializePrivateChatSocket(session.user.userId as string);
-      socketRef.current = socket;
-      socket.on("connect", () => console.log("Connected Successfully"));
-    }
-  }, [session?.user]);
-
-  useEffect(() => {
-    if (!socketRef.current) return;
-    socketRef.current.on("display-message", (data: Messages) => {
-      console.log(data);
+    if (!socket) return;
+    socket.on("display-message", (data: Messages) => {
       setGetAllMessage((prevMessages) => [...prevMessages, data]);
     });
+    return () => {
+      socket.off("display-message");
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [socketRef.current]);
+  }, [socket]);
   if (getReceiverInfoAndChats.isLoading) {
     return <h1>Loading asf</h1>;
   }
@@ -68,6 +68,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       return <UserNotFound />;
     }
   }
+  console.log(socket);
   return (
     <div
       onClick={() => setOpenEmoji(false)}
@@ -177,32 +178,30 @@ function Chatboard({ conversationId }: { conversationId: string }) {
               </div>
             </div>
           ))}
+          <div ref={scrollRef} className="relative top-5"></div>
         </div>
       </div>
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          if (socketRef.current) {
-            socketRef.current.emit("join-room", conversationId);
-            socketRef.current.emit("send-message", {
+          socket?.emit("send-message", {
+            message,
+            conversationId,
+          });
+          setGetAllMessage((prevMessage) => [
+            ...prevMessage,
+            {
               message,
-              conversationId,
-            });
-            setGetAllMessage((prevMessage) => [
-              ...prevMessage,
-              {
-                message,
-                sender: {
-                  name: session?.user.name.split(" ")[0],
-                  status: "Online",
-                  profilePic: session?.user.image,
-                  _id: session?.user.userId,
-                },
-                isRead: false,
+              sender: {
+                name: session?.user.name.split(" ")[0],
+                status: "Online",
+                profilePic: session?.user.image,
+                _id: session?.user.userId,
               },
-            ]);
-            setMessage("");
-          }
+              isRead: false,
+            },
+          ]);
+          setMessage("");
         }}
         className="px-3 py-2.5 flex items-center space-x-2 bg-[#171717]"
       >
