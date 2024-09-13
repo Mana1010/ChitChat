@@ -18,3 +18,11 @@ export interface Messages {
   message: string;
   isRead: boolean;
 }
+
+export type ConversationAndMessagesSchema = {
+  getUserInfo: {
+    _id: string;
+    receiver_details: User;
+  };
+  getMessages: Messages[];
+};

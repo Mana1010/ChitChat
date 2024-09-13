@@ -3,7 +3,7 @@ import { serverUrl } from "@/utils/serverUrl";
 import axios, { AxiosError } from "axios";
 import React, { useState } from "react";
 import { useEffect } from "react";
-import { useQuery, UseQueryResult } from "react-query";
+import { useQuery, UseQueryResult, useQueryClient } from "react-query";
 import { useSession } from "next-auth/react";
 import { Conversation } from "@/types/UserTypes";
 import emptyChatImg from "../../../../../assets/images/empty-chat.png";
@@ -33,43 +33,45 @@ function ChatList({
       const response = await axios.get(
         `${serverUrl}/api/messages/chat-list/${session?.user.userId}`
       );
-      setChats(response.data.message);
       return response.data.message;
     },
     enabled: status === "authenticated",
   });
+  const queryClient = useQueryClient();
   useEffect(() => {
     if (!socket || status === "unauthenticated") return;
     socket.on("display-updated-chatlist", ({ newMessage, conversationId }) => {
-      setChats((chatList) =>
-        chatList
-          .map((chat) => {
-            if (chat._id === conversationId) {
-              return {
-                ...chat,
-                lastMessage: newMessage,
-                updatedAt: new Date().toString(),
-              };
-            } else {
-              return chat;
-            }
-          })
-          .sort(
-            (a, b) =>
-              new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-          )
+      queryClient.setQueryData<Conversation[] | undefined>(
+        ["chat-list"],
+        (prevData) => {
+          if (prevData) {
+            return prevData
+              .map((conversation: Conversation) => {
+                if (conversation._id === conversationId) {
+                  return {
+                    ...conversation,
+                    lastMessage: newMessage,
+                    updatedAt: new Date().toString(),
+                  };
+                } else {
+                  return conversation;
+                }
+              })
+              .sort(
+                (a, b) =>
+                  new Date(b.updatedAt).getTime() -
+                  new Date(a.updatedAt).getTime()
+              );
+          } else {
+            return [];
+          }
+        }
       );
     });
     return () => {
       socket.off("display-updated-chatlist");
     };
-  }, [socket, status]);
-  useEffect(() => {
-    const searchResult = displayAllChats.data?.filter((user) =>
-      new RegExp(searchChat, "i").test(user.receiver_details.name as string)
-    );
-    setChats(searchResult as Conversation[]);
-  }, [searchChat, displayAllChats.data]);
+  }, [queryClient, socket, status]);
   const searchResult = displayAllChats.data?.filter((user) =>
     new RegExp(searchChat, "i").test(user.receiver_details.name as string)
   );
@@ -107,7 +109,7 @@ function ChatList({
         </div>
       ) : (
         <div className="pt-2 flex flex-col w-full overflow-y-auto h-full items-center px-1.5">
-          {chats?.map((user: Conversation, index: number) => (
+          {searchResult?.map((user: Conversation, index: number) => (
             <motion.button
               onClick={() =>
                 router.push(`/chats/private/${user._id}?type=chats`)

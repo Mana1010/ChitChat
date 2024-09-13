@@ -18,7 +18,6 @@ import { TbMessage2 } from "react-icons/tb";
 function UserList({ searchUser }: { searchUser: string }) {
   const router = useRouter();
   const { data: session } = useSession();
-  const [users, setUsers] = useState<User[]>([]);
   const displayAllUsers: UseQueryResult<
     User[],
     AxiosError<{ message: string }>
@@ -26,7 +25,6 @@ function UserList({ searchUser }: { searchUser: string }) {
     queryKey: ["user-list"],
     queryFn: async () => {
       const response = await axios.get(`${serverUrl}/api/messages/user-list`);
-      setUsers(response.data.message);
       return response.data.message;
     },
   });
@@ -48,17 +46,10 @@ function UserList({ searchUser }: { searchUser: string }) {
       toast.error(err.response?.data.message);
     },
   });
-  useEffect(() => {
-    const searchResult = displayAllUsers.data?.filter((user) =>
-      new RegExp(searchUser, "i").test(user.name as string)
-    );
-    setUsers(searchResult as User[]);
-  }, [displayAllUsers.data, searchUser]);
 
   const searchResult = displayAllUsers.data?.filter((user) =>
     new RegExp(searchUser, "i").test(user.name as string)
   );
-  console.log(displayAllUsers.data);
   return (
     <div className="flex-grow w-full flex">
       {searchResult?.length === 0 ? (
@@ -79,7 +70,7 @@ function UserList({ searchUser }: { searchUser: string }) {
         </div>
       ) : (
         <div className="pt-2 flex flex-col w-full overflow-y-auto h-full items-center px-1.5">
-          {users?.map((user: User, index: number) => (
+          {searchResult?.map((user: User, index: number) => (
             <div
               key={index}
               className="flex items-center w-full p-3.5 cursor-pointer hover:bg-[#414141] rounded-lg justify-between"

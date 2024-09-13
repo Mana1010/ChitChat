@@ -1,7 +1,7 @@
 "use client";
 import axios, { AxiosError } from "axios";
 import React, { useEffect, useRef, useState } from "react";
-import { useQuery, UseQueryResult } from "react-query";
+import { useQuery, useQueryClient, UseQueryResult } from "react-query";
 import { useSession } from "next-auth/react";
 import { serverUrl } from "@/utils/serverUrl";
 import Image from "next/image";
@@ -12,18 +12,17 @@ import emptyChat from "../../../../../assets/images/empty-chat.png";
 import Picker from "emoji-picker-react";
 import { MdEmojiEmotions } from "react-icons/md";
 import { LuSend } from "react-icons/lu";
-import { Conversation, Messages } from "@/types/UserTypes";
+import { ConversationAndMessagesSchema, Messages } from "@/types/UserTypes";
 import { useSocketStore } from "@/utils/store/socket.store";
 
 function Chatboard({ conversationId }: { conversationId: string }) {
   const { socket } = useSocketStore();
-  const [getAllMessage, setGetAllMessage] = useState<any[]>([]);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [message, setMessage] = useState<string>("");
   const [openEmoji, setOpenEmoji] = useState(false);
   const { data: session, status } = useSession();
   const getReceiverInfoAndChats: UseQueryResult<
-    Conversation,
+    ConversationAndMessagesSchema,
     AxiosError<{ message: string }>
   > = useQuery({
     queryKey: ["message", conversationId],
@@ -31,30 +30,36 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       const response = await axios.get(
         `${serverUrl}/api/messages/receiver-info/${session?.user.userId}/conversation/${conversationId}`
       );
-      setGetAllMessage(response.data.message.getMessages);
-      return response.data.message.getUserInfo;
+      return response.data.message;
     },
     refetchOnWindowFocus: false,
     enabled: status === "authenticated",
   });
+  const queryClient = useQueryClient();
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ block: "end" });
-  }, [getAllMessage]);
+  }, [getReceiverInfoAndChats.data?.getMessages]);
   useEffect(() => {
     if (!socket) return;
     socket.emit("join-room", conversationId);
-  }, [conversationId, socket]);
-
-  useEffect(() => {
-    if (!socket) return;
     socket.on("display-message", (data: Messages) => {
-      setGetAllMessage((prevMessages) => [...prevMessages, data]);
+      queryClient.setQueryData<ConversationAndMessagesSchema | undefined | any>(
+        ["message", conversationId],
+        (cachedData: any) => {
+          const { getMessages } = cachedData || {};
+          return { ...cachedData, getMessages: [...getMessages, data] };
+        }
+      );
     });
     return () => {
       socket.off("display-message");
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socket]);
+  useEffect(() => {
+    if (status === "authenticated") {
+    }
+  }, [queryClient, status]);
   if (getReceiverInfoAndChats.isLoading) {
     return <h1>Loading asf</h1>;
   }
@@ -78,8 +83,8 @@ function Chatboard({ conversationId }: { conversationId: string }) {
           <div className="w-[40px] h-[40px] relative rounded-full">
             <Image
               src={
-                getReceiverInfoAndChats.data?.receiver_details.profilePic ||
-                emptyChat
+                getReceiverInfoAndChats.data?.getUserInfo?.receiver_details
+                  .profilePic || emptyChat
               }
               alt="profile-image"
               fill
@@ -89,8 +94,8 @@ function Chatboard({ conversationId }: { conversationId: string }) {
             />
             <span
               className={`${
-                getReceiverInfoAndChats.data?.receiver_details.status ===
-                "Online"
+                getReceiverInfoAndChats.data?.getUserInfo?.receiver_details
+                  .status === "Online"
                   ? "bg-green-500"
                   : "bg-zinc-500"
               } absolute bottom-[2px] right-[2px] w-2 h-2 rounded-full`}
@@ -98,11 +103,11 @@ function Chatboard({ conversationId }: { conversationId: string }) {
           </div>
           <div>
             <h3 className="text-white text-sm">
-              {getReceiverInfoAndChats.data?.receiver_details.name}
+              {getReceiverInfoAndChats.data?.getUserInfo?.receiver_details.name}
             </h3>
             <small className="text-slate-300">
-              {getReceiverInfoAndChats.data?.receiver_details.status ===
-              "Online"
+              {getReceiverInfoAndChats.data?.getUserInfo?.receiver_details
+                .status === "Online"
                 ? "Active Now"
                 : "Offline"}
             </small>
@@ -114,7 +119,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       </header>
       <div className="flex-grow w-full p-3">
         <div className="w-full max-h-[430px] overflow-y-auto flex flex-col space-y-3">
-          {getAllMessage.map((data: Messages) => (
+          {getReceiverInfoAndChats.data?.getMessages.map((data: Messages) => (
             <div
               key={data._id}
               className={`flex space-x-2 w-full relative z-10 ${
@@ -187,19 +192,46 @@ function Chatboard({ conversationId }: { conversationId: string }) {
             message,
             conversationId,
           });
-          setGetAllMessage((prevMessage) => [
-            ...prevMessage,
-            {
-              message,
-              sender: {
-                name: session?.user.name.split(" ")[0],
-                status: "Online",
-                profilePic: session?.user.image,
-                _id: session?.user.userId,
-              },
-              isRead: false,
-            },
-          ]);
+          queryClient.setQueryData<ConversationAndMessagesSchema | undefined>(
+            ["message", conversationId],
+            (data: any) => {
+              const { getMessages } = data || {};
+              if (getMessages) {
+                return {
+                  ...data,
+                  getMessages: [
+                    ...getMessages,
+                    {
+                      message,
+                      sender: {
+                        name: session?.user.name.split(" ")[0],
+                        status: "Online",
+                        profilePic: session?.user.image,
+                        _id: session?.user.userId,
+                      },
+                      isRead: false,
+                    },
+                  ],
+                };
+              } else {
+                return {
+                  ...data,
+                  getMessages: [
+                    {
+                      message,
+                      sender: {
+                        name: session?.user.name.split(" ")[0],
+                        status: "Online",
+                        profilePic: session?.user.image,
+                        _id: session?.user.userId,
+                      },
+                      isRead: false,
+                    },
+                  ],
+                };
+              }
+            }
+          );
           setMessage("");
         }}
         className="px-3 py-2.5 flex items-center space-x-2 bg-[#171717]"
