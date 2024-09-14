@@ -1,7 +1,7 @@
 "use client";
 import { serverUrl } from "@/utils/serverUrl";
 import axios, { AxiosError } from "axios";
-import React, { useState } from "react";
+import React, { useRef } from "react";
 import { useEffect } from "react";
 import { useQuery, UseQueryResult, useQueryClient } from "react-query";
 import { useSession } from "next-auth/react";
@@ -10,7 +10,6 @@ import emptyChatImg from "../../../../../assets/images/empty-chat.png";
 import noSearchFoundImg from "../../../../../assets/images/not-found.png";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { usePathname } from "next/navigation";
 import { useSocketStore } from "@/utils/store/socket.store";
 import { motion } from "framer-motion";
 function ChatList({
@@ -22,8 +21,8 @@ function ChatList({
 }) {
   const { socket } = useSocketStore();
   const { data: session, status } = useSession();
-  const [chats, setChats] = useState<Conversation[]>([]);
   const router = useRouter();
+  const conversationRef = useRef();
   const displayAllChats: UseQueryResult<
     Conversation[],
     AxiosError<{ message: string }>
@@ -121,7 +120,7 @@ function ChatList({
               }`}
             >
               <div className="flex items-center space-x-2">
-                <div className="w-[40px] h-[40px] relative rounded-full">
+                <div className="w-[40px] h-[40px] relative rounded-full pr-2">
                   <Image
                     src={user.receiver_details.profilePic}
                     alt="profile-pic"
@@ -144,8 +143,10 @@ function ChatList({
                       ? "You"
                       : user.receiver_details.name}
                   </h1>
-                  <small className="text-zinc-300 text-[0.75rem]">
-                    {user.lastMessage}
+                  <small className="text-zinc-300 text-[0.75rem] break-all">
+                    {user.lastMessage.length >= 30
+                      ? `${user.lastMessage.slice(0, 30)}...`
+                      : user.lastMessage}
                   </small>
                 </div>
               </div>

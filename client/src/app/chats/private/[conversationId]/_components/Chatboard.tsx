@@ -1,6 +1,6 @@
 "use client";
 import axios, { AxiosError } from "axios";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useLayoutEffect } from "react";
 import { useQuery, useQueryClient, UseQueryResult } from "react-query";
 import { useSession } from "next-auth/react";
 import { serverUrl } from "@/utils/serverUrl";
@@ -14,6 +14,7 @@ import { MdEmojiEmotions } from "react-icons/md";
 import { LuSend } from "react-icons/lu";
 import { ConversationAndMessagesSchema, Messages } from "@/types/UserTypes";
 import { useSocketStore } from "@/utils/store/socket.store";
+import { nanoid } from "nanoid";
 
 function Chatboard({ conversationId }: { conversationId: string }) {
   const { socket } = useSocketStore();
@@ -36,7 +37,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
     enabled: status === "authenticated",
   });
   const queryClient = useQueryClient();
-  useEffect(() => {
+  useLayoutEffect(() => {
     scrollRef.current?.scrollIntoView({ block: "end" });
   }, [getReceiverInfoAndChats.data?.getMessages]);
   useEffect(() => {
@@ -56,10 +57,6 @@ function Chatboard({ conversationId }: { conversationId: string }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socket]);
-  useEffect(() => {
-    if (status === "authenticated") {
-    }
-  }, [queryClient, status]);
   if (getReceiverInfoAndChats.isLoading) {
     return <h1>Loading asf</h1>;
   }
@@ -68,7 +65,6 @@ function Chatboard({ conversationId }: { conversationId: string }) {
   }
   if (getReceiverInfoAndChats.isError) {
     const error = getReceiverInfoAndChats.error as AxiosError;
-    console.log(error);
     if (error.response?.status === 404) {
       return <UserNotFound />;
     }
@@ -210,6 +206,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                         _id: session?.user.userId,
                       },
                       isRead: false,
+                      _id: nanoid(), //As temporary data
                     },
                   ],
                 };

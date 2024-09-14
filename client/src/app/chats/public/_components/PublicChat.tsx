@@ -1,12 +1,12 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { LuSend } from "react-icons/lu";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import { Socket } from "socket.io-client";
-import { useQuery } from "react-query";
+import { useQuery, useQueryClient, UseQueryResult } from "react-query";
 import { serverUrl } from "@/utils/serverUrl";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { User } from "@/types/next-auth";
 import { initializePublicChatSocket } from "@/utils/socket";
 import Image from "next/image";
@@ -16,11 +16,11 @@ import Picker from "emoji-picker-react";
 import typingChatAnimation from "../../../../assets/images/gif-animation/typing-chat-animation.gif";
 import chatLoadingAnimation from "../../../../assets/images/gif-animation/chat-loading.gif";
 import { HiOutlineDotsVertical } from "react-icons/hi";
+import { PublicMessages } from "@/types/UserTypes";
+import { nanoid } from "nanoid";
 function PublicChat() {
   const [message, setMessage] = useState("");
-  const [allMessages, setAllMessages] = useState<any>([]);
   const { status, data: session } = useSession();
-  const [scrollPosition, setScrollPosition] = useState();
   const [openEmoji, setOpenEmoji] = useState(false);
   const socketRef = useRef<Socket | null>();
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -28,17 +28,20 @@ function PublicChat() {
   const [typingUsers, setTypingUsers] = useState<
     { socketId: string; userImg: string }[]
   >([]);
-  const getAllMessage = useQuery({
+  const getAllMessage: UseQueryResult<
+    PublicMessages[],
+    AxiosError<{ message: string }>
+  > = useQuery({
     queryKey: ["public-messages"],
     queryFn: async () => {
       const response = await axios.get(`${serverUrl}/api/messages/public`);
-      setAllMessages(response.data.message);
-      return;
+      return response.data.message;
     },
   });
-  useEffect(() => {
+  const queryClient = useQueryClient();
+  useLayoutEffect(() => {
     scrollRef.current?.scrollIntoView({ block: "end" });
-  }, [allMessages, typingUsers]);
+  }, [getAllMessage.data, typingUsers]);
   useEffect(() => {
     function onDisconnect() {
       socketRef.current?.emit("user-disconnect", { status: "Offline" });
@@ -54,7 +57,16 @@ function PublicChat() {
   useEffect(() => {
     if (!socketRef.current) return;
     const handleGetMessages = (data: User) => {
-      setAllMessages((messages: any) => [...messages, data]);
+      queryClient.setQueryData<PublicMessages[] | undefined>(
+        ["public-messages"],
+        (prevMessages): any => {
+          if (prevMessages) {
+            return [...prevMessages, data];
+          } else {
+            return [data];
+          }
+        }
+      );
     };
     const handleDisplayStatus = (data: { name: string; status: string }) => {
       toast.message(`${data.name} is ${data.status}`, {
@@ -82,15 +94,6 @@ function PublicChat() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socketRef.current]);
-  const userData = {
-    name: session?.user.name,
-    email: session?.user.email,
-    profilePic: session?.user.image,
-    authId: session?.user.id,
-    provider: session?.user.provider,
-    status: "Online",
-    _id: session?.user.userId,
-  };
   return (
     <div className="h-full" onClick={() => setOpenEmoji(false)}>
       <div className="h-[440px] bg-[#3A3B3C] w-full rounded-md relative">
@@ -106,7 +109,7 @@ function PublicChat() {
           </div>
         ) : (
           <div className="chat-div w-full space-y-2 p-3 overflow-y-auto h-full relative">
-            {allMessages.map((data: any) => (
+            {getAllMessage.data?.map((data: PublicMessages) => (
               <div
                 key={data._id}
                 className={`flex space-x-2 w-full relative z-10 ${
@@ -225,10 +228,39 @@ function PublicChat() {
         onSubmit={(e) => {
           e.preventDefault();
           socketRef.current?.emit("send-message", message);
-          setAllMessages([
-            ...allMessages,
-            { message, userId: userData, isMessageDeleted: false },
-          ]);
+          queryClient.setQueryData<PublicMessages[] | undefined>(
+            ["public-messages"],
+            (prevMessages): PublicMessages[] => {
+              const userData = {
+                name: session?.user?.name,
+                profilePic: session?.user.image,
+                status: "Online",
+                _id: session?.user.userId,
+              };
+              if (prevMessages && session?.user) {
+                return [
+                  ...prevMessages,
+                  {
+                    message,
+                    userId: userData,
+                    createdAt: new Date().toString(),
+                    isMessageDeleted: false,
+                    _id: nanoid(),
+                  },
+                ];
+              } else {
+                return [
+                  {
+                    message,
+                    userId: userData,
+                    createdAt: new Date().toString(),
+                    isMessageDeleted: false,
+                    _id: nanoid(),
+                  },
+                ];
+              }
+            }
+          );
           setMessage("");
         }}
         className="flex-grow flex space-x-2 items-center pt-3 justify-between"

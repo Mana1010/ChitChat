@@ -18,7 +18,13 @@ export interface Messages {
   message: string;
   isRead: boolean;
 }
-
+export interface PublicMessages {
+  _id: string;
+  userId: User | any;
+  message: string;
+  createdAt: string;
+  isMessageDeleted: boolean;
+}
 export type ConversationAndMessagesSchema = {
   getUserInfo: {
     _id: string;

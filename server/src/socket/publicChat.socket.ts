@@ -35,10 +35,10 @@ export function publicChat(io: Socket) {
         userId: userId,
         isMessageDeleted: false,
       });
-      const getUser = await Public.findById(getId._id)
+      const getUser = await Public.findById(getId._id) //Retrieving the Public messages
         .populate({
           path: "userId",
-          select: ["-createdAt", "-updatedAt", "-__v"],
+          select: ["name", "profilePic", "status"],
         })
         .select(["-updatedAt", "-__v"])
         .lean();
