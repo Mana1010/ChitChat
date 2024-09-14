@@ -67,6 +67,49 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       return <UserNotFound />;
     }
   }
+  function sendMessage(messageContent: string) {
+    queryClient.setQueryData<ConversationAndMessagesSchema | undefined>(
+      ["message", conversationId],
+      (data: any) => {
+        const { getMessages } = data || {};
+        if (getMessages) {
+          return {
+            ...data,
+            getMessages: [
+              ...getMessages,
+              {
+                message: messageContent,
+                sender: {
+                  name: session?.user.name.split(" ")[0],
+                  status: "Online",
+                  profilePic: session?.user.image,
+                  _id: session?.user.userId,
+                },
+                isRead: false,
+                _id: nanoid(), //As temporary data
+              },
+            ],
+          };
+        } else {
+          return {
+            ...data,
+            getMessages: [
+              {
+                message,
+                sender: {
+                  name: session?.user.name.split(" ")[0],
+                  status: "Online",
+                  profilePic: session?.user.image,
+                  _id: session?.user.userId,
+                },
+                isRead: false,
+              },
+            ],
+          };
+        }
+      }
+    );
+  }
   return (
     <div
       onClick={() => setOpenEmoji(false)}
@@ -122,71 +165,102 @@ function Chatboard({ conversationId }: { conversationId: string }) {
         {getReceiverInfoAndChats.isLoading || !getReceiverInfoAndChats.data ? (
           <LoadingChat />
         ) : (
-          <div className="w-full max-h-[430px] overflow-y-auto flex flex-col space-y-3">
-            {getReceiverInfoAndChats.data?.getMessages.map((data: Messages) => (
-              <div
-                key={data._id}
-                className={`flex space-x-2 w-full relative z-10 ${
-                  data.sender._id === session?.user.userId
-                    ? "justify-end"
-                    : "justify-start"
-                }`}
-              >
-                <div
-                  className={`w-1/2 flex ${
-                    data.sender._id === session?.user.userId
-                      ? "justify-end"
-                      : "justify-start"
-                  }`}
+          <div className="h-full w-full">
+            {getReceiverInfoAndChats.data.getMessages.length === 0 ? (
+              <div className="flex items-center flex-col justify-end h-full w-full pb-5 space-y-2">
+                <h3 className="text-zinc-300 text-[0.78rem]">
+                  Wave to{" "}
+                  {
+                    getReceiverInfoAndChats.data.getUserInfo.receiver_details
+                      .name
+                  }
+                </h3>
+                <button
+                  onClick={() => {
+                    socket?.emit("send-message", {
+                      message: "👋",
+                      conversationId,
+                    });
+                    sendMessage("👋");
+                  }}
+                  className="bg-[#414141] text-lg px-3 py-1.5 rounded-md overflow-hidden"
                 >
-                  <div
-                    className={`flex items-end gap-1  ${
-                      data.sender._id !== session?.user.userId &&
-                      "flex-row-reverse"
-                    }`}
-                  >
-                    <div className="flex flex-col">
-                      <small
-                        className={`font-semibold text-[0.7rem] text-white ${
-                          data.sender._id === session?.user.userId && "text-end"
-                        }`}
-                      >
-                        {data?.sender?.name.split(" ")[0] ?? ""}
-                      </small>
-                      {/* ChatBox */}
-
+                  <span className="mr-1">👋</span>
+                </button>
+              </div>
+            ) : (
+              <div className="w-full max-h-[430px] overflow-y-auto flex flex-col space-y-3">
+                {getReceiverInfoAndChats.data?.getMessages.map(
+                  (data: Messages) => (
+                    <div
+                      key={data._id}
+                      className={`flex space-x-2 w-full relative z-10 ${
+                        data.sender._id === session?.user.userId
+                          ? "justify-end"
+                          : "justify-start"
+                      }`}
+                    >
                       <div
-                        className={`p-2 rounded-md flex items-center justify-center break-all ${
+                        className={`w-1/2 flex ${
                           data.sender._id === session?.user.userId
-                            ? "bg-[#6486FF]"
-                            : "bg-[#171717]"
+                            ? "justify-end"
+                            : "justify-start"
                         }`}
                       >
-                        <span className="text-white">{data?.message}</span>
+                        <div
+                          className={`flex items-end gap-1  ${
+                            data.sender._id !== session?.user.userId &&
+                            "flex-row-reverse"
+                          }`}
+                        >
+                          <div className="flex flex-col">
+                            <small
+                              className={`font-semibold text-[0.7rem] text-white ${
+                                data.sender._id === session?.user.userId &&
+                                "text-end"
+                              }`}
+                            >
+                              {data?.sender?.name.split(" ")[0] ?? ""}
+                            </small>
+                            {/* ChatBox */}
+
+                            <div
+                              className={`p-2 rounded-md flex items-center justify-center break-all ${
+                                data.sender._id === session?.user.userId
+                                  ? "bg-[#6486FF]"
+                                  : "bg-[#171717]"
+                              }`}
+                            >
+                              <span className="text-white">
+                                {data?.message}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="w-[32px] h-[32px] rounded-full relative px-4 py-2">
+                            <Image
+                              src={data.sender.profilePic ?? emptyChat}
+                              alt="profile-pic"
+                              fill
+                              sizes="100%"
+                              className="rounded-full absolute"
+                              priority
+                            />
+                            <span
+                              className={`w-2 h-2 ${
+                                data.sender.status === "Online"
+                                  ? "bg-green-500"
+                                  : "bg-slate-500"
+                              } rounded-full absolute right-[1px] bottom-[2px]`}
+                            ></span>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div className="w-[32px] h-[32px] rounded-full relative px-4 py-2">
-                      <Image
-                        src={data.sender.profilePic ?? emptyChat}
-                        alt="profile-pic"
-                        fill
-                        sizes="100%"
-                        className="rounded-full absolute"
-                        priority
-                      />
-                      <span
-                        className={`w-2 h-2 ${
-                          data.sender.status === "Online"
-                            ? "bg-green-500"
-                            : "bg-slate-500"
-                        } rounded-full absolute right-[1px] bottom-[2px]`}
-                      ></span>
-                    </div>
-                  </div>
-                </div>
+                  )
+                )}
+                <div ref={scrollRef} className="relative top-5"></div>
               </div>
-            ))}
-            <div ref={scrollRef} className="relative top-5"></div>
+            )}
           </div>
         )}
       </div>
@@ -197,47 +271,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
             message,
             conversationId,
           });
-          queryClient.setQueryData<ConversationAndMessagesSchema | undefined>(
-            ["message", conversationId],
-            (data: any) => {
-              const { getMessages } = data || {};
-              if (getMessages) {
-                return {
-                  ...data,
-                  getMessages: [
-                    ...getMessages,
-                    {
-                      message,
-                      sender: {
-                        name: session?.user.name.split(" ")[0],
-                        status: "Online",
-                        profilePic: session?.user.image,
-                        _id: session?.user.userId,
-                      },
-                      isRead: false,
-                      _id: nanoid(), //As temporary data
-                    },
-                  ],
-                };
-              } else {
-                return {
-                  ...data,
-                  getMessages: [
-                    {
-                      message,
-                      sender: {
-                        name: session?.user.name.split(" ")[0],
-                        status: "Online",
-                        profilePic: session?.user.image,
-                        _id: session?.user.userId,
-                      },
-                      isRead: false,
-                    },
-                  ],
-                };
-              }
-            }
-          );
+          sendMessage(message);
           setMessage("");
         }}
         className="px-3 py-2.5 flex items-center space-x-2 bg-[#171717]"
