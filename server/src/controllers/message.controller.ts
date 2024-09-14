@@ -206,3 +206,45 @@ export const getChatNotifications = asyncHandler(
     res.status(200).json({ message: null }); //If the user is new and have no conversation made with other
   }
 );
+export const getParticipantName = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { participantId, conversationId } = req.params;
+
+    const getChatMateName = await Conversation.aggregate([
+      {
+        $match: { _id: new mongoose.Types.ObjectId(conversationId) },
+      },
+      {
+        $unwind: "$participants",
+      },
+      {
+        $match: {
+          participants: { $ne: new mongoose.Types.ObjectId(participantId) },
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "participants",
+          foreignField: "_id",
+          as: "participant_name",
+        },
+      },
+      {
+        $project: {
+          participant_name: {
+            name: "$participant_name.name",
+          },
+        },
+      },
+    ]);
+    if (!getChatMateName) {
+      res.status(404);
+      throw new Error("User not found");
+    }
+    console.log();
+    res
+      .status(200)
+      .json({ name: getChatMateName[0].participant_name[0].name[0] }); //Retrieving the participant's name
+  }
+);

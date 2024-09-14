@@ -5,11 +5,12 @@ interface Routes {
   chatboard: ReactNode;
   chatusers: ReactNode;
 }
-function PrivateLayout({ chatboard, chatusers }: Routes) {
+function PrivateLayout({ chatboard, chatusers, children }: Routes) {
   return (
     <PrivateChatProvider>
       {chatusers}
       {chatboard}
+      {children}
     </PrivateChatProvider>
   );
 }

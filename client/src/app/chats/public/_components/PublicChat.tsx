@@ -15,12 +15,12 @@ import { MdEmojiEmotions } from "react-icons/md";
 import Picker from "emoji-picker-react";
 import typingChatAnimation from "../../../../assets/images/gif-animation/typing-chat-animation.gif";
 import chatLoadingAnimation from "../../../../assets/images/gif-animation/chat-loading.gif";
-import { HiOutlineDotsVertical } from "react-icons/hi";
 import { PublicMessages } from "@/types/UserTypes";
 import { nanoid } from "nanoid";
+import LoadingChat from "@/components/LoadingChat";
 function PublicChat() {
   const [message, setMessage] = useState("");
-  const { status, data: session } = useSession();
+  const { data: session } = useSession();
   const [openEmoji, setOpenEmoji] = useState(false);
   const socketRef = useRef<Socket | null>();
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -98,15 +98,7 @@ function PublicChat() {
     <div className="h-full" onClick={() => setOpenEmoji(false)}>
       <div className="h-[440px] bg-[#3A3B3C] w-full rounded-md relative">
         {getAllMessage.isLoading ? (
-          <div className="flex w-full items-center justify-center h-full">
-            <Image
-              src={chatLoadingAnimation}
-              width={30}
-              height={30}
-              alt="chat-loading"
-              priority
-            />
-          </div>
+          <LoadingChat />
         ) : (
           <div className="chat-div w-full space-y-2 p-3 overflow-y-auto h-full relative">
             {getAllMessage.data?.map((data: PublicMessages) => (

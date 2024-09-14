@@ -15,7 +15,8 @@ import { LuSend } from "react-icons/lu";
 import { ConversationAndMessagesSchema, Messages } from "@/types/UserTypes";
 import { useSocketStore } from "@/utils/store/socket.store";
 import { nanoid } from "nanoid";
-
+import ChatBoardHeaderSkeleton from "@/app/chats/_components/ChatBoardHeaderSkeleton";
+import LoadingChat from "@/components/LoadingChat";
 function Chatboard({ conversationId }: { conversationId: string }) {
   const { socket } = useSocketStore();
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -44,7 +45,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
     if (!socket) return;
     socket.emit("join-room", conversationId);
     socket.on("display-message", (data: Messages) => {
-      queryClient.setQueryData<ConversationAndMessagesSchema | undefined | any>(
+      queryClient.setQueryData<ConversationAndMessagesSchema | undefined>(
         ["message", conversationId],
         (cachedData: any) => {
           const { getMessages } = cachedData || {};
@@ -57,9 +58,6 @@ function Chatboard({ conversationId }: { conversationId: string }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socket]);
-  if (getReceiverInfoAndChats.isLoading) {
-    return <h1>Loading asf</h1>;
-  }
   if (conversationId.toLowerCase() === "new") {
     return <NewUser />;
   }
@@ -75,111 +73,122 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       className="flex flex-grow w-full h-full flex-col"
     >
       <header className="w-full shadow-md py-3 px-4 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="w-[40px] h-[40px] relative rounded-full">
-            <Image
-              src={
-                getReceiverInfoAndChats.data?.getUserInfo?.receiver_details
-                  .profilePic || emptyChat
-              }
-              alt="profile-image"
-              fill
-              sizes="100%"
-              priority
-              className="rounded-full absolute"
-            />
-            <span
-              className={`${
-                getReceiverInfoAndChats.data?.getUserInfo?.receiver_details
+        {getReceiverInfoAndChats.isLoading || !getReceiverInfoAndChats.data ? (
+          <ChatBoardHeaderSkeleton />
+        ) : (
+          <div className="flex items-center space-x-3">
+            <div className="w-[40px] h-[40px] relative rounded-full">
+              <Image
+                src={
+                  getReceiverInfoAndChats.data?.getUserInfo?.receiver_details
+                    .profilePic
+                }
+                alt="profile-image"
+                fill
+                sizes="100%"
+                priority
+                className="rounded-full absolute"
+              />
+              <span
+                className={`${
+                  getReceiverInfoAndChats.data?.getUserInfo?.receiver_details
+                    .status === "Online"
+                    ? "bg-green-500"
+                    : "bg-zinc-500"
+                } absolute bottom-[2px] right-[2px] w-2 h-2 rounded-full`}
+              ></span>
+            </div>
+            <div>
+              <h3 className="text-white text-sm">
+                {
+                  getReceiverInfoAndChats.data?.getUserInfo?.receiver_details
+                    .name
+                }
+              </h3>
+              <small className="text-slate-300">
+                {getReceiverInfoAndChats.data?.getUserInfo?.receiver_details
                   .status === "Online"
-                  ? "bg-green-500"
-                  : "bg-zinc-500"
-              } absolute bottom-[2px] right-[2px] w-2 h-2 rounded-full`}
-            ></span>
+                  ? "Active Now"
+                  : "Offline"}
+              </small>
+            </div>
           </div>
-          <div>
-            <h3 className="text-white text-sm">
-              {getReceiverInfoAndChats.data?.getUserInfo?.receiver_details.name}
-            </h3>
-            <small className="text-slate-300">
-              {getReceiverInfoAndChats.data?.getUserInfo?.receiver_details
-                .status === "Online"
-                ? "Active Now"
-                : "Offline"}
-            </small>
-          </div>
-        </div>
+        )}
         <button className="text-[1.5rem] text-[#6486FF]">
           <HiOutlineDotsCircleHorizontal />
         </button>
       </header>
       <div className="flex-grow w-full p-3">
-        <div className="w-full max-h-[430px] overflow-y-auto flex flex-col space-y-3">
-          {getReceiverInfoAndChats.data?.getMessages.map((data: Messages) => (
-            <div
-              key={data._id}
-              className={`flex space-x-2 w-full relative z-10 ${
-                data.sender._id === session?.user.userId
-                  ? "justify-end"
-                  : "justify-start"
-              }`}
-            >
+        {getReceiverInfoAndChats.isLoading || !getReceiverInfoAndChats.data ? (
+          <LoadingChat />
+        ) : (
+          <div className="w-full max-h-[430px] overflow-y-auto flex flex-col space-y-3">
+            {getReceiverInfoAndChats.data?.getMessages.map((data: Messages) => (
               <div
-                className={`w-1/2 flex ${
+                key={data._id}
+                className={`flex space-x-2 w-full relative z-10 ${
                   data.sender._id === session?.user.userId
                     ? "justify-end"
                     : "justify-start"
                 }`}
               >
                 <div
-                  className={`flex items-end gap-1  ${
-                    data.sender._id !== session?.user.userId &&
-                    "flex-row-reverse"
+                  className={`w-1/2 flex ${
+                    data.sender._id === session?.user.userId
+                      ? "justify-end"
+                      : "justify-start"
                   }`}
                 >
-                  <div className="flex flex-col">
-                    <small
-                      className={`font-semibold text-[0.7rem] text-white ${
-                        data.sender._id === session?.user.userId && "text-end"
-                      }`}
-                    >
-                      {data?.sender?.name.split(" ")[0] ?? ""}
-                    </small>
-                    {/* ChatBox */}
+                  <div
+                    className={`flex items-end gap-1  ${
+                      data.sender._id !== session?.user.userId &&
+                      "flex-row-reverse"
+                    }`}
+                  >
+                    <div className="flex flex-col">
+                      <small
+                        className={`font-semibold text-[0.7rem] text-white ${
+                          data.sender._id === session?.user.userId && "text-end"
+                        }`}
+                      >
+                        {data?.sender?.name.split(" ")[0] ?? ""}
+                      </small>
+                      {/* ChatBox */}
 
-                    <div
-                      className={`p-2 rounded-md flex items-center justify-center break-all ${
-                        data.sender._id === session?.user.userId
-                          ? "bg-[#6486FF]"
-                          : "bg-[#171717]"
-                      }`}
-                    >
-                      <span className="text-white">{data?.message}</span>
+                      <div
+                        className={`p-2 rounded-md flex items-center justify-center break-all ${
+                          data.sender._id === session?.user.userId
+                            ? "bg-[#6486FF]"
+                            : "bg-[#171717]"
+                        }`}
+                      >
+                        <span className="text-white">{data?.message}</span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="w-[32px] h-[32px] rounded-full relative px-4 py-2">
-                    <Image
-                      src={data.sender.profilePic ?? emptyChat}
-                      alt="profile-pic"
-                      fill
-                      sizes="100%"
-                      className="rounded-full absolute"
-                      priority
-                    />
-                    <span
-                      className={`w-2 h-2 ${
-                        data.sender.status === "Online"
-                          ? "bg-green-500"
-                          : "bg-slate-500"
-                      } rounded-full absolute right-[1px] bottom-[2px]`}
-                    ></span>
+                    <div className="w-[32px] h-[32px] rounded-full relative px-4 py-2">
+                      <Image
+                        src={data.sender.profilePic ?? emptyChat}
+                        alt="profile-pic"
+                        fill
+                        sizes="100%"
+                        className="rounded-full absolute"
+                        priority
+                      />
+                      <span
+                        className={`w-2 h-2 ${
+                          data.sender.status === "Online"
+                            ? "bg-green-500"
+                            : "bg-slate-500"
+                        } rounded-full absolute right-[1px] bottom-[2px]`}
+                      ></span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
-          <div ref={scrollRef} className="relative top-5"></div>
-        </div>
+            ))}
+            <div ref={scrollRef} className="relative top-5"></div>
+          </div>
+        )}
       </div>
       <form
         onSubmit={(e) => {

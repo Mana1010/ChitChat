@@ -6,6 +6,7 @@ import {
   chatUser,
   getReceiverInfo,
   getChatNotifications,
+  getParticipantName,
 } from "../controllers/message.controller";
 export const router = express.Router();
 
@@ -18,3 +19,7 @@ router.get(
 );
 router.post("/messages/newChat", chatUser);
 router.get("/messages/notification/:senderId", getChatNotifications);
+router.get(
+  "/messages/conversation-name/:participantId/conversation/:conversationId",
+  getParticipantName
+);

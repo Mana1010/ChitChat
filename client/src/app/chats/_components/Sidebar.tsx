@@ -59,29 +59,33 @@ function Sidebar() {
       </div>
 
       <div className="flex flex-col items-center w-full justify-center">
-        <DropdownMenu>
-          <DropdownMenuTrigger className="h-8 w-8 relative overflow-hidden rounded-full">
-            {" "}
-            <Image
-              src={data?.user.image ?? pic}
-              alt="profile-pic"
-              sizes="100%"
-              fill
-              priority
-              className="absolute"
-            />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="bg-[#454545] ml-2 text-white">
-            <DropdownMenuItem
-              onClick={() => {
-                signOut({ callbackUrl: "/login" });
-              }}
-              className="cursor-pointer"
-            >
-              Logout
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {getNotifications.isLoading || !data?.user ? (
+          <div className="h-8 w-8 relative overflow-hidden rounded-full bg-[#414141] animate-pulse"></div>
+        ) : (
+          <DropdownMenu>
+            <DropdownMenuTrigger className="h-8 w-8 relative overflow-hidden rounded-full">
+              {" "}
+              <Image
+                src={data?.user?.image}
+                alt="profile-pic"
+                sizes="100%"
+                fill
+                priority
+                className="absolute"
+              />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="bg-[#454545] ml-2 text-white">
+              <DropdownMenuItem
+                onClick={() => {
+                  signOut({ callbackUrl: "/login" });
+                }}
+                className="cursor-pointer"
+              >
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
     </div>
   );

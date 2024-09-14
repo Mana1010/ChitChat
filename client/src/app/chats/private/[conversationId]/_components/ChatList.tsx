@@ -12,6 +12,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useSocketStore } from "@/utils/store/socket.store";
 import { motion } from "framer-motion";
+import ConversationListSkeleton from "@/app/chats/_components/ConversationListSkeleton";
 function ChatList({
   searchChat,
   conversationId,
@@ -22,7 +23,6 @@ function ChatList({
   const { socket } = useSocketStore();
   const { data: session, status } = useSession();
   const router = useRouter();
-  const conversationRef = useRef();
   const displayAllChats: UseQueryResult<
     Conversation[],
     AxiosError<{ message: string }>
@@ -37,6 +37,7 @@ function ChatList({
     enabled: status === "authenticated",
   });
   const queryClient = useQueryClient();
+
   useEffect(() => {
     if (!socket || status === "unauthenticated") return;
     socket.on("display-updated-chatlist", ({ newMessage, conversationId }) => {
@@ -71,9 +72,13 @@ function ChatList({
       socket.off("display-updated-chatlist");
     };
   }, [queryClient, socket, status]);
+  if (displayAllChats.isLoading) {
+    return <ConversationListSkeleton />;
+  }
   const searchResult = displayAllChats.data?.filter((user) =>
     new RegExp(searchChat, "i").test(user.receiver_details.name as string)
   );
+
   return (
     <div className="w-full flex-grow flex">
       {displayAllChats.data?.length === 0 && searchChat.length === 0 ? (

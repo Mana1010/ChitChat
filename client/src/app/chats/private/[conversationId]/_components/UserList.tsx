@@ -15,6 +15,7 @@ import { User } from "@/types/UserTypes";
 import noSearchFoundImg from "../../../../../assets/images/not-found.png";
 import { toast } from "sonner";
 import { TbMessage2 } from "react-icons/tb";
+import ConversationListSkeleton from "@/app/chats/_components/ConversationListSkeleton";
 function UserList({ searchUser }: { searchUser: string }) {
   const router = useRouter();
   const { data: session } = useSession();
@@ -46,10 +47,13 @@ function UserList({ searchUser }: { searchUser: string }) {
       toast.error(err.response?.data.message);
     },
   });
-
+  if (displayAllUsers.isLoading) {
+    return <ConversationListSkeleton />;
+  }
   const searchResult = displayAllUsers.data?.filter((user) =>
     new RegExp(searchUser, "i").test(user.name as string)
   );
+
   return (
     <div className="flex-grow w-full flex">
       {searchResult?.length === 0 ? (

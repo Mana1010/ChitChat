@@ -37,7 +37,7 @@ const authOptions: NextAuthOptions = {
     async jwt({ token }) {
       return token;
     },
-    async session({ session, token, user }) {
+    async session({ session, token }) {
       const checkUser = await axios.get(
         `${serverUrl}/api/auth/checkUser/${token?.sub}`
       );
