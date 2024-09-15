@@ -68,6 +68,7 @@ function ChatList({
         }
       );
     });
+    socket.on("seen-message", (data) => {});
     return () => {
       socket.off("display-updated-chatlist");
     };
@@ -155,6 +156,7 @@ function ChatList({
                   </small>
                 </div>
               </div>
+              <div className="w-2.5 h-2.5 rounded-full flex items-center justify-center bg-[#6486FF]"></div>
             </motion.button>
           ))}{" "}
         </div>

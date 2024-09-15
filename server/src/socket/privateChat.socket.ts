@@ -31,5 +31,14 @@ export function privateChat(io: Server) {
       socket.join(conversationId);
       console.log(`Joined room ${conversationId}`);
     });
+    socket.on("read-message", async ({ conversationId, participantId }) => {
+      if (conversationId && participantId) {
+        await Private.updateMany(
+          { conversationId, sender: participantId },
+          { $set: { isRead: true } }
+        );
+        socket.emit("seen-message", conversationId);
+      }
+    });
   });
 }

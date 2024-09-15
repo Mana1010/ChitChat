@@ -190,7 +190,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                 </button>
               </div>
             ) : (
-              <div className="w-full max-h-[430px] overflow-y-auto flex flex-col space-y-3">
+              <div className="w-full max-h-[430px] overflow-y-auto flex flex-col space-y-3 relative pr-2">
                 {getReceiverInfoAndChats.data?.getMessages.map(
                   (data: Messages) => (
                     <Linkify
@@ -224,7 +224,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                               <small
                                 className={`font-semibold text-[0.7rem] text-white ${
                                   data.sender._id === session?.user.userId &&
-                                  "text-end"
+                                  "text-end hidden"
                                 }`}
                               >
                                 {data?.sender?.name.split(" ")[0] ?? ""}
@@ -243,7 +243,12 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                                 </span>
                               </div>
                             </div>
-                            <div className="w-[32px] h-[32px] rounded-full relative px-4 py-2">
+                            <div
+                              className={`w-[32px] h-[32px] rounded-full relative px-4 py-2 ${
+                                data.sender._id === session?.user.userId &&
+                                "hidden"
+                              }`}
+                            >
                               <Image
                                 src={data.sender.profilePic ?? emptyChat}
                                 alt="profile-pic"
@@ -266,6 +271,9 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                     </Linkify>
                   )
                 )}
+                <div className="w-full justify-end items-end flex relative bottom-3 pr-1">
+                  <small className="text-zinc-500">Seen</small>
+                </div>
                 <div ref={scrollRef} className="relative top-5"></div>
               </div>
             )}
@@ -286,6 +294,14 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       >
         <input
           value={message}
+          onFocus={() => {
+            if (!socket) return;
+            socket.emit("read-message", {
+              conversationId,
+              participantId:
+                getReceiverInfoAndChats.data?.getUserInfo.receiver_details._id,
+            });
+          }}
           onChange={(e) => setMessage(e.target.value)}
           type="text"
           placeholder="Send a message"
