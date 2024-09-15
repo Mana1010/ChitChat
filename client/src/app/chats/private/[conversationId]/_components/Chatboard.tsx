@@ -17,6 +17,7 @@ import { useSocketStore } from "@/utils/store/socket.store";
 import { nanoid } from "nanoid";
 import ChatBoardHeaderSkeleton from "@/app/chats/_components/ChatBoardHeaderSkeleton";
 import LoadingChat from "@/components/LoadingChat";
+import Linkify from "linkify-react";
 function Chatboard({ conversationId }: { conversationId: string }) {
   const { socket } = useSocketStore();
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -192,70 +193,77 @@ function Chatboard({ conversationId }: { conversationId: string }) {
               <div className="w-full max-h-[430px] overflow-y-auto flex flex-col space-y-3">
                 {getReceiverInfoAndChats.data?.getMessages.map(
                   (data: Messages) => (
-                    <div
+                    <Linkify
                       key={data._id}
-                      className={`flex space-x-2 w-full relative z-10 ${
-                        data.sender._id === session?.user.userId
-                          ? "justify-end"
-                          : "justify-start"
-                      }`}
+                      options={{
+                        attributes: { target: "_blank" },
+                        className: "styled-link",
+                      }}
                     >
                       <div
-                        className={`w-1/2 flex ${
+                        className={`flex space-x-2 w-full relative z-10 ${
                           data.sender._id === session?.user.userId
                             ? "justify-end"
                             : "justify-start"
                         }`}
                       >
                         <div
-                          className={`flex items-end gap-1  ${
-                            data.sender._id !== session?.user.userId &&
-                            "flex-row-reverse"
+                          className={`w-1/2 flex ${
+                            data.sender._id === session?.user.userId
+                              ? "justify-end"
+                              : "justify-start"
                           }`}
                         >
-                          <div className="flex flex-col">
-                            <small
-                              className={`font-semibold text-[0.7rem] text-white ${
-                                data.sender._id === session?.user.userId &&
-                                "text-end"
-                              }`}
-                            >
-                              {data?.sender?.name.split(" ")[0] ?? ""}
-                            </small>
-                            {/* ChatBox */}
+                          <div
+                            className={`flex items-end gap-1  ${
+                              data.sender._id !== session?.user.userId &&
+                              "flex-row-reverse"
+                            }`}
+                          >
+                            <div className="flex flex-col">
+                              <small
+                                className={`font-semibold text-[0.7rem] text-white ${
+                                  data.sender._id === session?.user.userId &&
+                                  "text-end"
+                                }`}
+                              >
+                                {data?.sender?.name.split(" ")[0] ?? ""}
+                              </small>
+                              {/* ChatBox */}
 
-                            <div
-                              className={`p-2 rounded-md flex items-center justify-center break-all ${
-                                data.sender._id === session?.user.userId
-                                  ? "bg-[#6486FF]"
-                                  : "bg-[#171717]"
-                              }`}
-                            >
-                              <span className="text-white">
-                                {data?.message}
-                              </span>
+                              <div
+                                className={`p-2 rounded-md flex items-center justify-center break-all ${
+                                  data.sender._id === session?.user.userId
+                                    ? "bg-[#6486FF]"
+                                    : "bg-[#171717]"
+                                }`}
+                              >
+                                <span className="text-white">
+                                  {data?.message}
+                                </span>
+                              </div>
                             </div>
-                          </div>
-                          <div className="w-[32px] h-[32px] rounded-full relative px-4 py-2">
-                            <Image
-                              src={data.sender.profilePic ?? emptyChat}
-                              alt="profile-pic"
-                              fill
-                              sizes="100%"
-                              className="rounded-full absolute"
-                              priority
-                            />
-                            <span
-                              className={`w-2 h-2 ${
-                                data.sender.status === "Online"
-                                  ? "bg-green-500"
-                                  : "bg-slate-500"
-                              } rounded-full absolute right-[1px] bottom-[2px]`}
-                            ></span>
+                            <div className="w-[32px] h-[32px] rounded-full relative px-4 py-2">
+                              <Image
+                                src={data.sender.profilePic ?? emptyChat}
+                                alt="profile-pic"
+                                fill
+                                sizes="100%"
+                                className="rounded-full absolute"
+                                priority
+                              />
+                              <span
+                                className={`w-2 h-2 ${
+                                  data.sender.status === "Online"
+                                    ? "bg-green-500"
+                                    : "bg-slate-500"
+                                } rounded-full absolute right-[1px] bottom-[2px]`}
+                              ></span>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </Linkify>
                   )
                 )}
                 <div ref={scrollRef} className="relative top-5"></div>

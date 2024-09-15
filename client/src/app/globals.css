@@ -78,3 +78,11 @@
   border-radius: 4px;
   opacity: 0.5;
 }
+
+.styled-link {
+  text-decoration: underline white;
+}
+.styled-link:hover {
+  color: #0000ee;
+  text-decoration: underline #0000ee;
+}
