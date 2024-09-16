@@ -40,37 +40,63 @@ function ChatList({
 
   useEffect(() => {
     if (!socket || status === "unauthenticated") return;
-    socket.on("display-updated-chatlist", ({ newMessage, conversationId }) => {
+    socket.on(
+      "display-updated-chatlist",
+      ({ newMessage, conversationId, participantId }) => {
+        queryClient.setQueryData<Conversation[] | undefined>(
+          ["chat-list"],
+          (prevData) => {
+            if (prevData) {
+              return prevData
+                .map((conversation: Conversation) => {
+                  if (conversation._id === conversationId) {
+                    return {
+                      ...conversation,
+                      lastMessage: {
+                        sender: participantId,
+                        text: newMessage,
+                      },
+                      hasUnreadMessages: true,
+                      updatedAt: new Date().toString(),
+                    };
+                  } else {
+                    return conversation;
+                  }
+                })
+                .sort(
+                  (a, b) =>
+                    new Date(b.updatedAt).getTime() -
+                    new Date(a.updatedAt).getTime()
+                );
+            } else {
+              return [];
+            }
+          }
+        );
+      }
+    );
+    socket.on("seen-message", (conversationId) => {
       queryClient.setQueryData<Conversation[] | undefined>(
         ["chat-list"],
-        (prevData) => {
-          if (prevData) {
-            return prevData
-              .map((conversation: Conversation) => {
-                if (conversation._id === conversationId) {
-                  return {
-                    ...conversation,
-                    lastMessage: newMessage,
-                    updatedAt: new Date().toString(),
-                  };
-                } else {
-                  return conversation;
-                }
-              })
-              .sort(
-                (a, b) =>
-                  new Date(b.updatedAt).getTime() -
-                  new Date(a.updatedAt).getTime()
-              );
-          } else {
-            return [];
+        (cachedData) => {
+          if (cachedData) {
+            return cachedData.map((conversation: Conversation) => {
+              if (conversation._id === conversationId) {
+                return {
+                  ...conversation,
+                  hasUnreadMessages: false,
+                };
+              } else {
+                return conversation;
+              }
+            });
           }
         }
       );
     });
-    socket.on("seen-message", (data) => {});
     return () => {
       socket.off("display-updated-chatlist");
+      socket.off("seen-message");
     };
   }, [queryClient, socket, status]);
   if (displayAllChats.isLoading) {
@@ -150,13 +176,23 @@ function ChatList({
                       : user.receiver_details.name}
                   </h1>
                   <small className="text-zinc-300 text-[0.75rem] break-all">
-                    {user.lastMessage.length >= 30
-                      ? `${user.lastMessage.slice(0, 30)}...`
-                      : user.lastMessage}
+                    {`${
+                      user.lastMessage.sender === session?.user.userId
+                        ? "You:"
+                        : ""
+                    } ${
+                      user.lastMessage.text.length >= 30
+                        ? `${user.lastMessage?.text?.slice(0, 30)}...`
+                        : user.lastMessage?.text
+                    }`}
                   </small>
                 </div>
               </div>
-              <div className="w-2.5 h-2.5 rounded-full flex items-center justify-center bg-[#6486FF]"></div>
+              <div
+                className={`w-2.5 h-2.5 rounded-full items-center justify-center bg-[#6486FF] ${
+                  user.hasUnreadMessages ? "flex" : "hidden"
+                }`}
+              ></div>
             </motion.button>
           ))}{" "}
         </div>

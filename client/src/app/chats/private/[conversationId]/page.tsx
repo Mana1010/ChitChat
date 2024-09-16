@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: Params) {
   const getChatName = await getUserConversation(params.conversationId);
 
   return {
-    title: `${getChatName} | Private ChitChat`,
+    title: `${getChatName || "New Chat"} | Private ChitChat`,
   };
 }
 

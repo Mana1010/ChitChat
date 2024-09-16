@@ -8,7 +8,11 @@ export interface User {
 export interface Conversation {
   receiver_details: User;
   _id: string;
-  lastMessage: string;
+  hasUnreadMessages: boolean;
+  lastMessage: {
+    sender: User | string;
+    text: string;
+  };
   updatedAt: string;
 }
 

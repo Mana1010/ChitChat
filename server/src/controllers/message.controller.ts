@@ -34,39 +34,6 @@ export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
     "profilePic",
     "status",
   ]);
-
-  // const getAllUsers = await User.aggregate([
-  //   {
-  //     $group: {
-  //       _id: "$status",
-  //       allUsers: {
-  //         $push: {
-  //           _id: "$_id",
-  //           name: "$name",
-  //           profilePic: "$profilePic",
-  //           status: "$status",
-  //         },
-  //       },
-  //     },
-  //   },
-  //   {
-  //     $sort: {
-  //       _id: -1, //Sort it based on the status (online to offline) but it will really sort out based on alphabetically
-  //     },
-  //   },
-  //   {
-  //     $group: {
-  //       _id: null,
-  //       userStatuses: { $push: "$allUsers" },
-  //     },
-  //   },
-  //   {
-  //     $project: {
-  //       _id: 0,
-  //       userStatuses: 1,
-  //     },
-  //   },
-  // ]);
   res.status(200).json({
     message: [...getAllOnlineUsers, ...getAllOfflineUsers],
   });
@@ -98,11 +65,12 @@ export const getAllUsersConversation = asyncHandler(
           receiver_details: { $arrayElemAt: ["$receiver_details", 0] },
           _id: 1,
           lastMessage: 1,
-          shouldUnwind: 1,
+          hasUnreadMessages: 1,
           updatedAt: 1,
         },
       },
     ]);
+    console.log(getAllUsers);
     res.status(200).json({ message: getAllUsers });
   }
 );
@@ -242,7 +210,6 @@ export const getParticipantName = asyncHandler(
       res.status(404);
       throw new Error("User not found");
     }
-    console.log();
     res
       .status(200)
       .json({ name: getChatMateName[0].participant_name[0].name[0] }); //Retrieving the participant's name

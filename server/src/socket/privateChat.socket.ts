@@ -18,12 +18,18 @@ export function privateChat(io: Server) {
           ])
           .select(["isRead", "message", "sender"]);
         await Conversation.findByIdAndUpdate(conversationId, {
-          lastMessage: message,
+          $set: {
+            "lastMessage.sender": userId,
+            "lastMessage.text": message,
+            hasUnreadMessages: true,
+          },
         });
+
         socket.broadcast.to(conversationId).emit("display-message", getProfile);
         socket.emit("display-updated-chatlist", {
           newMessage: message,
           conversationId,
+          participantId: userId,
         });
       }
     });
@@ -37,6 +43,9 @@ export function privateChat(io: Server) {
           { conversationId, sender: participantId },
           { $set: { isRead: true } }
         );
+        await Conversation.findByIdAndUpdate(conversationId, {
+          hasUnreadMessages: false,
+        });
         socket.emit("seen-message", conversationId);
       }
     });
