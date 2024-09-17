@@ -55,11 +55,9 @@ export const getAllUsersConversation = asyncHandler(
           as: "receiver_details",
         },
       },
-
       {
-        $sort: { updatedAt: -1 },
+        $sort: { "lastMessage.lastMessageCreatedAt": -1 },
       },
-
       {
         $project: {
           receiver_details: { $arrayElemAt: ["$receiver_details", 0] },
@@ -70,7 +68,14 @@ export const getAllUsersConversation = asyncHandler(
         },
       },
     ]);
-    console.log(getAllUsers);
+
+    console.log(
+      getAllUsers.sort(
+        (a, b) =>
+          b.lastMessage.lastMessageCreatedAt -
+          a.lastMessage.lastMessageCreatedAt
+      )
+    );
     res.status(200).json({ message: getAllUsers });
   }
 );

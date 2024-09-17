@@ -17,19 +17,28 @@ export function privateChat(io: Server) {
             { path: "sender", select: ["profilePic", "name", "status"] },
           ])
           .select(["isRead", "message", "sender"]);
-        await Conversation.findByIdAndUpdate(conversationId, {
-          $set: {
-            "lastMessage.sender": userId,
-            "lastMessage.text": message,
-            hasUnreadMessages: true,
+        const updatedConversation = await Conversation.findByIdAndUpdate(
+          conversationId,
+          {
+            $set: {
+              "lastMessage.sender": userId,
+              "lastMessage.text": message,
+              "lastMessage.lastMessageCreatedAt": new Date(),
+              hasUnreadMessages: true,
+            },
           },
-        });
+          {
+            new: true,
+          }
+        );
 
         socket.broadcast.to(conversationId).emit("display-message", getProfile);
         socket.emit("display-updated-chatlist", {
           newMessage: message,
           conversationId,
           participantId: userId,
+          lastMessageCreatedAt:
+            updatedConversation.lastMessage.lastMessageCreatedAt,
         });
       }
     });

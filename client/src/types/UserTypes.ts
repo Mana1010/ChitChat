@@ -12,6 +12,7 @@ export interface Conversation {
   lastMessage: {
     sender: User | string;
     text: string;
+    lastMessageCreatedAt: Date;
   };
   updatedAt: string;
 }

@@ -42,7 +42,7 @@ function ChatList({
     if (!socket || status === "unauthenticated") return;
     socket.on(
       "display-updated-chatlist",
-      ({ newMessage, conversationId, participantId }) => {
+      ({ newMessage, conversationId, participantId, lastMessageCreatedAt }) => {
         queryClient.setQueryData<Conversation[] | undefined>(
           ["chat-list"],
           (prevData) => {
@@ -55,6 +55,7 @@ function ChatList({
                       lastMessage: {
                         sender: participantId,
                         text: newMessage,
+                        lastMessageCreatedAt,
                       },
                       hasUnreadMessages: true,
                       updatedAt: new Date().toString(),
@@ -65,8 +66,8 @@ function ChatList({
                 })
                 .sort(
                   (a, b) =>
-                    new Date(b.updatedAt).getTime() -
-                    new Date(a.updatedAt).getTime()
+                    new Date(b.lastMessage.lastMessageCreatedAt).getTime() -
+                    new Date(a.lastMessage.lastMessageCreatedAt).getTime()
                 );
             } else {
               return [];
@@ -175,7 +176,13 @@ function ChatList({
                       ? "You"
                       : user.receiver_details.name}
                   </h1>
-                  <small className="text-zinc-300 text-[0.75rem] break-all">
+                  <small
+                    className={`text-[0.75rem] break-all ${
+                      user.hasUnreadMessages
+                        ? "text-white font-bold"
+                        : "text-zinc-300"
+                    }`}
+                  >
                     {`${
                       user.lastMessage.sender === session?.user.userId
                         ? "You:"
