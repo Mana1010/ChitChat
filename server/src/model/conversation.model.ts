@@ -2,7 +2,10 @@ import mongoose, { Schema } from "mongoose";
 
 const conversationSchema = new mongoose.Schema({
   participants: [{ type: Schema.Types.ObjectId, ref: "User" }],
-  hasUnreadMessages: { type: Boolean, default: false },
+  hasUnreadMessages: {
+    user: { type: Schema.Types.ObjectId, ref: "User" }, //This field is for the user who have not unread the message.
+    totalUnreadMessages: { type: Schema.Types.Number, default: 0 },
+  },
   lastMessage: {
     sender: { type: Schema.Types.ObjectId, ref: "User" },
     text: { type: String, default: "👋" },

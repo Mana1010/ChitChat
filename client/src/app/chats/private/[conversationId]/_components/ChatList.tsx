@@ -57,7 +57,6 @@ function ChatList({
                         text: newMessage,
                         lastMessageCreatedAt,
                       },
-                      hasUnreadMessages: true,
                       updatedAt: new Date().toString(),
                     };
                   } else {
@@ -76,7 +75,7 @@ function ChatList({
         );
       }
     );
-    socket.on("seen-message", (conversationId) => {
+    socket.on("seen-message", ({ conversationId, hasUnreadMessages }) => {
       queryClient.setQueryData<Conversation[] | undefined>(
         ["chat-list"],
         (cachedData) => {
@@ -85,7 +84,10 @@ function ChatList({
               if (conversation._id === conversationId) {
                 return {
                   ...conversation,
-                  hasUnreadMessages: false,
+                  hasUnreadMessages: {
+                    user: hasUnreadMessages.user,
+                    totalUnreadMessages: hasUnreadMessages.totalUnreadMessages,
+                  },
                 };
               } else {
                 return conversation;
@@ -178,7 +180,8 @@ function ChatList({
                   </h1>
                   <small
                     className={`text-[0.75rem] break-all ${
-                      user.hasUnreadMessages
+                      user.hasUnreadMessages.user === session?.user.userId &&
+                      user.hasUnreadMessages.totalUnreadMessages !== 0
                         ? "text-white font-bold"
                         : "text-zinc-300"
                     }`}
@@ -197,7 +200,10 @@ function ChatList({
               </div>
               <div
                 className={`w-2.5 h-2.5 rounded-full items-center justify-center bg-[#6486FF] ${
-                  user.hasUnreadMessages ? "flex" : "hidden"
+                  user.hasUnreadMessages.user === session?.user.userId &&
+                  user.hasUnreadMessages.totalUnreadMessages !== 0
+                    ? "flex"
+                    : "hidden"
                 }`}
               ></div>
             </motion.button>

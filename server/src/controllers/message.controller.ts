@@ -68,14 +68,6 @@ export const getAllUsersConversation = asyncHandler(
         },
       },
     ]);
-
-    console.log(
-      getAllUsers.sort(
-        (a, b) =>
-          b.lastMessage.lastMessageCreatedAt -
-          a.lastMessage.lastMessageCreatedAt
-      )
-    );
     res.status(200).json({ message: getAllUsers });
   }
 );
@@ -164,7 +156,7 @@ export const getChatNotifications = asyncHandler(
     const { senderId } = req.params;
     const checkIfNewUser = await Conversation.findOne({
       participants: { $in: [senderId] },
-    }); //Checking if the user already have a conversation or chatmate
+    }); //Checking if the user has already a conversation or chatmate
     if (checkIfNewUser) {
       const getLatestConversationId = await Conversation.find({
         participants: { $in: [senderId] },

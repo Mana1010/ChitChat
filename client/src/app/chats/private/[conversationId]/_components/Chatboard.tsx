@@ -181,6 +181,9 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                     socket?.emit("send-message", {
                       message: "👋",
                       conversationId,
+                      participantId:
+                        getReceiverInfoAndChats.data.getUserInfo
+                          .receiver_details._id,
                     });
                     sendMessage("👋");
                   }}
@@ -286,6 +289,8 @@ function Chatboard({ conversationId }: { conversationId: string }) {
           socket?.emit("send-message", {
             message,
             conversationId,
+            participantId:
+              getReceiverInfoAndChats.data?.getUserInfo.receiver_details._id,
           });
           sendMessage(message);
           setMessage("");
