@@ -41,7 +41,11 @@ function Chatboard({ conversationId }: { conversationId: string }) {
   const queryClient = useQueryClient();
   useLayoutEffect(() => {
     scrollRef.current?.scrollIntoView({ block: "end" });
-  }, [getReceiverInfoAndChats.data?.getMessages]);
+  }, [
+    getReceiverInfoAndChats.data?.getMessages.length,
+    getReceiverInfoAndChats.data?.getUserInfo.hasUnreadMessages
+      .totalUnreadMessages,
+  ]);
   useEffect(() => {
     if (!socket) return;
     socket.emit("join-room", conversationId);
@@ -59,6 +63,32 @@ function Chatboard({ conversationId }: { conversationId: string }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socket]);
+  useEffect(() => {
+    if (!socket) return;
+    socket.on("display-seen-text", ({ user, totalUnreadMessages }) => {
+      queryClient.setQueryData<ConversationAndMessagesSchema | undefined>(
+        ["message", conversationId],
+        (cachedData) => {
+          if (cachedData) {
+            return {
+              ...cachedData,
+              getUserInfo: {
+                ...cachedData?.getUserInfo,
+                hasUnreadMessages: {
+                  ...cachedData?.getUserInfo?.hasUnreadMessages,
+                  user,
+                  totalUnreadMessages,
+                },
+              },
+            };
+          }
+        }
+      );
+    });
+    return () => {
+      socket.off("display-seen-text");
+    };
+  }, [conversationId, queryClient, socket]);
   if (conversationId.toLowerCase() === "new") {
     return <NewUser />;
   }
@@ -72,10 +102,16 @@ function Chatboard({ conversationId }: { conversationId: string }) {
     queryClient.setQueryData<ConversationAndMessagesSchema | undefined>(
       ["message", conversationId],
       (data: any) => {
-        const { getMessages } = data || {};
+        const { getMessages, getUserInfo } = data || {};
         if (getMessages) {
           return {
-            ...data,
+            getUserInfo: {
+              ...getUserInfo,
+              hasUnreadMessages: {
+                ...getUserInfo.hasUnreadMessages,
+                totalUnreadMessages: getUserInfo.hasUnreadMessages + 1,
+              },
+            },
             getMessages: [
               ...getMessages,
               {
@@ -274,7 +310,16 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                     </Linkify>
                   )
                 )}
-                <div className="w-full justify-end items-end flex relative bottom-3 pr-1">
+                <div
+                  className={`w-full justify-end items-end relative bottom-3 pr-1 ${
+                    getReceiverInfoAndChats.data.getUserInfo.hasUnreadMessages
+                      .user !== session?.user.userId &&
+                    getReceiverInfoAndChats.data.getUserInfo.hasUnreadMessages
+                      .totalUnreadMessages === 0
+                      ? "flex"
+                      : "hidden"
+                  } `}
+                >
                   <small className="text-zinc-500">Seen</small>
                 </div>
                 <div ref={scrollRef} className="relative top-5"></div>

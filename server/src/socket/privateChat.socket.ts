@@ -6,6 +6,7 @@ export function privateChat(io: Server) {
   const privateSocket = io.of("/private");
   privateSocket.on("connection", (socket) => {
     const { userId } = socket.handshake.auth;
+    const typingUsers = [];
     socket.on(
       "send-message",
       async ({ message, conversationId, participantId }) => {
@@ -56,35 +57,40 @@ export function privateChat(io: Server) {
         }
       }
     );
+    socket.on("read-message", async ({ conversationId, participantId }) => {
+      try {
+        if (conversationId && participantId) {
+          const getUnreadMessages = await Conversation.findById(
+            conversationId
+          ).select("hasUnreadMessages");
+          const getUnread = getUnreadMessages.hasUnreadMessages;
+          //This nested if will be checking and update only the hasUnreadMessages if there is no
+          //unread messages yet and also to match the user that has not read the messages;
+          if (getUnreadMessages) {
+            if (
+              getUnread.totalUnreadMessages !== 0 &&
+              getUnread.user.toString() === userId
+            ) {
+              getUnreadMessages.hasUnreadMessages.totalUnreadMessages = 0;
+              await getUnreadMessages.save();
+            }
+          }
+          socket.emit("seen-message", {
+            conversationId,
+            hasUnreadMessages: getUnread,
+          });
+          socket.broadcast.to(conversationId).emit("display-seen-text", {
+            user: getUnread.user,
+            totalUnreadMessages: getUnread.totalUnreadMessages,
+          });
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    });
     socket.on("join-room", (conversationId) => {
       socket.join(conversationId);
       console.log(`Joined room ${conversationId}`);
-    });
-    socket.on("read-message", async ({ conversationId, participantId }) => {
-      if (conversationId && participantId) {
-        await Private.updateMany(
-          { conversationId, sender: participantId },
-          { $set: { isRead: true } },
-          { new: true }
-        );
-        const getUnreadMessages = await Conversation.findById(conversationId);
-        const getUnread = getUnreadMessages.hasUnreadMessages;
-        //This nested if will be checking and update only the hasUnreadMessages if there is no
-        //unread messages yet and also to match the user that has not read the messages;
-        if (getUnreadMessages) {
-          if (
-            getUnread.totalUnreadMessages !== 0 &&
-            getUnread.user.toString() === userId
-          ) {
-            getUnreadMessages.hasUnreadMessages.totalUnreadMessages = 0;
-            await getUnreadMessages.save();
-          }
-        }
-        socket.emit("seen-message", {
-          conversationId,
-          hasUnreadMessages: getUnread,
-        });
-      }
     });
   });
 }

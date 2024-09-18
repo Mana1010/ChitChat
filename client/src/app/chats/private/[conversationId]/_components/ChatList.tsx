@@ -108,7 +108,6 @@ function ChatList({
   const searchResult = displayAllChats.data?.filter((user) =>
     new RegExp(searchChat, "i").test(user.receiver_details.name as string)
   );
-
   return (
     <div className="w-full flex-grow flex">
       {displayAllChats.data?.length === 0 && searchChat.length === 0 ? (

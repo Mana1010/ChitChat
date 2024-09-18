@@ -37,6 +37,10 @@ export type ConversationAndMessagesSchema = {
   getUserInfo: {
     _id: string;
     receiver_details: User;
+    hasUnreadMessages: {
+      user: User | string;
+      totalUnreadMessages: number;
+    };
   };
   getMessages: Messages[];
 };

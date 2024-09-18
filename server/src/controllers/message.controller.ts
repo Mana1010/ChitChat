@@ -132,6 +132,7 @@ export const getReceiverInfo = asyncHandler(
             profilePic: "$receiver_details.profilePic",
             status: "$receiver_details.status",
           },
+          hasUnreadMessages: 1,
         },
       },
     ]);
@@ -161,7 +162,7 @@ export const getChatNotifications = asyncHandler(
       const getLatestConversationId = await Conversation.find({
         participants: { $in: [senderId] },
       })
-        .sort({ updatedAt: -1 })
+        .sort({ "lastMessage.lastMessageCreatedAt": -1 })
         .limit(1)
         .select("_id"); //Will sort descending by updatedAt and get the very first index using limit
       res.status(200).json({ message: getLatestConversationId[0]._id });
