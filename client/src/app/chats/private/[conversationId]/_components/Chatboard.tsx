@@ -18,12 +18,17 @@ import { nanoid } from "nanoid";
 import ChatBoardHeaderSkeleton from "@/app/chats/_components/ChatBoardHeaderSkeleton";
 import LoadingChat from "@/components/LoadingChat";
 import Linkify from "linkify-react";
+import { VscReactions } from "react-icons/vsc";
+import Reactions from "@/app/chats/_components/Reactions";
+
 function Chatboard({ conversationId }: { conversationId: string }) {
   const { socket } = useSocketStore();
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [message, setMessage] = useState<string>("");
   const [openEmoji, setOpenEmoji] = useState(false);
   const { data: session, status } = useSession();
+  const [hoveredMessage, setHoveredMessage] = useState<string | undefined>("");
+  const [openReaction, setOpenReaction] = useState<string | undefined>("");
   const getReceiverInfoAndChats: UseQueryResult<
     ConversationAndMessagesSchema,
     AxiosError<{ message: string }>
@@ -283,17 +288,48 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                                 {data?.sender?.name.split(" ")[0] ?? ""}
                               </small>
                               {/* ChatBox */}
-
                               <div
-                                className={`p-2 rounded-md flex items-center justify-center break-all ${
-                                  data.sender._id === session?.user.userId
-                                    ? "bg-[#6486FF]"
-                                    : "bg-[#171717]"
+                                onMouseMove={() => {
+                                  setHoveredMessage(data._id);
+                                }}
+                                onMouseLeave={() => {
+                                  setHoveredMessage("");
+                                }}
+                                className={`flex items-center w-full  ${
+                                  data.sender._id === session?.user.userId &&
+                                  "flex-row-reverse"
                                 }`}
                               >
-                                <span className="text-white">
-                                  {data?.message}
-                                </span>
+                                <div
+                                  className={`p-2 rounded-md flex items-center justify-center break-all ${
+                                    data.sender._id === session?.user.userId
+                                      ? "bg-[#6486FF]"
+                                      : "bg-[#171717]"
+                                  }`}
+                                >
+                                  <span className="text-white">
+                                    {data?.message}
+                                  </span>
+                                </div>
+
+                                {/* Reactions */}
+                                <div className={`px-2 relative`}>
+                                  <button
+                                    onClick={() => setOpenReaction(data._id)}
+                                    className={`w-5 h-5 rounded-full items-center justify-center ${
+                                      data._id === hoveredMessage
+                                        ? "flex"
+                                        : "hidden"
+                                    }`}
+                                  >
+                                    <span
+                                      className={`text-slate-300 font-bold text-lg`}
+                                    >
+                                      <VscReactions />
+                                    </span>
+                                  </button>
+                                  {openReaction === data._id && <Reactions />}
+                                </div>
                               </div>
                             </div>
                             <div

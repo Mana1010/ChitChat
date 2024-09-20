@@ -11,6 +11,7 @@ const messageSchema = new mongoose.Schema(
     sender: { type: Schema.Types.ObjectId, ref: "User", required: true },
     message: { type: String, required: true },
     isRead: { type: Boolean, default: false },
+    reaction: { type: String, default: "" },
   },
   {
     timestamps: true,
