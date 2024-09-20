@@ -47,22 +47,22 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       .totalUnreadMessages,
   ]);
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || status !== "authenticated") return;
     socket.emit("join-room", conversationId);
-    socket.on("display-message", (data: Messages) => {
+    socket.on("display-message", ({ getProfile, conversation }) => {
       queryClient.setQueryData<ConversationAndMessagesSchema | undefined>(
         ["message", conversationId],
         (cachedData: any) => {
           const { getMessages } = cachedData || {};
-          return { ...cachedData, getMessages: [...getMessages, data] };
+          return { ...cachedData, getMessages: [...getMessages, getProfile] };
         }
       );
     });
     return () => {
       socket.off("display-message");
+      socket.emit("leave-room", conversationId);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [socket]);
+  }, [conversationId, queryClient, socket, status]);
   useEffect(() => {
     if (!socket) return;
     socket.on("display-seen-text", ({ user, totalUnreadMessages }) => {
@@ -89,6 +89,20 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       socket.off("display-seen-text");
     };
   }, [conversationId, queryClient, socket]);
+
+  useEffect(() => {
+    if (!socket) return;
+    socket.emit("read-message", {
+      conversationId,
+      participantId:
+        getReceiverInfoAndChats.data?.getUserInfo.receiver_details._id,
+    });
+  }, [
+    conversationId,
+    getReceiverInfoAndChats.data?.getUserInfo.receiver_details._id,
+    socket,
+    getReceiverInfoAndChats.data?.getMessages,
+  ]);
   if (conversationId.toLowerCase() === "new") {
     return <NewUser />;
   }
@@ -331,12 +345,14 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          socket?.emit("send-message", {
+          if (!socket) return;
+          socket.emit("send-message", {
             message,
             conversationId,
             participantId:
               getReceiverInfoAndChats.data?.getUserInfo.receiver_details._id,
           });
+
           sendMessage(message);
           setMessage("");
         }}
@@ -344,14 +360,6 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       >
         <input
           value={message}
-          onFocus={() => {
-            if (!socket) return;
-            socket.emit("read-message", {
-              conversationId,
-              participantId:
-                getReceiverInfoAndChats.data?.getUserInfo.receiver_details._id,
-            });
-          }}
           onChange={(e) => setMessage(e.target.value)}
           type="text"
           placeholder="Send a message"

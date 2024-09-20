@@ -41,9 +41,10 @@ export function privateChat(io: Server) {
               new: true,
             }
           );
-          socket.broadcast
-            .to(conversationId)
-            .emit("display-message", getProfile);
+          socket.broadcast.to(conversationId).emit("display-message", {
+            getProfile,
+            conversation: conversationId,
+          });
           socket.broadcast
             .to(conversationId)
             .emit("display-unread-message", conversationId);
@@ -91,6 +92,10 @@ export function privateChat(io: Server) {
     socket.on("join-room", (conversationId) => {
       socket.join(conversationId);
       console.log(`Joined room ${conversationId}`);
+    });
+    socket.on("leave-room", (conversationId) => {
+      socket.leave(conversationId);
+      console.log("Leaving room");
     });
   });
 }
