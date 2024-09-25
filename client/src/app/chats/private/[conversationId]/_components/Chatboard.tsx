@@ -68,8 +68,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
   const getUserInfo = data?.pages[0]?.getUserInfo;
   const queryClient = useQueryClient();
   useLayoutEffect(() => {
-    if (inView && !isFetchingNextPage) {
-      alert("Running the scrollIntoView");
+    if (!inView && !isFetchingNextPage) {
       scrollRef.current?.scrollIntoView({ block: "end" });
     }
   }, [inView, data?.pages, isFetchingNextPage]);
@@ -136,10 +135,16 @@ function Chatboard({ conversationId }: { conversationId: string }) {
     data?.pages[0]?.getMessages,
   ]);
   const flattenArr = useMemo(() => {
-    return data?.pages
-      .filter((page) => page) //For removing the undefined element in page params
-      .sort((a, b) => a.nextPage - b.nextPage) //to sorted out the message ASCENDING
-      .flatMap((page) => page.getMessages); //To flatten the sub array inside of an array and retrieve only the getMessage
+    return (
+      data?.pages
+        .filter((page) => page) //For removing the undefined element in page params
+        // .sort((a, b) => a.nextPage - b.nextPage) //to sorted out the message ASCENDING
+        .flatMap((page) => page.getMessages)
+        .sort(
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        )
+    ); //To flatten the sub array inside of an array and retrieve only the getMessage
   }, [data?.pages]); //Run only when there is a changes to the data
   if (conversationId.toLowerCase() === "new") {
     return <NewUser />;
@@ -207,7 +212,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       }
     );
   }
-  console.log("Rendering its own");
+  console.log(data?.pages);
   return (
     <div
       onClick={() => setOpenEmoji(false)}

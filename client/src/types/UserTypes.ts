@@ -31,7 +31,7 @@ export interface PublicMessages {
   _id: string;
   userId: User | any;
   message: string;
-  createdAt: string;
+  createdAt: string | any;
   isMessageDeleted: boolean;
 }
 export type ConversationAndMessagesSchema = {

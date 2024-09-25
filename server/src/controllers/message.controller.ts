@@ -156,7 +156,7 @@ export const getReceiverInfo = asyncHandler(
         .populate([
           { path: "sender", select: ["name", "profilePic", "status"] },
         ])
-        .select(["sender", "message", "isRead"]);
+        .select(["sender", "message", "isRead", "createdAt"]);
       const hasMoreMessages = getMessages.length === LIMIT;
       const messages = getMessages.reverse();
       const nextPage = hasMoreMessages ? CURRENTPAGE + 1 : null;
