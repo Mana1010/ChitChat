@@ -41,6 +41,7 @@ export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
 export const getAllUsersConversation = asyncHandler(
   async (req: Request, res: Response) => {
     const { id } = req.params;
+    const LIMIT = 10;
     const getAllUsers = await Conversation.aggregate([
       { $match: { participants: new mongoose.Types.ObjectId(id) } },
       { $unwind: "$participants" },
@@ -93,6 +94,7 @@ export const chatUser = asyncHandler(async (req: Request, res: Response) => {
 export const getReceiverInfo = asyncHandler(
   async (req: Request, res: Response) => {
     const { userId, conversationId } = req.params;
+    const { page, limit } = req.query;
     if (!mongoose.Types.ObjectId.isValid(conversationId)) {
       res.status(404);
       throw new Error("User not found");
@@ -140,15 +142,33 @@ export const getReceiverInfo = asyncHandler(
       res.status(404);
       throw new Error("User not found");
     }
-    const getMessages = await Private.find({ conversationId })
-      .populate([{ path: "sender", select: ["name", "profilePic", "status"] }])
-      .select(["sender", "message", "isRead"]);
-    res.status(200).json({
-      message: {
-        getUserInfo: getUserInfo[0],
-        getMessages,
-      },
-    });
+    if (!page || !limit) {
+      res.status(403);
+      throw new Error("Forbidden");
+    }
+    const LIMIT = +limit;
+    const CURRENTPAGE = +page;
+    if (isFinite(CURRENTPAGE)) {
+      const getMessages = await Private.find({ conversationId })
+        .sort({ createdAt: -1 })
+        .skip(CURRENTPAGE * LIMIT)
+        .limit(LIMIT)
+        .populate([
+          { path: "sender", select: ["name", "profilePic", "status"] },
+        ])
+        .select(["sender", "message", "isRead"]);
+      const hasMoreMessages = getMessages.length === LIMIT;
+      const messages = getMessages.reverse();
+      const nextPage = hasMoreMessages ? CURRENTPAGE + 1 : null;
+      console.log(CURRENTPAGE);
+      res.status(200).json({
+        message: {
+          getUserInfo: getUserInfo[0],
+          getMessages: messages,
+          nextPage,
+        },
+      });
+    }
   }
 );
 

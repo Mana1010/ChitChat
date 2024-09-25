@@ -25,6 +25,7 @@ export interface Messages {
   sender: User;
   message: string;
   isRead: boolean;
+  reaction: string;
 }
 export interface PublicMessages {
   _id: string;

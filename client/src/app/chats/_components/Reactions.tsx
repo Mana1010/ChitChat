@@ -1,5 +1,8 @@
-import React from "react";
+"use client";
+import React, { useEffect, useState } from "react";
 import { nanoid } from "nanoid";
+import { useSocketStore } from "@/utils/store/socket.store";
+
 const reactions = [
   {
     emoji: "👍",
@@ -42,11 +45,18 @@ const reactions = [
     id: nanoid(),
   },
 ];
-function Reactions() {
+function Reactions({ messageId }: { messageId: string }) {
+  const { socket } = useSocketStore();
+  const [pickedReaction, setPickedReaction] = useState<string>("");
+
   return (
-    <div className="absolute -top-14 -left-20 px-2 rounded-md bg-[#414141] flex items-center justify-center space-x-1 h-[40px]">
+    <div className="absolute -top-14 -left-20 rounded-md bg-[#414141] flex items-center justify-center h-[40px]">
       {reactions.map((reaction) => (
-        <button key={reaction.id} className="text-2xl">
+        <button
+          onClick={() => setPickedReaction(reaction.emoji)}
+          key={reaction.id}
+          className="text-2xl p-1.5 hover:bg-slate-800"
+        >
           {reaction.emoji}
         </button>
       ))}

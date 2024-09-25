@@ -1,7 +1,19 @@
 "use client";
-import axios, { AxiosError } from "axios";
-import React, { useEffect, useRef, useState, useLayoutEffect } from "react";
-import { useQuery, useQueryClient, UseQueryResult } from "react-query";
+import axios from "axios";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useLayoutEffect,
+  useMemo,
+} from "react";
+import {
+  InfiniteData,
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient,
+  UseQueryResult,
+} from "react-query";
 import { useSession } from "next-auth/react";
 import { serverUrl } from "@/utils/serverUrl";
 import Image from "next/image";
@@ -20,7 +32,7 @@ import LoadingChat from "@/components/LoadingChat";
 import Linkify from "linkify-react";
 import { VscReactions } from "react-icons/vsc";
 import Reactions from "@/app/chats/_components/Reactions";
-
+import { useInView } from "react-intersection-observer";
 function Chatboard({ conversationId }: { conversationId: string }) {
   const { socket } = useSocketStore();
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -29,28 +41,43 @@ function Chatboard({ conversationId }: { conversationId: string }) {
   const { data: session, status } = useSession();
   const [hoveredMessage, setHoveredMessage] = useState<string | undefined>("");
   const [openReaction, setOpenReaction] = useState<string | undefined>("");
-  const getReceiverInfoAndChats: UseQueryResult<
-    ConversationAndMessagesSchema,
-    AxiosError<{ message: string }>
-  > = useQuery({
-    queryKey: ["message", conversationId],
-    queryFn: async () => {
-      const response = await axios.get(
-        `${serverUrl}/api/messages/receiver-info/${session?.user.userId}/conversation/${conversationId}`
-      );
-      return response.data.message;
-    },
-    refetchOnWindowFocus: false,
-    enabled: status === "authenticated",
-  });
+  const [hasNextPage, setHasNextPage] = useState(true);
+  const { ref, inView } = useInView();
+  const { data, fetchNextPage, error, isLoading, isFetchingNextPage } =
+    useInfiniteQuery({
+      queryKey: ["message", conversationId],
+      queryFn: async ({ pageParam = 0 }): Promise<any> => {
+        const response = await axios.get(
+          `${serverUrl}/api/messages/receiver-info/${
+            session?.user.userId
+          }/conversation/${conversationId}?page=${pageParam}&limit=${10}`
+        );
+        return response.data.message;
+      },
+      getNextPageParam: (lastPage, allPages) => {
+        if (lastPage.nextPage === null && hasNextPage) {
+          setHasNextPage(false);
+        }
+        return lastPage?.nextPage ?? null;
+      },
+      cacheTime: 0,
+      refetchOnWindowFocus: false,
+      enabled: status === "authenticated",
+    });
+
+  const getUserInfo = data?.pages[0]?.getUserInfo;
   const queryClient = useQueryClient();
   useLayoutEffect(() => {
-    scrollRef.current?.scrollIntoView({ block: "end" });
-  }, [
-    getReceiverInfoAndChats.data?.getMessages.length,
-    getReceiverInfoAndChats.data?.getUserInfo.hasUnreadMessages
-      .totalUnreadMessages,
-  ]);
+    if (inView && !isFetchingNextPage) {
+      alert("Running the scrollIntoView");
+      scrollRef.current?.scrollIntoView({ block: "end" });
+    }
+  }, [inView, data?.pages, isFetchingNextPage]);
+  useEffect(() => {
+    if (inView && hasNextPage) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, fetchNextPage, inView]);
   useEffect(() => {
     if (!socket || status !== "authenticated") return;
     socket.emit("join-room", conversationId);
@@ -99,50 +126,64 @@ function Chatboard({ conversationId }: { conversationId: string }) {
     if (!socket) return;
     socket.emit("read-message", {
       conversationId,
-      participantId:
-        getReceiverInfoAndChats.data?.getUserInfo.receiver_details._id,
+      participantId: getUserInfo?.receiver_details?._id,
     });
   }, [
     conversationId,
-    getReceiverInfoAndChats.data?.getUserInfo.receiver_details._id,
+    getUserInfo?.receiver_details._id,
     socket,
-    getReceiverInfoAndChats.data?.getMessages,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    data?.pages[0]?.getMessages,
   ]);
+  const flattenArr = useMemo(() => {
+    return data?.pages
+      .filter((page) => page) //For removing the undefined element in page params
+      .sort((a, b) => a.nextPage - b.nextPage) //to sorted out the message ASCENDING
+      .flatMap((page) => page.getMessages); //To flatten the sub array inside of an array and retrieve only the getMessage
+  }, [data?.pages]); //Run only when there is a changes to the data
   if (conversationId.toLowerCase() === "new") {
     return <NewUser />;
   }
-  if (getReceiverInfoAndChats.isError) {
-    const error = getReceiverInfoAndChats.error as AxiosError;
-    if (error.response?.status === 404) {
-      return <UserNotFound />;
-    }
-  }
+  // if (isError) {
+  //   const error = error as AxiosError;
+  //   if (error.response?.status === 404) {
+  //     return <UserNotFound />;
+  //   }
+  // }
   function sendMessage(messageContent: string) {
     queryClient.setQueryData<ConversationAndMessagesSchema | undefined>(
       ["message", conversationId],
       (data: any) => {
+        console.log(data);
         const { getMessages, getUserInfo } = data || {};
-        if (getMessages) {
+        const firstPage = data?.pages[0];
+        if (firstPage) {
           return {
-            getUserInfo: {
-              ...getUserInfo,
-              hasUnreadMessages: {
-                ...getUserInfo.hasUnreadMessages,
-                totalUnreadMessages: getUserInfo.hasUnreadMessages + 1,
-              },
-            },
-            getMessages: [
-              ...getMessages,
+            ...data, //the page params
+            pages: [
               {
-                message: messageContent,
-                sender: {
-                  name: session?.user.name.split(" ")[0],
-                  status: "Online",
-                  profilePic: session?.user.image,
-                  _id: session?.user.userId,
+                ...firstPage,
+                getUserInfo: {
+                  ...getUserInfo,
+                  hasUnreadMessages: {
+                    ...getUserInfo?.hasUnreadMessages,
+                    totalUnreadMessages: getUserInfo?.hasUnreadMessages + 1,
+                  },
                 },
-                isRead: false,
-                _id: nanoid(), //As temporary data
+                getMessages: [
+                  ...getMessages,
+                  {
+                    message: messageContent,
+                    sender: {
+                      name: session?.user.name.split(" ")[0],
+                      status: "Online",
+                      profilePic: session?.user.image,
+                      _id: session?.user.userId,
+                    },
+                    isRead: false,
+                    _id: nanoid(), //As temporary data
+                  },
+                ],
               },
             ],
           };
@@ -166,22 +207,20 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       }
     );
   }
+  console.log("Rendering its own");
   return (
     <div
       onClick={() => setOpenEmoji(false)}
       className="flex flex-grow w-full h-full flex-col"
     >
       <header className="w-full shadow-md py-3 px-4 flex items-center justify-between">
-        {getReceiverInfoAndChats.isLoading || !getReceiverInfoAndChats.data ? (
+        {isLoading || !data ? (
           <ChatBoardHeaderSkeleton />
         ) : (
           <div className="flex items-center space-x-3">
             <div className="w-[40px] h-[40px] relative rounded-full">
               <Image
-                src={
-                  getReceiverInfoAndChats.data?.getUserInfo?.receiver_details
-                    .profilePic
-                }
+                src={getUserInfo?.receiver_details.profilePic}
                 alt="profile-image"
                 fill
                 sizes="100%"
@@ -190,8 +229,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
               />
               <span
                 className={`${
-                  getReceiverInfoAndChats.data?.getUserInfo?.receiver_details
-                    .status === "Online"
+                  getUserInfo?.receiver_details.status === "Online"
                     ? "bg-green-500"
                     : "bg-zinc-500"
                 } absolute bottom-[2px] right-[2px] w-2 h-2 rounded-full`}
@@ -199,14 +237,10 @@ function Chatboard({ conversationId }: { conversationId: string }) {
             </div>
             <div>
               <h3 className="text-white text-sm">
-                {
-                  getReceiverInfoAndChats.data?.getUserInfo?.receiver_details
-                    .name
-                }
+                {getUserInfo?.receiver_details.name}
               </h3>
               <small className="text-slate-300">
-                {getReceiverInfoAndChats.data?.getUserInfo?.receiver_details
-                  .status === "Online"
+                {getUserInfo?.receiver_details.status === "Online"
                   ? "Active Now"
                   : "Offline"}
               </small>
@@ -218,27 +252,21 @@ function Chatboard({ conversationId }: { conversationId: string }) {
         </button>
       </header>
       <div className="flex-grow w-full p-3">
-        {getReceiverInfoAndChats.isLoading || !getReceiverInfoAndChats.data ? (
+        {isLoading || !data ? (
           <LoadingChat />
         ) : (
           <div className="h-full w-full">
-            {getReceiverInfoAndChats.data.getMessages.length === 0 ? (
+            {data?.pages[0]?.getMessages?.length === 0 ? (
               <div className="flex items-center flex-col justify-end h-full w-full pb-5 space-y-2">
                 <h3 className="text-zinc-300 text-[0.78rem]">
-                  Wave to{" "}
-                  {
-                    getReceiverInfoAndChats.data.getUserInfo.receiver_details
-                      .name
-                  }
+                  Wave to {getUserInfo.receiver_details.name}
                 </h3>
                 <button
                   onClick={() => {
                     socket?.emit("send-message", {
                       message: "👋",
                       conversationId,
-                      participantId:
-                        getReceiverInfoAndChats.data.getUserInfo
-                          .receiver_details._id,
+                      participantId: getUserInfo.receiver_details._id,
                     });
                     sendMessage("👋");
                   }}
@@ -249,123 +277,149 @@ function Chatboard({ conversationId }: { conversationId: string }) {
               </div>
             ) : (
               <div className="w-full max-h-[430px] overflow-y-auto flex flex-col space-y-3 relative pr-2">
-                {getReceiverInfoAndChats.data?.getMessages.map(
-                  (data: Messages) => (
-                    <Linkify
-                      key={data._id}
-                      options={{
-                        attributes: { target: "_blank" },
-                        className: "styled-link",
-                      }}
+                {/* <div className="flex w-full items-center justify-center absolute">
+                  <button
+                    onClick={() => {
+                      fetchNextPage();
+                      setCurrentPage((prev) => prev + 1);
+                    }}
+                    className="text-sm rounded-3xl bg-[#414141] text-[#6486FF] px-2.5 py-2 flex items-center space-x-2 cursor-pointer relative z-50"
+                  >
+                    <span>
+                      <IoReload />
+                    </span>
+                    <span>Load Previous Messages</span>
+                  </button>
+                </div> */}
+                {hasNextPage && (
+                  <div ref={ref} className="w-full absolute top-0 z-50">
+                    <span>
+                      <LoadingChat />
+                    </span>
+                  </div>
+                )}
+                {flattenArr?.map((data: Messages) => (
+                  <Linkify
+                    key={data._id}
+                    options={{
+                      attributes: { target: "_blank" },
+                      className: "styled-link",
+                    }}
+                  >
+                    <div
+                      className={`flex space-x-2 w-full relative z-10 ${
+                        data.sender._id === session?.user.userId
+                          ? "justify-end"
+                          : "justify-start"
+                      }`}
                     >
                       <div
-                        className={`flex space-x-2 w-full relative z-10 ${
+                        onMouseMove={() => {
+                          setHoveredMessage(data._id);
+                        }}
+                        onMouseLeave={() => {
+                          setHoveredMessage("");
+                          setOpenReaction("");
+                        }}
+                        className={`w-1/2 flex ${
                           data.sender._id === session?.user.userId
                             ? "justify-end"
                             : "justify-start"
                         }`}
                       >
                         <div
-                          className={`w-1/2 flex ${
-                            data.sender._id === session?.user.userId
-                              ? "justify-end"
-                              : "justify-start"
+                          className={`flex items-end gap-1  ${
+                            data.sender._id !== session?.user.userId &&
+                            "flex-row-reverse"
                           }`}
                         >
-                          <div
-                            className={`flex items-end gap-1  ${
-                              data.sender._id !== session?.user.userId &&
-                              "flex-row-reverse"
-                            }`}
-                          >
-                            <div className="flex flex-col">
-                              <small
-                                className={`font-semibold text-[0.7rem] text-white ${
-                                  data.sender._id === session?.user.userId &&
-                                  "text-end hidden"
-                                }`}
-                              >
-                                {data?.sender?.name.split(" ")[0] ?? ""}
-                              </small>
-                              {/* ChatBox */}
-                              <div
-                                onMouseMove={() => {
-                                  setHoveredMessage(data._id);
-                                }}
-                                onMouseLeave={() => {
-                                  setHoveredMessage("");
-                                }}
-                                className={`flex items-center w-full  ${
-                                  data.sender._id === session?.user.userId &&
-                                  "flex-row-reverse"
-                                }`}
-                              >
-                                <div
-                                  className={`p-2 rounded-md flex items-center justify-center break-all ${
-                                    data.sender._id === session?.user.userId
-                                      ? "bg-[#6486FF]"
-                                      : "bg-[#171717]"
-                                  }`}
-                                >
-                                  <span className="text-white">
-                                    {data?.message}
-                                  </span>
-                                </div>
-
-                                {/* Reactions */}
-                                <div className={`px-2 relative`}>
-                                  <button
-                                    onClick={() => setOpenReaction(data._id)}
-                                    className={`w-5 h-5 rounded-full items-center justify-center ${
-                                      data._id === hoveredMessage
-                                        ? "flex"
-                                        : "hidden"
-                                    }`}
-                                  >
-                                    <span
-                                      className={`text-slate-300 font-bold text-lg`}
-                                    >
-                                      <VscReactions />
-                                    </span>
-                                  </button>
-                                  {openReaction === data._id && <Reactions />}
-                                </div>
-                              </div>
-                            </div>
-                            <div
-                              className={`w-[32px] h-[32px] rounded-full relative px-4 py-2 ${
+                          <div className="flex flex-col">
+                            <small
+                              className={`font-semibold text-[0.7rem] text-white ${
                                 data.sender._id === session?.user.userId &&
-                                "hidden"
+                                "text-end hidden"
                               }`}
                             >
-                              <Image
-                                src={data.sender.profilePic ?? emptyChat}
-                                alt="profile-pic"
-                                fill
-                                sizes="100%"
-                                className="rounded-full absolute"
-                                priority
-                              />
-                              <span
-                                className={`w-2 h-2 ${
-                                  data.sender.status === "Online"
-                                    ? "bg-green-500"
-                                    : "bg-slate-500"
-                                } rounded-full absolute right-[1px] bottom-[2px]`}
-                              ></span>
+                              {data?.sender?.name.split(" ")[0] ?? ""}
+                            </small>
+                            {/* ChatBox */}
+                            <div
+                              className={`flex items-center w-full  ${
+                                data.sender._id === session?.user.userId &&
+                                "flex-row-reverse"
+                              }`}
+                            >
+                              <div
+                                className={`p-2 rounded-md flex items-center justify-center break-all ${
+                                  data.sender._id === session?.user.userId
+                                    ? "bg-[#6486FF]"
+                                    : "bg-[#171717]"
+                                }`}
+                              >
+                                <span className="text-white">
+                                  {data?.message}
+                                </span>
+                              </div>
+
+                              {/* Reactions */}
+                              <div className={`px-2 relative`}>
+                                <button
+                                  onClick={() => {
+                                    setOpenReaction((prevData) =>
+                                      prevData ? "" : data._id
+                                    );
+                                    setHoveredMessage(data._id);
+                                  }}
+                                  className={`w-5 h-5 rounded-full items-center justify-center ${
+                                    data._id === hoveredMessage
+                                      ? "flex"
+                                      : "hidden"
+                                  }`}
+                                >
+                                  <span
+                                    className={`text-slate-300 font-bold text-lg`}
+                                  >
+                                    <VscReactions />
+                                  </span>
+                                </button>
+                                {openReaction === data._id && (
+                                  <Reactions messageId={data._id ?? ""} />
+                                )}
+                              </div>
                             </div>
+                          </div>
+                          <div
+                            className={`w-[32px] h-[32px] rounded-full relative px-4 py-2 ${
+                              data.sender._id === session?.user.userId &&
+                              "hidden"
+                            }`}
+                          >
+                            <Image
+                              src={data.sender.profilePic ?? emptyChat}
+                              alt="profile-pic"
+                              fill
+                              sizes="100%"
+                              className="rounded-full absolute"
+                              priority
+                            />
+                            <span
+                              className={`w-2 h-2 ${
+                                data.sender.status === "Online"
+                                  ? "bg-green-500"
+                                  : "bg-slate-500"
+                              } rounded-full absolute right-[1px] bottom-[2px]`}
+                            ></span>
                           </div>
                         </div>
                       </div>
-                    </Linkify>
-                  )
-                )}
+                    </div>
+                  </Linkify>
+                ))}
                 <div
                   className={`w-full justify-end items-end relative bottom-3 pr-1 ${
-                    getReceiverInfoAndChats.data.getUserInfo.hasUnreadMessages
-                      .user !== session?.user.userId &&
-                    getReceiverInfoAndChats.data.getUserInfo.hasUnreadMessages
-                      .totalUnreadMessages === 0
+                    getUserInfo?.hasUnreadMessages?.user !==
+                      session?.user.userId &&
+                    getUserInfo?.hasUnreadMessages?.totalUnreadMessages === 0
                       ? "flex"
                       : "hidden"
                   } `}
@@ -373,6 +427,21 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                   <small className="text-zinc-500">Seen</small>
                 </div>
                 <div ref={scrollRef} className="relative top-5"></div>
+                {/* {currentPage > 1 && (
+                  <div className="flex w-full items-center justify-center absolute bottom-0">
+                    <button
+                      onClick={() => {
+                        setCurrentPage((prev) => prev - 1);
+                      }}
+                      className="text-sm rounded-3xl bg-[#414141] text-[#6486FF] px-2.5 py-2 flex items-center space-x-2 cursor-pointer relative z-50"
+                    >
+                      <span>
+                        <IoReload />
+                      </span>
+                      <span>Load Previous Messages</span>
+                    </button>
+                  </div>
+                )} */}
               </div>
             )}
           </div>
@@ -385,8 +454,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
           socket.emit("send-message", {
             message,
             conversationId,
-            participantId:
-              getReceiverInfoAndChats.data?.getUserInfo.receiver_details._id,
+            participantId: getUserInfo.receiver_details._id,
           });
 
           sendMessage(message);
