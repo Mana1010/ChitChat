@@ -3,6 +3,7 @@ export interface User {
   profilePic: string;
   _id: string;
   status: string;
+  userId: string;
 }
 
 export interface Conversation {
@@ -34,14 +35,11 @@ export interface PublicMessages {
   createdAt: string | any;
   isMessageDeleted: boolean;
 }
-export type ConversationAndMessagesSchema = {
-  getUserInfo: {
-    _id: string;
-    receiver_details: User;
-    hasUnreadMessages: {
-      user: User | string;
-      totalUnreadMessages: number;
-    };
+export interface GetParticipantInfo {
+  _id: string;
+  receiver_details: User;
+  hasUnreadMessages: {
+    user: User | string;
+    totalUnreadMessages: number;
   };
-  getMessages: Messages[];
-};
+}

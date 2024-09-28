@@ -4,7 +4,8 @@ import {
   getAllUsers,
   getAllUsersConversation,
   chatUser,
-  getReceiverInfo,
+  getParticipantInfo,
+  getPrivateMessages,
   getChatNotifications,
   getParticipantName,
 } from "../controllers/message.controller";
@@ -14,8 +15,12 @@ router.get("/messages/public", getAllPublicMessages);
 router.get("/messages/chat-list/:id", getAllUsersConversation);
 router.get("/messages/user-list", getAllUsers);
 router.get(
-  "/messages/receiver-info/:userId/conversation/:conversationId",
-  getReceiverInfo
+  "/messages/participant-info/:userId/conversation/:conversationId",
+  getParticipantInfo
+);
+router.get(
+  "/messages/message-list/conversation/:conversationId",
+  getPrivateMessages
 );
 router.post("/messages/newChat", chatUser);
 router.get("/messages/notification/:senderId", getChatNotifications);

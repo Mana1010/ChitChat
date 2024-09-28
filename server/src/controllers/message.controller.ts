@@ -91,12 +91,47 @@ export const chatUser = asyncHandler(async (req: Request, res: Response) => {
   res.status(201).json({ message: checkExistingConversation._id });
 });
 
-export const getReceiverInfo = asyncHandler(
+export const getPrivateMessages = asyncHandler(
   async (req: Request, res: Response) => {
-    const { userId, conversationId } = req.params;
+    const { conversationId } = req.params;
     const { page, limit } = req.query;
     if (!mongoose.Types.ObjectId.isValid(conversationId)) {
       res.status(404);
+      throw new Error("User not found");
+    }
+    if (!page || !limit) {
+      res.status(403);
+      throw new Error("Forbidden");
+    }
+    const LIMIT = +limit;
+    const CURRENTPAGE = +page;
+    if (isFinite(CURRENTPAGE)) {
+      const getMessages = await Private.find({ conversationId })
+        .sort({ createdAt: -1 })
+        .skip(CURRENTPAGE * LIMIT)
+        .limit(LIMIT)
+        .populate([
+          { path: "sender", select: ["name", "profilePic", "status"] },
+        ])
+        .select(["sender", "message", "isRead", "createdAt"]);
+      const hasMoreMessages = getMessages.length === LIMIT;
+      const messages = getMessages.reverse();
+      const nextPage = hasMoreMessages ? CURRENTPAGE + 1 : null;
+      res.status(200).json({
+        message: {
+          getMessages: messages,
+          nextPage,
+        },
+      });
+    }
+  }
+);
+export const getParticipantInfo = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { userId, conversationId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(conversationId)) {
+      res.status(404);
+      console.log("Huyy");
       throw new Error("User not found");
     }
 
@@ -142,33 +177,9 @@ export const getReceiverInfo = asyncHandler(
       res.status(404);
       throw new Error("User not found");
     }
-    if (!page || !limit) {
-      res.status(403);
-      throw new Error("Forbidden");
-    }
-    const LIMIT = +limit;
-    const CURRENTPAGE = +page;
-    if (isFinite(CURRENTPAGE)) {
-      const getMessages = await Private.find({ conversationId })
-        .sort({ createdAt: -1 })
-        .skip(CURRENTPAGE * LIMIT)
-        .limit(LIMIT)
-        .populate([
-          { path: "sender", select: ["name", "profilePic", "status"] },
-        ])
-        .select(["sender", "message", "isRead", "createdAt"]);
-      const hasMoreMessages = getMessages.length === LIMIT;
-      const messages = getMessages.reverse();
-      const nextPage = hasMoreMessages ? CURRENTPAGE + 1 : null;
-      console.log(CURRENTPAGE);
-      res.status(200).json({
-        message: {
-          getUserInfo: getUserInfo[0],
-          getMessages: messages,
-          nextPage,
-        },
-      });
-    }
+    res.status(200).json({
+      message: getUserInfo[0],
+    });
   }
 );
 
