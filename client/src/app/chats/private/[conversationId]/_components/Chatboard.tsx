@@ -1,5 +1,5 @@
 "use client";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import React, {
   useEffect,
   useRef,
@@ -24,7 +24,11 @@ import emptyChat from "../../../../../assets/images/empty-chat.png";
 import Picker from "emoji-picker-react";
 import { MdEmojiEmotions } from "react-icons/md";
 import { LuSend } from "react-icons/lu";
-import { ConversationAndMessagesSchema, Messages } from "@/types/UserTypes";
+import {
+  Conversation,
+  ConversationAndMessagesSchema,
+  Messages,
+} from "@/types/UserTypes";
 import { useSocketStore } from "@/utils/store/socket.store";
 import { nanoid } from "nanoid";
 import ChatBoardHeaderSkeleton from "@/app/chats/_components/ChatBoardHeaderSkeleton";
@@ -36,14 +40,18 @@ import { useInView } from "react-intersection-observer";
 function Chatboard({ conversationId }: { conversationId: string }) {
   const { socket } = useSocketStore();
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const currentPageRef = useRef(0);
+  const scrollDivRef = useRef<HTMLDivElement | null>(null);
+  const scrollPositionRef = useRef<number | undefined | any>(0);
   const [message, setMessage] = useState<string>("");
   const [openEmoji, setOpenEmoji] = useState(false);
   const { data: session, status } = useSession();
   const [hoveredMessage, setHoveredMessage] = useState<string | undefined>("");
   const [openReaction, setOpenReaction] = useState<string | undefined>("");
   const [hasNextPage, setHasNextPage] = useState(true);
+  const [allMessages, setAllMessages] = useState<Messages[]>([]);
   const { ref, inView } = useInView();
-  const { data, fetchNextPage, error, isLoading, isFetchingNextPage } =
+  const { data, fetchNextPage, error, isLoading, isFetchingNextPage, isError } =
     useInfiniteQuery({
       queryKey: ["message", conversationId],
       queryFn: async ({ pageParam = 0 }): Promise<any> => {
@@ -54,29 +62,51 @@ function Chatboard({ conversationId }: { conversationId: string }) {
         );
         return response.data.message;
       },
-      getNextPageParam: (lastPage, allPages) => {
+      getNextPageParam: (lastPage) => {
         if (lastPage.nextPage === null && hasNextPage) {
           setHasNextPage(false);
         }
         return lastPage?.nextPage ?? null;
       },
-      cacheTime: 0,
+      onSuccess: (data) => {
+        const previousScrollHeight = scrollDivRef.current?.scrollHeight;
+        setAllMessages((prevMessages) => [
+          ...data.pages[currentPageRef.current]?.getMessages,
+          ...prevMessages,
+        ]);
+        const newScrollHeight = scrollDivRef.current?.scrollHeight;
+        if (currentPageRef.current > 0 && scrollDivRef.current) {
+          console.log("Scrolled up");
+          scrollDivRef.current?.scrollTo(0, 30);
+        }
+      },
       refetchOnWindowFocus: false,
       enabled: status === "authenticated",
     });
 
   const getUserInfo = data?.pages[0]?.getUserInfo;
   const queryClient = useQueryClient();
+  const checked = data?.pages[0];
   useLayoutEffect(() => {
-    if (!inView && !isFetchingNextPage) {
-      scrollRef.current?.scrollIntoView({ block: "end" });
-    }
-  }, [inView, data?.pages, isFetchingNextPage]);
+    scrollRef.current?.scrollIntoView({ block: "end" });
+  }, [checked]);
   useEffect(() => {
     if (inView && hasNextPage) {
+      currentPageRef.current++;
       fetchNextPage();
     }
   }, [hasNextPage, fetchNextPage, inView]);
+  // useEffect(() => {
+  //   console.log(scrollDivRef.current);
+  //   if (!scrollDivRef.current) return;
+  //   const scroll = scrollDivRef.current;
+  //   if (!inView) {
+  //     scroll.addEventListener("scroll", () => {
+  //       scrollPositionRef.current = scroll.scrollTop;
+  //       console.log(`Scroll Position: ${scrollPositionRef.current}`);
+  //     });
+  //   }
+  // }, [inView]);
   useEffect(() => {
     if (!socket || status !== "authenticated") return;
     socket.emit("join-room", conversationId);
@@ -134,32 +164,19 @@ function Chatboard({ conversationId }: { conversationId: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     data?.pages[0]?.getMessages,
   ]);
-  const flattenArr = useMemo(() => {
-    return (
-      data?.pages
-        .filter((page) => page) //For removing the undefined element in page params
-        // .sort((a, b) => a.nextPage - b.nextPage) //to sorted out the message ASCENDING
-        .flatMap((page) => page.getMessages)
-        .sort(
-          (a, b) =>
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        )
-    ); //To flatten the sub array inside of an array and retrieve only the getMessage
-  }, [data?.pages]); //Run only when there is a changes to the data
   if (conversationId.toLowerCase() === "new") {
     return <NewUser />;
   }
-  // if (isError) {
-  //   const error = error as AxiosError;
-  //   if (error.response?.status === 404) {
-  //     return <UserNotFound />;
-  //   }
-  // }
+  if (isError) {
+    const errorMessage = error as AxiosError<{ message: string }>;
+    if (errorMessage.response?.status === 404) {
+      return <UserNotFound />;
+    }
+  }
   function sendMessage(messageContent: string) {
     queryClient.setQueryData<ConversationAndMessagesSchema | undefined>(
       ["message", conversationId],
       (data: any) => {
-        console.log(data);
         const { getMessages, getUserInfo } = data || {};
         const firstPage = data?.pages[0];
         if (firstPage) {
@@ -212,7 +229,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       }
     );
   }
-  console.log(data?.pages);
+
   return (
     <div
       onClick={() => setOpenEmoji(false)}
@@ -260,8 +277,8 @@ function Chatboard({ conversationId }: { conversationId: string }) {
         {isLoading || !data ? (
           <LoadingChat />
         ) : (
-          <div className="h-full w-full">
-            {data?.pages[0]?.getMessages?.length === 0 ? (
+          <div className="h-full w-full relative">
+            {allMessages.length === 0 ? (
               <div className="flex items-center flex-col justify-end h-full w-full pb-5 space-y-2">
                 <h3 className="text-zinc-300 text-[0.78rem]">
                   Wave to {getUserInfo.receiver_details.name}
@@ -281,29 +298,18 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                 </button>
               </div>
             ) : (
-              <div className="w-full max-h-[430px] overflow-y-auto flex flex-col space-y-3 relative pr-2">
-                {/* <div className="flex w-full items-center justify-center absolute">
-                  <button
-                    onClick={() => {
-                      fetchNextPage();
-                      setCurrentPage((prev) => prev + 1);
-                    }}
-                    className="text-sm rounded-3xl bg-[#414141] text-[#6486FF] px-2.5 py-2 flex items-center space-x-2 cursor-pointer relative z-50"
-                  >
-                    <span>
-                      <IoReload />
-                    </span>
-                    <span>Load Previous Messages</span>
-                  </button>
-                </div> */}
+              <div
+                ref={scrollDivRef}
+                className="w-full max-h-[430px] overflow-y-auto flex flex-col space-y-3 relative pr-2"
+              >
                 {hasNextPage && (
-                  <div ref={ref} className="w-full absolute top-0 z-50">
+                  <div ref={ref} className="w-full z-50">
                     <span>
                       <LoadingChat />
                     </span>
                   </div>
                 )}
-                {flattenArr?.map((data: Messages) => (
+                {allMessages?.map((data: Messages) => (
                   <Linkify
                     key={data._id}
                     options={{
@@ -431,22 +437,9 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                 >
                   <small className="text-zinc-500">Seen</small>
                 </div>
-                <div ref={scrollRef} className="relative top-5"></div>
-                {/* {currentPage > 1 && (
-                  <div className="flex w-full items-center justify-center absolute bottom-0">
-                    <button
-                      onClick={() => {
-                        setCurrentPage((prev) => prev - 1);
-                      }}
-                      className="text-sm rounded-3xl bg-[#414141] text-[#6486FF] px-2.5 py-2 flex items-center space-x-2 cursor-pointer relative z-50"
-                    >
-                      <span>
-                        <IoReload />
-                      </span>
-                      <span>Load Previous Messages</span>
-                    </button>
-                  </div>
-                )} */}
+                <div ref={scrollRef} className="relative w-full">
+                  d
+                </div>
               </div>
             )}
           </div>

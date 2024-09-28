@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { nanoid } from "nanoid";
 import { useSocketStore } from "@/utils/store/socket.store";
 
