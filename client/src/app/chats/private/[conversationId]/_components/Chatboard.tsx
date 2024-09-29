@@ -1,24 +1,22 @@
 "use client";
 import axios, { AxiosError } from "axios";
 import React, { useEffect, useRef, useState, useLayoutEffect } from "react";
-import { useInfiniteQuery, useQueryClient, UseQueryResult } from "react-query";
+import { useInfiniteQuery, useQueryClient } from "react-query";
 import { useSession } from "next-auth/react";
 import { serverUrl } from "@/utils/serverUrl";
 import NewUser from "./NewUser";
 import UserNotFound from "./UserNotFound";
-import { Conversation, GetParticipantInfo, Messages } from "@/types/UserTypes";
+import { GetParticipantInfo, Messages } from "@/types/UserTypes";
 import { useSocketStore } from "@/utils/store/socket.store";
 import { nanoid } from "nanoid";
 import LoadingChat from "@/components/LoadingChat";
 import { useInView } from "react-intersection-observer";
-import { usePathname } from "next/navigation";
 import ChatHeader from "./ChatHeader";
 import useGetParticipantInfo from "@/hooks/getParticipantInfo.hook";
 import ChatBubbles from "@/components/ChatBubbles";
 import MessageField from "@/components/MessageField";
 function Chatboard({ conversationId }: { conversationId: string }) {
   const { socket } = useSocketStore();
-  const pathname = usePathname();
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const currentPageRef = useRef(0);
   const scrollDivRef = useRef<HTMLDivElement | null>(null);
@@ -51,14 +49,13 @@ function Chatboard({ conversationId }: { conversationId: string }) {
           ...prevMessages,
         ]);
         if (currentPageRef.current > 0 && scrollDivRef.current) {
-          scrollDivRef.current?.scrollTo(0, 30);
+          scrollDivRef.current.scrollTo(0, 40);
         }
       },
       refetchOnWindowFocus: false,
       enabled: status === "authenticated",
     });
 
-  const getUserInfo = data?.pages[0]?.getUserInfo; //Lets retrieve the user's infos
   const queryClient = useQueryClient();
   useEffect(() => {
     return () => {
@@ -66,10 +63,17 @@ function Chatboard({ conversationId }: { conversationId: string }) {
     };
   }, [conversationId, queryClient]);
   useLayoutEffect(() => {
-    if (!inView) {
-      scrollRef.current?.scrollIntoView({ block: "end" });
+    if (!scrollRef.current) return;
+    if (currentPageRef.current <= 0) {
+      scrollRef.current.scrollIntoView({ block: "end" });
     }
-  }, [allMessages, pathname, inView, isFetchingNextPage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    scrollRef.current,
+    allMessages.length,
+    currentPageRef.current,
+    participantInfo,
+  ]);
   useEffect(() => {
     if (inView && hasNextPage) {
       currentPageRef.current++;
@@ -164,6 +168,9 @@ function Chatboard({ conversationId }: { conversationId: string }) {
         },
       ];
     });
+    setTimeout(() => {
+      scrollRef.current?.scrollIntoView({ block: "end" }); //To bypass the closure nature of react :)
+    }, 0);
   }
 
   return (
@@ -218,9 +225,10 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                 ))}
                 <div
                   className={`w-full justify-end items-end relative bottom-3 pr-1 ${
-                    getUserInfo?.hasUnreadMessages?.user !==
+                    participantInfo?.hasUnreadMessages?.user !==
                       session?.user.userId &&
-                    getUserInfo?.hasUnreadMessages?.totalUnreadMessages === 0
+                    participantInfo?.hasUnreadMessages?.totalUnreadMessages ===
+                      0
                       ? "flex"
                       : "hidden"
                   } `}

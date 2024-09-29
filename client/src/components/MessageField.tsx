@@ -34,7 +34,6 @@ function MessageField({
           conversationId,
           participantId: participantInfo?.receiver_details._id,
         });
-
         sendMessage(message);
         setMessage("");
       }}

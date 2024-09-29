@@ -131,7 +131,6 @@ export const getParticipantInfo = asyncHandler(
     const { userId, conversationId } = req.params;
     if (!mongoose.Types.ObjectId.isValid(conversationId)) {
       res.status(404);
-      console.log("Huyy");
       throw new Error("User not found");
     }
 
