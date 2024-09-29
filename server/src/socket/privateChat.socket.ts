@@ -9,52 +9,58 @@ export function privateChat(io: Server) {
     const typingUsers = [];
     socket.on(
       "send-message",
-      async ({ message, conversationId, participantId }) => {
-        if (conversationId) {
-          const createMessage = await Private.create({
-            conversationId,
-            sender: userId,
-            message,
-          });
-          const getProfile = await Private.findById(createMessage._id)
-            .populate([
-              { path: "sender", select: ["profilePic", "name", "status"] },
-            ])
-            .select(["isRead", "message", "sender"]);
-          const getTotalUnreadMessages = await Conversation.findById(
-            conversationId
-          ).select("hasUnreadMessages");
-          const updatedConversation = await Conversation.findByIdAndUpdate(
-            conversationId,
-            {
-              $set: {
-                "lastMessage.sender": userId,
-                "lastMessage.text": message,
-                "lastMessage.lastMessageCreatedAt": new Date(),
-                "hasUnreadMessages.user": participantId,
-                "hasUnreadMessages.totalUnreadMessages":
-                  getTotalUnreadMessages.hasUnreadMessages.totalUnreadMessages +
-                  1,
+      async ({ message, conversationId, participantId }, cb) => {
+        try {
+          if (conversationId) {
+            const createMessage = await Private.create({
+              conversationId,
+              sender: userId,
+              message,
+            });
+            const getProfile = await Private.findById(createMessage._id)
+              .populate([
+                { path: "sender", select: ["profilePic", "name", "status"] },
+              ])
+              .select(["isRead", "message", "sender"]);
+            const getTotalUnreadMessages = await Conversation.findById(
+              conversationId
+            ).select("hasUnreadMessages");
+            const updatedConversation = await Conversation.findByIdAndUpdate(
+              conversationId,
+              {
+                $set: {
+                  "lastMessage.sender": userId,
+                  "lastMessage.text": message,
+                  "lastMessage.lastMessageCreatedAt": new Date(),
+                  "hasUnreadMessages.user": participantId,
+                  "hasUnreadMessages.totalUnreadMessages":
+                    getTotalUnreadMessages.hasUnreadMessages
+                      .totalUnreadMessages + 1,
+                },
               },
-            },
-            {
-              new: true,
-            }
-          );
-          socket.broadcast.to(conversationId).emit("display-message", {
-            getProfile,
-            conversation: conversationId,
-          });
-          socket.broadcast
-            .to(conversationId)
-            .emit("display-unread-message", conversationId);
-          socket.emit("display-updated-chatlist", {
-            newMessage: message,
-            conversationId,
-            participantId: userId,
-            lastMessageCreatedAt:
-              updatedConversation.lastMessage.lastMessageCreatedAt,
-          });
+              {
+                new: true,
+              }
+            );
+            socket.broadcast.to(conversationId).emit("display-message", {
+              getProfile,
+              conversation: conversationId,
+            });
+            cb({ success: false });
+            socket.broadcast
+              .to(conversationId)
+              .emit("display-unread-message", conversationId);
+            socket.emit("display-updated-chatlist", {
+              newMessage: message,
+              conversationId,
+              participantId: userId,
+              lastMessageCreatedAt:
+                updatedConversation.lastMessage.lastMessageCreatedAt,
+            });
+          }
+        } catch (err) {
+          cb({ success: false });
+          console.log(err);
         }
       }
     );

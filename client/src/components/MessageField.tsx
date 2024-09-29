@@ -29,11 +29,19 @@ function MessageField({
       onSubmit={(e) => {
         e.preventDefault();
         if (!socket) return;
-        socket.emit("send-message", {
-          message,
-          conversationId,
-          participantId: participantInfo?.receiver_details._id,
-        });
+        socket.emit(
+          "send-message",
+          {
+            message,
+            conversationId,
+            participantId: participantInfo?.receiver_details._id,
+          },
+          (cb: { success: boolean }) => {
+            if (cb.success) {
+              alert("Your message successfully delivered!");
+            }
+          }
+        );
         sendMessage(message);
         setMessage("");
       }}

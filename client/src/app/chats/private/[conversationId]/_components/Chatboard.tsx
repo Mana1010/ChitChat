@@ -15,16 +15,20 @@ import ChatHeader from "./ChatHeader";
 import useGetParticipantInfo from "@/hooks/getParticipantInfo.hook";
 import ChatBubbles from "@/components/ChatBubbles";
 import MessageField from "@/components/MessageField";
+import { IoIosArrowRoundDown } from "react-icons/io";
+import { AnimatePresence, motion } from "framer-motion";
 function Chatboard({ conversationId }: { conversationId: string }) {
   const { socket } = useSocketStore();
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const currentPageRef = useRef(0);
   const scrollDivRef = useRef<HTMLDivElement | null>(null);
+  const scrollPositionRef = useRef<number>(0);
   const [message, setMessage] = useState<string>("");
   const [openEmoji, setOpenEmoji] = useState(false);
   const { data: session, status } = useSession();
   const [hasNextPage, setHasNextPage] = useState(true);
   const [allMessages, setAllMessages] = useState<Messages[]>([]);
+  const [showArrowDown, setShowArrowDown] = useState(false);
   const { ref, inView } = useInView();
   const { participantInfo, isLoading: participantInfoLoading } =
     useGetParticipantInfo(conversationId, status, session);
@@ -208,6 +212,19 @@ function Chatboard({ conversationId }: { conversationId: string }) {
               </div>
             ) : (
               <div
+                onScroll={() => {
+                  if (scrollDivRef.current) {
+                    scrollPositionRef.current = scrollDivRef.current.scrollTop;
+                    const scrollHeight =
+                      scrollDivRef.current.scrollHeight -
+                      scrollDivRef.current.clientHeight;
+                    if (scrollHeight - scrollPositionRef.current > 100) {
+                      setShowArrowDown(true);
+                    } else {
+                      setShowArrowDown(false);
+                    }
+                  }
+                }}
                 ref={scrollDivRef}
                 className="w-full max-h-[430px] overflow-y-auto flex flex-col space-y-3 relative pr-2"
               >
@@ -236,6 +253,29 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                   <small className="text-zinc-500">Seen</small>
                 </div>
                 <div ref={scrollRef} className="relative w-full"></div>
+                <AnimatePresence mode="wait">
+                  {showArrowDown && (
+                    <motion.button
+                      initial={{ opacity: 0, bottom: "10px" }}
+                      animate={{ opacity: 1, bottom: "15px" }}
+                      transition={{ duration: 0.25, ease: "easeIn" }}
+                      exit={{ opacity: 0, bottom: "10px" }}
+                      onClick={() => {
+                        setShowArrowDown(false);
+                        scrollRef.current?.scrollIntoView({
+                          block: "end",
+                          behavior: "smooth",
+                        });
+                      }}
+                      className="w-12 h-12 rounded-md flex items-center justify-center p-2 bg-[#414141] text-[#6486FF] z-[999] sticky left-[50%] right-[50%] text-2xl"
+                    >
+                      <span>
+                        {" "}
+                        <IoIosArrowRoundDown />
+                      </span>
+                    </motion.button>
+                  )}
+                </AnimatePresence>
               </div>
             )}
           </div>
