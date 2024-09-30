@@ -37,7 +37,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       queryKey: ["messages", conversationId],
       queryFn: async ({ pageParam = 0 }): Promise<any> => {
         const response = await axios.get(
-          `${serverUrl}/api/messages/message-list/conversation/${conversationId}?page=${pageParam}&limit=${10}`
+          `${serverUrl}/api/messages/message-list/conversation/${conversationId}?page=${pageParam}&limit=${20}`
         );
         return response.data.message;
       },
@@ -218,7 +218,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                     const scrollHeight =
                       scrollDivRef.current.scrollHeight -
                       scrollDivRef.current.clientHeight;
-                    if (scrollHeight - scrollPositionRef.current > 100) {
+                    if (scrollHeight - scrollPositionRef.current > 300) {
                       setShowArrowDown(true);
                     } else {
                       setShowArrowDown(false);
@@ -255,25 +255,26 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                 <div ref={scrollRef} className="relative w-full"></div>
                 <AnimatePresence mode="wait">
                   {showArrowDown && (
-                    <motion.button
+                    <motion.div
                       initial={{ opacity: 0, bottom: "10px" }}
                       animate={{ opacity: 1, bottom: "15px" }}
                       transition={{ duration: 0.25, ease: "easeIn" }}
                       exit={{ opacity: 0, bottom: "10px" }}
-                      onClick={() => {
-                        setShowArrowDown(false);
-                        scrollRef.current?.scrollIntoView({
-                          block: "end",
-                          behavior: "smooth",
-                        });
-                      }}
-                      className="w-12 h-12 rounded-md flex items-center justify-center p-2 bg-[#414141] text-[#6486FF] z-[999] sticky left-[50%] right-[50%] text-2xl"
+                      className=" flex items-center justify-center z-[999] sticky left-[50%] right-[50%] bg-transparent"
                     >
-                      <span>
-                        {" "}
+                      <button
+                        onClick={() => {
+                          setShowArrowDown(false);
+                          scrollRef.current?.scrollIntoView({
+                            block: "end",
+                            behavior: "smooth",
+                          });
+                        }}
+                        className="w-10 h-10 rounded-full flex items-center justify-center p-1 bg-[#414141] text-[#6486FF]  text-2xl"
+                      >
                         <IoIosArrowRoundDown />
-                      </span>
-                    </motion.button>
+                      </button>
+                    </motion.div>
                   )}
                 </AnimatePresence>
               </div>
