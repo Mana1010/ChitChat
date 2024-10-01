@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import Linkify from "linkify-react";
 import Reactions from "@/app/chats/_components/Reactions";
 import { Messages } from "@/types/UserTypes";
@@ -7,15 +7,44 @@ import { Session } from "next-auth";
 import Image from "next/image";
 import emptyChat from "../assets/images/empty-chat.png";
 import { VscReactions } from "react-icons/vsc";
+import { useSocketStore } from "@/utils/store/socket.store";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+
 function ChatBubbles({
   messageDetails,
   session,
+  conversationId,
+  setMessage,
 }: {
   messageDetails: Messages;
   session: Session | null;
+  conversationId: string;
+  setMessage: Dispatch<SetStateAction<Messages[]>>;
 }) {
+  const { socket } = useSocketStore();
   const [hoveredMessage, setHoveredMessage] = useState<string | undefined>("");
   const [openReaction, setOpenReaction] = useState<string | undefined>("");
+  useEffect(() => {
+    if (!socket) return;
+    socket.on("display-reaction", ({ reaction, messageId }) => {
+      setMessage((prev) => {
+        return prev.map((message) => {
+          if (message._id === messageId) {
+            return { ...message, reaction };
+          } else {
+            return message;
+          }
+        });
+      });
+      return () => {
+        socket.off("display-reaction");
+      };
+    });
+  }, [setMessage, socket]);
   return (
     <Linkify
       options={{
@@ -67,34 +96,56 @@ function ChatBubbles({
                 }`}
               >
                 <div
-                  className={`p-2 rounded-md flex items-center justify-center break-all ${
+                  className={`p-2 rounded-md flex items-center justify-center break-all relative ${
                     messageDetails.sender._id === session?.user.userId
                       ? "bg-[#6486FF]"
                       : "bg-[#171717]"
                   }`}
                 >
                   <span className="text-white">{messageDetails?.message}</span>
+                  {messageDetails.reaction && (
+                    <button
+                      className={`absolute bottom-[-10px] text-[0.8rem] ${
+                        messageDetails.sender._id === session?.user.userId
+                          ? "left-0"
+                          : "right-0"
+                      }`}
+                    >
+                      {messageDetails.reaction}
+                    </button>
+                  )}
                 </div>
 
                 {/* Reactions */}
                 <div className={`px-2 relative`}>
-                  <button
-                    onClick={() => {
-                      setOpenReaction((prevData) =>
-                        prevData ? "" : messageDetails._id
-                      );
-                      setHoveredMessage(messageDetails._id);
-                    }}
-                    className={`w-5 h-5 rounded-full items-center justify-center ${
-                      messageDetails._id === hoveredMessage ? "flex" : "hidden"
-                    }`}
-                  >
-                    <span className={`text-slate-300 font-bold text-lg`}>
-                      <VscReactions />
-                    </span>
-                  </button>
+                  {messageDetails.sender._id !== session?.user.userId && (
+                    <button
+                      onClick={() => {
+                        setOpenReaction((prevData) =>
+                          prevData ? "" : messageDetails._id
+                        );
+                        setHoveredMessage(messageDetails._id);
+                      }}
+                      className={`w-5 h-5 rounded-full items-center justify-center ${
+                        messageDetails._id === hoveredMessage
+                          ? "flex"
+                          : "hidden"
+                      }`}
+                    >
+                      <span className={`text-slate-300 font-bold text-lg`}>
+                        <VscReactions />
+                      </span>
+                    </button>
+                  )}
+
                   {openReaction === messageDetails._id && (
-                    <Reactions messageId={messageDetails._id ?? ""} />
+                    <Reactions
+                      messageDetails={messageDetails}
+                      messageId={messageDetails._id ?? ""}
+                      conversationId={conversationId}
+                      setMessage={setMessage}
+                      setOpenReaction={setOpenReaction}
+                    />
                   )}
                 </div>
               </div>

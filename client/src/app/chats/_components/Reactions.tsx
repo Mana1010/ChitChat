@@ -1,7 +1,8 @@
 "use client";
-import React, { useState } from "react";
+import React, { Dispatch, SetStateAction, useState } from "react";
 import { nanoid } from "nanoid";
 import { useSocketStore } from "@/utils/store/socket.store";
+import { Messages } from "@/types/UserTypes";
 
 const reactions = [
   {
@@ -45,17 +46,52 @@ const reactions = [
     id: nanoid(),
   },
 ];
-function Reactions({ messageId }: { messageId: string }) {
+function Reactions({
+  messageId,
+  conversationId,
+  messageDetails,
+  setMessage,
+  setOpenReaction,
+}: {
+  messageId: string;
+  conversationId: string;
+  messageDetails: Messages;
+  setMessage: Dispatch<SetStateAction<Messages[]>>;
+  setOpenReaction: Dispatch<SetStateAction<string | undefined>>;
+}) {
   const { socket } = useSocketStore();
-  const [pickedReaction, setPickedReaction] = useState<string>("");
 
   return (
-    <div className="absolute -top-14 -left-20 rounded-md bg-[#414141] flex items-center justify-center h-[40px]">
+    <div className=" absolute -top-14 -left-25 rounded-md bg-[#414141] flex items-center justify-center h-[40px] z-[99999999999]">
       {reactions.map((reaction) => (
         <button
-          onClick={() => setPickedReaction(reaction.emoji)}
+          onClick={() => {
+            if (!socket) return;
+            socket.emit("send-reaction", {
+              reaction: reaction.emoji,
+              messageId,
+              conversationId,
+            });
+            setMessage((prev) => {
+              return prev.map((message) => {
+                if (messageId === message._id) {
+                  if (reaction.emoji === message.reaction) {
+                    return { ...message, reaction: "" };
+                  }
+                  return { ...message, reaction: reaction.emoji };
+                } else {
+                  return message;
+                }
+              });
+            });
+            setOpenReaction("");
+          }}
           key={reaction.id}
-          className="text-2xl p-1.5 hover:bg-slate-800"
+          className={`text-2xl h-full p-1 ${
+            messageDetails.reaction === reaction.emoji
+              ? "bg-slate-800"
+              : "hover:bg-slate-800"
+          }`}
         >
           {reaction.emoji}
         </button>

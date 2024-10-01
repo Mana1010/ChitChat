@@ -2,6 +2,36 @@ import { Server } from "socket.io";
 import { Private } from "../model/private.model";
 import { Conversation } from "../model/conversation.model";
 import mongoose from "mongoose";
+
+interface Payload {
+  conversationId: string;
+  userId: string;
+  message: string;
+  participantId?: string;
+}
+async function updateConversation(payload: Payload, addUnreadMessage: number) {
+  const getTotalUnreadMessages = await Conversation.findById(
+    payload.conversationId
+  ).select("hasUnreadMessages");
+  const updatedConversation = await Conversation.findByIdAndUpdate(
+    payload.conversationId,
+    {
+      $set: {
+        "lastMessage.sender": payload.userId,
+        "lastMessage.text": payload.message,
+        "lastMessage.lastMessageCreatedAt": new Date(),
+        "hasUnreadMessages.user": payload.participantId,
+        "hasUnreadMessages.totalUnreadMessages":
+          getTotalUnreadMessages.hasUnreadMessages.totalUnreadMessages +
+          addUnreadMessage,
+      },
+    },
+    {
+      new: true,
+    }
+  );
+  return updatedConversation;
+}
 export function privateChat(io: Server) {
   const privateSocket = io.of("/private");
   privateSocket.on("connection", (socket) => {
@@ -22,31 +52,20 @@ export function privateChat(io: Server) {
                 { path: "sender", select: ["profilePic", "name", "status"] },
               ])
               .select(["isRead", "message", "sender"]);
-            const getTotalUnreadMessages = await Conversation.findById(
-              conversationId
-            ).select("hasUnreadMessages");
-            const updatedConversation = await Conversation.findByIdAndUpdate(
-              conversationId,
-              {
-                $set: {
-                  "lastMessage.sender": userId,
-                  "lastMessage.text": message,
-                  "lastMessage.lastMessageCreatedAt": new Date(),
-                  "hasUnreadMessages.user": participantId,
-                  "hasUnreadMessages.totalUnreadMessages":
-                    getTotalUnreadMessages.hasUnreadMessages
-                      .totalUnreadMessages + 1,
-                },
-              },
-              {
-                new: true,
-              }
-            );
+
             socket.broadcast.to(conversationId).emit("display-message", {
               getProfile,
               conversation: conversationId,
             });
-            cb({ success: false });
+            const updatedConversation = await updateConversation(
+              {
+                conversationId,
+                userId,
+                message,
+                participantId,
+              },
+              1
+            );
             socket.broadcast
               .to(conversationId)
               .emit("display-unread-message", conversationId);
@@ -59,7 +78,6 @@ export function privateChat(io: Server) {
             });
           }
         } catch (err) {
-          cb({ success: false });
           console.log(err);
         }
       }
@@ -95,6 +113,26 @@ export function privateChat(io: Server) {
         console.log(err);
       }
     });
+    socket.on(
+      "send-reaction",
+      async ({ reaction, messageId, conversationId, participantId }) => {
+        await Private.findByIdAndUpdate(messageId, {
+          reaction,
+        });
+        const updatedConversation = await updateConversation(
+          {
+            conversationId,
+            userId,
+            message: `Reacted ${reaction} to a message`,
+            participantId,
+          },
+          0
+        );
+        socket.broadcast
+          .to(conversationId)
+          .emit("display-reaction", { reaction, messageId });
+      }
+    );
     socket.on("join-room", (conversationId) => {
       socket.join(conversationId);
       console.log(`Joined room ${conversationId}`);

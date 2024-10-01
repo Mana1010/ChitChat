@@ -238,6 +238,8 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                     key={data._id}
                     messageDetails={data}
                     session={session}
+                    conversationId={conversationId}
+                    setMessage={setAllMessages}
                   />
                 ))}
                 <div
@@ -260,7 +262,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                       animate={{ opacity: 1, bottom: "15px" }}
                       transition={{ duration: 0.25, ease: "easeIn" }}
                       exit={{ opacity: 0, bottom: "10px" }}
-                      className=" flex items-center justify-center z-[999] sticky left-[50%] right-[50%] bg-transparent"
+                      className=" flex items-center justify-center z-[999] sticky bg-transparent w-12 h-12 left-[50%] right-[50%]"
                     >
                       <button
                         onClick={() => {
