@@ -6,7 +6,11 @@ import { useSession } from "next-auth/react";
 import { serverUrl } from "@/utils/serverUrl";
 import NewUser from "./NewUser";
 import UserNotFound from "./UserNotFound";
-import { GetParticipantInfo, Messages } from "@/types/UserTypes";
+import {
+  GetParticipantInfo,
+  Messages,
+  InfiniteScrollingMessageSchema,
+} from "@/types/UserTypes";
 import { useSocketStore } from "@/utils/store/socket.store";
 import { nanoid } from "nanoid";
 import LoadingChat from "@/components/LoadingChat";
@@ -32,34 +36,34 @@ function Chatboard({ conversationId }: { conversationId: string }) {
   const { ref, inView } = useInView();
   const { participantInfo, isLoading: participantInfoLoading } =
     useGetParticipantInfo(conversationId, status, session);
-  const { data, fetchNextPage, error, isLoading, isFetchingNextPage, isError } =
-    useInfiniteQuery({
-      queryKey: ["messages", conversationId],
-      queryFn: async ({ pageParam = 0 }): Promise<any> => {
-        const response = await axios.get(
-          `${serverUrl}/api/messages/message-list/conversation/${conversationId}?page=${pageParam}&limit=${20}`
-        );
-        return response.data.message;
-      },
-      getNextPageParam: (lastPage) => {
-        if (lastPage.nextPage === null && hasNextPage) {
-          setHasNextPage(false);
-        }
-        return lastPage?.nextPage ?? null;
-      },
-      onSuccess: (data) => {
-        setAllMessages((prevMessages) => [
-          ...data.pages[currentPageRef.current]?.getMessages,
-          ...prevMessages,
-        ]);
-        if (currentPageRef.current > 0 && scrollDivRef.current) {
-          scrollDivRef.current.scrollTo(0, 40);
-        }
-      },
-      refetchOnWindowFocus: false,
-      enabled: status === "authenticated",
-    });
-
+  const { data, fetchNextPage, error, isLoading, isError } = useInfiniteQuery({
+    queryKey: ["messages", conversationId],
+    queryFn: async ({ pageParam = 0 }): Promise<any> => {
+      const response = await axios.get(
+        `${serverUrl}/api/messages/message-list/conversation/${conversationId}?page=${pageParam}&limit=${20}`
+      );
+      return response.data.message;
+    },
+    getNextPageParam: (lastPage) => {
+      if (lastPage.nextPage === null && hasNextPage) {
+        setHasNextPage(false);
+      }
+      return lastPage?.nextPage ?? null;
+    },
+    onSuccess: (data) => {
+      console.log(data.pages);
+      setAllMessages((prevMessages) => [
+        ...data.pages[currentPageRef.current]?.getMessages,
+        ...prevMessages,
+      ]);
+      if (currentPageRef.current > 0 && scrollDivRef.current) {
+        scrollDivRef.current.scrollTo(0, 40);
+      }
+    },
+    refetchOnWindowFocus: false,
+    enabled: status === "authenticated",
+  });
+  console.log(data);
   const queryClient = useQueryClient();
   useEffect(() => {
     return () => {
@@ -236,6 +240,9 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                 {allMessages?.map((data: Messages) => (
                   <ChatBubbles
                     key={data._id}
+                    participantId={
+                      participantInfo?.receiver_details._id as string
+                    }
                     messageDetails={data}
                     session={session}
                     conversationId={conversationId}

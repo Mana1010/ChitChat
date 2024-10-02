@@ -50,12 +50,14 @@ function Reactions({
   messageId,
   conversationId,
   messageDetails,
+  participantId,
   setMessage,
   setOpenReaction,
 }: {
   messageId: string;
   conversationId: string;
   messageDetails: Messages;
+  participantId: string;
   setMessage: Dispatch<SetStateAction<Messages[]>>;
   setOpenReaction: Dispatch<SetStateAction<string | undefined>>;
 }) {

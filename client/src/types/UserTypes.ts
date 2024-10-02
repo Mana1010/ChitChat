@@ -43,3 +43,8 @@ export interface GetParticipantInfo {
     totalUnreadMessages: number;
   };
 }
+
+export interface InfiniteScrollingMessageSchema {
+  pages: [{ getMessages: Messages[]; nextPage: number | null }];
+  pageParams: [undefined | number];
+}

@@ -17,11 +17,13 @@ import {
 function ChatBubbles({
   messageDetails,
   session,
+  participantId,
   conversationId,
   setMessage,
 }: {
   messageDetails: Messages;
   session: Session | null;
+  participantId: string;
   conversationId: string;
   setMessage: Dispatch<SetStateAction<Messages[]>>;
 }) {
@@ -141,6 +143,7 @@ function ChatBubbles({
                   {openReaction === messageDetails._id && (
                     <Reactions
                       messageDetails={messageDetails}
+                      participantId={participantId}
                       messageId={messageDetails._id ?? ""}
                       conversationId={conversationId}
                       setMessage={setMessage}

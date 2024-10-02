@@ -131,6 +131,13 @@ export function privateChat(io: Server) {
         socket.broadcast
           .to(conversationId)
           .emit("display-reaction", { reaction, messageId });
+        socket.emit("display-updated-chatlist", {
+          newMessage: `Reacted ${reaction} to a message`,
+          conversationId,
+          participantId: userId,
+          lastMessageCreatedAt:
+            updatedConversation.lastMessage.lastMessageCreatedAt,
+        });
       }
     );
     socket.on("join-room", (conversationId) => {
