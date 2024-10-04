@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { useSocketStore } from "@/utils/store/socket.store";
 import { motion } from "framer-motion";
 import ConversationListSkeleton from "@/app/chats/_components/ConversationListSkeleton";
+import { useChatStore } from "@/utils/store/chat.store";
 function ChatList({
   searchChat,
   conversationId,
@@ -37,7 +38,6 @@ function ChatList({
     enabled: status === "authenticated",
   });
   const queryClient = useQueryClient();
-
   useEffect(() => {
     if (!socket || status === "unauthenticated") return;
     socket.on(
@@ -57,7 +57,6 @@ function ChatList({
                         text: newMessage,
                         lastMessageCreatedAt,
                       },
-                      updatedAt: new Date().toString(),
                     };
                   } else {
                     return conversation;

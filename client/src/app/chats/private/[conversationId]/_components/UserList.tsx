@@ -5,6 +5,7 @@ import {
   useQuery,
   UseQueryResult,
   useQueryClient,
+  useInfiniteQuery,
 } from "react-query";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -16,17 +17,21 @@ import noSearchFoundImg from "../../../../../assets/images/not-found.png";
 import { toast } from "sonner";
 import { TbMessage2 } from "react-icons/tb";
 import ConversationListSkeleton from "@/app/chats/_components/ConversationListSkeleton";
+import useDebounce from "@/hooks/useDebounce.hook";
 function UserList({ searchUser }: { searchUser: string }) {
   const router = useRouter();
+  const [allUserList, setAllUserList] = useState<User[]>([]);
   const { data: session } = useSession();
-  const displayAllUsers: UseQueryResult<
-    User[],
-    AxiosError<{ message: string }>
-  > = useQuery({
+  const debouncedValue = useDebounce(searchUser);
+
+  const { data, fetchNextPage, error, isLoading, isError } = useInfiniteQuery({
     queryKey: ["user-list"],
     queryFn: async () => {
       const response = await axios.get(`${serverUrl}/api/messages/user-list`);
       return response.data.message;
+    },
+    onSuccess: (data) => {
+      console.log(data);
     },
   });
   const queryClient = useQueryClient();
@@ -47,10 +52,10 @@ function UserList({ searchUser }: { searchUser: string }) {
       toast.error(err.response?.data.message);
     },
   });
-  if (displayAllUsers.isLoading) {
+  if (isLoading) {
     return <ConversationListSkeleton />;
   }
-  const searchResult = displayAllUsers.data?.filter((user) =>
+  const searchResult = allUserList.filter((user) =>
     new RegExp(searchUser, "i").test(user.name as string)
   );
 

@@ -11,6 +11,7 @@ interface MessageFieldProps {
   message: string;
   openEmoji: boolean;
   sendMessage: (messageContent: string) => void;
+  updateChatList: () => void;
   setMessage: Dispatch<SetStateAction<string>>;
   setOpenEmoji: Dispatch<SetStateAction<boolean>>;
 }
@@ -20,6 +21,7 @@ function MessageField({
   conversationId,
   message,
   openEmoji,
+  updateChatList,
   sendMessage,
   setMessage,
   setOpenEmoji,
@@ -34,7 +36,7 @@ function MessageField({
           {
             message,
             conversationId,
-            participantId: participantInfo?.receiver_details._id,
+            receiverId: participantInfo?.receiver_details._id,
           },
           (cb: { success: boolean }) => {
             if (cb.success) {
@@ -42,7 +44,9 @@ function MessageField({
             }
           }
         );
+
         sendMessage(message);
+        updateChatList();
         setMessage("");
       }}
       className="px-3 py-2.5 flex items-center space-x-2 bg-[#171717]"

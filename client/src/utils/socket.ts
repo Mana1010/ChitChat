@@ -16,6 +16,14 @@ export const initializePrivateChatSocket = (userId: string): Socket => {
   });
 };
 export const initializeNotificationSocket = (userId: string): Socket => {
+  return io(`${URL}/notification`, {
+    autoConnect: false,
+    auth: {
+      userId,
+    },
+  });
+};
+export const initializeGroupChatSocket = (userId: string): Socket => {
   return io(`${URL}/group`, {
     autoConnect: false,
     auth: {

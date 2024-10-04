@@ -6,11 +6,7 @@ import { useSession } from "next-auth/react";
 import { serverUrl } from "@/utils/serverUrl";
 import NewUser from "./NewUser";
 import UserNotFound from "./UserNotFound";
-import {
-  GetParticipantInfo,
-  Messages,
-  InfiniteScrollingMessageSchema,
-} from "@/types/UserTypes";
+import { Conversation, GetParticipantInfo, Messages } from "@/types/UserTypes";
 import { useSocketStore } from "@/utils/store/socket.store";
 import { nanoid } from "nanoid";
 import LoadingChat from "@/components/LoadingChat";
@@ -21,6 +17,7 @@ import ChatBubbles from "@/components/ChatBubbles";
 import MessageField from "@/components/MessageField";
 import { IoIosArrowRoundDown } from "react-icons/io";
 import { AnimatePresence, motion } from "framer-motion";
+import { useChatStore } from "@/utils/store/chat.store";
 function Chatboard({ conversationId }: { conversationId: string }) {
   const { socket } = useSocketStore();
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -51,7 +48,6 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       return lastPage?.nextPage ?? null;
     },
     onSuccess: (data) => {
-      console.log(data.pages);
       setAllMessages((prevMessages) => [
         ...data.pages[currentPageRef.current]?.getMessages,
         ...prevMessages,
@@ -63,11 +59,10 @@ function Chatboard({ conversationId }: { conversationId: string }) {
     refetchOnWindowFocus: false,
     enabled: status === "authenticated",
   });
-  console.log(data);
   const queryClient = useQueryClient();
   useEffect(() => {
     return () => {
-      queryClient.resetQueries(["messages", conversationId]); //To reset the cached data whenever the user unmount the components
+      queryClient.resetQueries(["messages", conversationId]); //To reset the cached data whenever the user unmount the component
     };
   }, [conversationId, queryClient]);
   useLayoutEffect(() => {
@@ -89,16 +84,34 @@ function Chatboard({ conversationId }: { conversationId: string }) {
     }
   }, [hasNextPage, fetchNextPage, inView]);
   useEffect(() => {
-    if (!socket || status !== "authenticated") return;
+    if (
+      !socket ||
+      status !== "authenticated" ||
+      !participantInfo?.receiver_details._id
+    )
+      return;
+    const participantID = participantInfo.receiver_details._id ?? "";
     socket.emit("join-room", conversationId);
+
     socket.on("display-message", ({ getProfile, conversation }) => {
       setAllMessages((prevMessages) => [...prevMessages, getProfile]);
     });
     return () => {
       socket.off("display-message");
       socket.emit("leave-room", conversationId);
+      socket.emit(
+        "leave-receiverId-room",
+        participantInfo.receiver_details._id
+      );
     };
-  }, [conversationId, queryClient, socket, status]);
+  }, [
+    conversationId,
+    participantInfo?.receiver_details._id,
+    queryClient,
+    socket,
+    status,
+  ]);
+  socket?.emit("join-receiverId-room", participantInfo?.receiver_details?._id);
   useEffect(() => {
     if (!socket) return;
     socket.on("display-seen-text", ({ user, totalUnreadMessages }) => {
@@ -180,7 +193,35 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       scrollRef.current?.scrollIntoView({ block: "end" }); //To bypass the closure nature of react :)
     }, 0);
   }
-
+  function updateChatList() {
+    queryClient.setQueryData<Conversation[] | undefined>(
+      ["chat-list"],
+      (cachedData: any) => {
+        if (cachedData) {
+          return cachedData
+            .map((chatlist: Conversation) => {
+              if (chatlist._id === conversationId) {
+                return {
+                  ...chatlist,
+                  lastMessage: {
+                    sender: session?.user.userId,
+                    text: message,
+                    lastMessageCreatedAt: new Date(),
+                  },
+                };
+              } else {
+                return chatlist;
+              }
+            })
+            .sort(
+              (a: any, b: any) =>
+                new Date(b.lastMessage.lastMessageCreatedAt).getTime() -
+                new Date(a.lastMessage.lastMessageCreatedAt).getTime()
+            );
+        }
+      }
+    );
+  }
   return (
     <div
       onClick={() => setOpenEmoji(false)}
@@ -298,6 +339,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
         message={message}
         openEmoji={openEmoji}
         sendMessage={sendMessage}
+        updateChatList={updateChatList}
         setMessage={setMessage}
         setOpenEmoji={setOpenEmoji}
       />

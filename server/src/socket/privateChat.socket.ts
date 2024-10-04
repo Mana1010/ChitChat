@@ -39,7 +39,7 @@ export function privateChat(io: Server) {
     const typingUsers = [];
     socket.on(
       "send-message",
-      async ({ message, conversationId, participantId }, cb) => {
+      async ({ message, conversationId, receiverId }, cb) => {
         try {
           if (conversationId) {
             const createMessage = await Private.create({
@@ -54,6 +54,7 @@ export function privateChat(io: Server) {
               .select(["isRead", "message", "sender"]);
 
             socket.broadcast.to(conversationId).emit("display-message", {
+              // To send a message and display to specific user only.
               getProfile,
               conversation: conversationId,
             });
@@ -62,20 +63,23 @@ export function privateChat(io: Server) {
                 conversationId,
                 userId,
                 message,
-                participantId,
+                participantId: receiverId,
               },
               1
             );
+            console.log(`Receiver Id: ${receiverId}`);
             socket.broadcast
-              .to(conversationId)
+              .to(receiverId)
               .emit("display-unread-message", conversationId);
-            socket.emit("display-updated-chatlist", {
-              newMessage: message,
-              conversationId,
-              participantId: userId,
-              lastMessageCreatedAt:
-                updatedConversation.lastMessage.lastMessageCreatedAt,
-            });
+            socket.broadcast
+              .to(receiverId) //To emit only to the receiver to avoid unnecessary emitting from the other connection
+              .emit("display-updated-chatlist", {
+                newMessage: message,
+                conversationId,
+                participantId: userId,
+                lastMessageCreatedAt:
+                  updatedConversation.lastMessage.lastMessageCreatedAt,
+              });
           }
         } catch (err) {
           console.log(err);
@@ -131,7 +135,7 @@ export function privateChat(io: Server) {
         socket.broadcast
           .to(conversationId)
           .emit("display-reaction", { reaction, messageId });
-        socket.emit("display-updated-chatlist", {
+        socket.broadcast.to(conversationId)?.emit("display-updated-chatlist", {
           newMessage: `Reacted ${reaction} to a message`,
           conversationId,
           participantId: userId,
@@ -144,9 +148,17 @@ export function privateChat(io: Server) {
       socket.join(conversationId);
       console.log(`Joined room ${conversationId}`);
     });
+    socket.on("join-receiverId-room", (receiverId) => {
+      if (receiverId) {
+        socket.join(receiverId);
+      }
+    });
     socket.on("leave-room", (conversationId) => {
       socket.leave(conversationId);
       console.log("Leaving room");
+    });
+    socket.on("leave-receiverId-room", (receiverId) => {
+      socket.leave(receiverId);
     });
   });
 }
