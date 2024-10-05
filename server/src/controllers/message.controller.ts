@@ -24,24 +24,31 @@ export const getAllPublicMessages = asyncHandler(
   }
 );
 export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
-  const getAllOnlineUsers = await User.find({ status: "Online" }).select([
-    "name",
-    "profilePic",
-    "status",
-  ]);
-  const getAllOfflineUsers = await User.find({ status: "Offline" }).select([
-    "name",
-    "profilePic",
-    "status",
-  ]);
+  const { limit, page } = req.query;
+  if (!page || !limit) {
+    res.status(403);
+    throw new Error("Forbidden");
+  }
+  const LIMIT = +limit;
+  const PAGE = +page;
+  const getAllUsers = await User.find()
+    .select(["name", "profilePic", "status"])
+    .sort({ status: -1 }) //Online to Offline
+    .skip(PAGE * LIMIT)
+    .limit(LIMIT);
+  const hasNextPage = getAllUsers.length === LIMIT;
+  const nextPage = hasNextPage ? PAGE + 1 : null;
+
   res.status(200).json({
-    message: [...getAllOnlineUsers, ...getAllOfflineUsers],
+    message: {
+      getAllUsers,
+      nextPage,
+    },
   });
 });
 export const getAllUsersConversation = asyncHandler(
   async (req: Request, res: Response) => {
     const { id } = req.params;
-    const LIMIT = 10;
     const getAllUsers = await Conversation.aggregate([
       { $match: { participants: new mongoose.Types.ObjectId(id) } },
       { $unwind: "$participants" },
@@ -241,5 +248,16 @@ export const getParticipantName = asyncHandler(
     res
       .status(200)
       .json({ name: getChatMateName[0].participant_name[0].name[0] }); //Retrieving the participant's name
+  }
+);
+
+export const searchUserResult = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { search } = req.query;
+    console.log(search);
+    const getUserResult = await User.find({
+      name: new RegExp(`${search}`, "i"),
+    }).select(["name", "profilePic", "status"]);
+    res.status(200).json({ message: getUserResult });
   }
 );

@@ -17,7 +17,6 @@ import ChatBubbles from "@/components/ChatBubbles";
 import MessageField from "@/components/MessageField";
 import { IoIosArrowRoundDown } from "react-icons/io";
 import { AnimatePresence, motion } from "framer-motion";
-import { useChatStore } from "@/utils/store/chat.store";
 function Chatboard({ conversationId }: { conversationId: string }) {
   const { socket } = useSocketStore();
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -39,6 +38,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       const response = await axios.get(
         `${serverUrl}/api/messages/message-list/conversation/${conversationId}?page=${pageParam}&limit=${20}`
       );
+
       return response.data.message;
     },
     getNextPageParam: (lastPage) => {
@@ -214,7 +214,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
               }
             })
             .sort(
-              (a: any, b: any) =>
+              (a: Conversation, b: Conversation) =>
                 new Date(b.lastMessage.lastMessageCreatedAt).getTime() -
                 new Date(a.lastMessage.lastMessageCreatedAt).getTime()
             );

@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   useMutation,
   useQuery,
@@ -14,24 +14,43 @@ import axios, { AxiosError } from "axios";
 import { serverUrl } from "@/utils/serverUrl";
 import { User } from "@/types/UserTypes";
 import noSearchFoundImg from "../../../../../assets/images/not-found.png";
+import LoadingChat from "@/components/LoadingChat";
 import { toast } from "sonner";
 import { TbMessage2 } from "react-icons/tb";
 import ConversationListSkeleton from "@/app/chats/_components/ConversationListSkeleton";
 import useDebounce from "@/hooks/useDebounce.hook";
+import useSearchUser from "@/hooks/useSearchUser.hook";
+import { InView, useInView } from "react-intersection-observer";
 function UserList({ searchUser }: { searchUser: string }) {
   const router = useRouter();
+  const { ref, inView } = useInView();
+  const [hasNextPage, setHasNextPage] = useState(true);
   const [allUserList, setAllUserList] = useState<User[]>([]);
+  const currentPageRef = useRef(0);
   const { data: session } = useSession();
   const debouncedValue = useDebounce(searchUser);
-
+  const { searchUser: debouncedSearchUser, isLoading: loadingSearchUser } =
+    useSearchUser(debouncedValue);
   const { data, fetchNextPage, error, isLoading, isError } = useInfiniteQuery({
     queryKey: ["user-list"],
-    queryFn: async () => {
-      const response = await axios.get(`${serverUrl}/api/messages/user-list`);
+    queryFn: async ({ pageParam = 0 }) => {
+      const response = await axios.get(
+        `${serverUrl}/api/messages/user-list?page=${pageParam}&limit=${10}`
+      );
       return response.data.message;
     },
+    getNextPageParam: (lastPage) => {
+      if (lastPage.nextPage === null && hasNextPage) {
+        setHasNextPage(false);
+      }
+      return lastPage.nextPage ?? null;
+    },
+    refetchOnWindowFocus: false,
     onSuccess: (data) => {
-      console.log(data);
+      setAllUserList((prevData) => [
+        ...prevData,
+        ...data.pages[currentPageRef.current].getAllUsers,
+      ]);
     },
   });
   const queryClient = useQueryClient();
@@ -48,20 +67,26 @@ function UserList({ searchUser }: { searchUser: string }) {
       router.push(`/chats/private/${id}?type=chats`);
     },
     onError: (err: AxiosError<{ message: string }>) => {
-      console.log(err.response?.data.message);
       toast.error(err.response?.data.message);
     },
   });
+  useEffect(() => {
+    if (inView && hasNextPage) {
+      currentPageRef.current++;
+      fetchNextPage();
+    }
+  }, [fetchNextPage, hasNextPage, inView]);
   if (isLoading) {
     return <ConversationListSkeleton />;
   }
-  const searchResult = allUserList.filter((user) =>
-    new RegExp(searchUser, "i").test(user.name as string)
-  );
+  if (loadingSearchUser) {
+    //Loading animation for searching the user
+    return <LoadingChat />;
+  }
 
   return (
     <div className="flex-grow w-full flex">
-      {searchResult?.length === 0 ? (
+      {debouncedSearchUser?.length === 0 ? (
         <div className="flex w-full items-center justify-center flex-col space-y-2 px-2">
           <Image
             src={noSearchFoundImg}
@@ -79,9 +104,9 @@ function UserList({ searchUser }: { searchUser: string }) {
         </div>
       ) : (
         <div className="pt-2 flex flex-col w-full overflow-y-auto h-full items-center px-1.5">
-          {searchResult?.map((user: User, index: number) => (
+          {allUserList?.map((user: User) => (
             <div
-              key={index}
+              key={user._id}
               className="flex items-center w-full p-3.5 cursor-pointer hover:bg-[#414141] rounded-lg justify-between"
             >
               <div className="flex items-center space-x-2">
@@ -122,6 +147,7 @@ function UserList({ searchUser }: { searchUser: string }) {
           ))}{" "}
         </div>
       )}
+      {hasNextPage && <div ref={ref}></div>}
     </div>
   );
 }
