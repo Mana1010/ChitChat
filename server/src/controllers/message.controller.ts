@@ -9,18 +9,30 @@ import mongoose from "mongoose";
 
 export const getAllPublicMessages = asyncHandler(
   async (req: Request, res: Response) => {
+    const { page, limit } = req.query;
+    if (!page || !limit) {
+      res.status(403);
+      throw new Error("Forbidden");
+    }
+    const PAGE = +page;
+    const LIMIT = +limit;
     const getAllMessages = await Public.find()
+      .sort({ createdAt: -1 })
+      .skip(PAGE * LIMIT)
+      .limit(LIMIT)
       .populate({
         path: "userId",
         select: ["-createdAt", "-updatedAt", "-__v"],
       })
-
       .select(["message", "isMessageDeleted"]);
-    if (getAllMessages.length === 0) {
-      res.status(200).json({ message: [] });
-      return;
-    }
-    res.status(200).json({ message: getAllMessages });
+    const hasNextPage = getAllMessages.length === LIMIT;
+    const nextPage = hasNextPage ? PAGE + 1 : null;
+    res.status(200).json({
+      message: {
+        getAllMessages: getAllMessages.reverse(),
+        nextPage,
+      },
+    });
   }
 );
 export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {

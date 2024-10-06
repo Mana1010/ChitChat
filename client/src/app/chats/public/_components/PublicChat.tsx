@@ -4,7 +4,12 @@ import { LuSend } from "react-icons/lu";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import { Socket } from "socket.io-client";
-import { useQuery, useQueryClient, UseQueryResult } from "react-query";
+import {
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient,
+  UseQueryResult,
+} from "react-query";
 import { serverUrl } from "@/utils/serverUrl";
 import axios, { AxiosError } from "axios";
 import { User } from "@/types/next-auth";
@@ -18,30 +23,64 @@ import chatLoadingAnimation from "../../../../assets/images/gif-animation/chat-l
 import { PublicMessages } from "@/types/UserTypes";
 import { nanoid } from "nanoid";
 import LoadingChat from "@/components/LoadingChat";
+import { useInView } from "react-intersection-observer";
+
 function PublicChat() {
   const [message, setMessage] = useState("");
   const { data: session } = useSession();
+  const { ref, inView } = useInView();
   const [openEmoji, setOpenEmoji] = useState(false);
   const socketRef = useRef<Socket | null>();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const scrollDivRef = useRef<HTMLDivElement | null>(null);
+  const currentPageRef = useRef(0);
+  const [allMessages, setAllMessages] = useState<PublicMessages[]>([]);
+  const [hasNextPage, setHasNextPage] = useState(true);
   const [typingUsers, setTypingUsers] = useState<
     { socketId: string; userImg: string }[]
   >([]);
-  const getAllMessage: UseQueryResult<
-    PublicMessages[],
-    AxiosError<{ message: string }>
-  > = useQuery({
+  const { data, isError, fetchNextPage, isLoading } = useInfiniteQuery({
     queryKey: ["public-messages"],
-    queryFn: async () => {
-      const response = await axios.get(`${serverUrl}/api/messages/public`);
+    queryFn: async ({ pageParam = 0 }) => {
+      const response = await axios.get(
+        `${serverUrl}/api/messages/public?page=${pageParam}&limit=${20}`
+      );
       return response.data.message;
+    },
+    refetchOnWindowFocus: false,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.nextPage === null && hasNextPage) {
+        setHasNextPage(false);
+      }
+      return lastPage.nextPage ?? false;
+    },
+    onSuccess: (data) => {
+      const nextPage: PublicMessages[] =
+        data.pages[currentPageRef.current].getAllMessages;
+      setAllMessages((prevMessages) => [...nextPage, ...prevMessages]);
+      if (currentPageRef.current > 0 && scrollDivRef.current) {
+        scrollDivRef.current.scrollTo(0, 80);
+      }
     },
   });
   const queryClient = useQueryClient();
   useLayoutEffect(() => {
-    scrollRef.current?.scrollIntoView({ block: "end" });
-  }, [getAllMessage.data, typingUsers]);
+    if (currentPageRef.current <= 0) {
+      scrollRef.current?.scrollIntoView({ block: "end" });
+    }
+  }, [allMessages]);
+  useEffect(() => {
+    return () => {
+      queryClient.resetQueries(["public-messages"]);
+    }; //Reset the cache
+  }, [queryClient]);
+  useEffect(() => {
+    if (inView && hasNextPage) {
+      currentPageRef.current++;
+      fetchNextPage();
+    }
+  }, [fetchNextPage, hasNextPage, inView]);
   useEffect(() => {
     function onDisconnect() {
       socketRef.current?.emit("user-disconnect", { status: "Offline" });
@@ -97,11 +136,19 @@ function PublicChat() {
   return (
     <div className="h-full" onClick={() => setOpenEmoji(false)}>
       <div className="h-[440px] bg-[#3A3B3C] w-full rounded-md relative">
-        {getAllMessage.isLoading ? (
+        {isLoading ? (
           <LoadingChat />
         ) : (
-          <div className="chat-div w-full space-y-2 p-3 overflow-y-auto h-full relative">
-            {getAllMessage.data?.map((data: PublicMessages) => (
+          <div
+            ref={scrollDivRef}
+            className="chat-div w-full space-y-2 p-3 overflow-y-auto h-full relative"
+          >
+            {hasNextPage && (
+              <div ref={ref}>
+                <LoadingChat />
+              </div>
+            )}
+            {allMessages?.map((data: PublicMessages) => (
               <div
                 key={data._id}
                 className={`flex space-x-2 w-full relative z-10 ${
@@ -220,40 +267,28 @@ function PublicChat() {
         onSubmit={(e) => {
           e.preventDefault();
           socketRef.current?.emit("send-message", message);
-          queryClient.setQueryData<PublicMessages[] | undefined>(
-            ["public-messages"],
-            (prevMessages): PublicMessages[] => {
-              const userData = {
-                name: session?.user?.name,
-                profilePic: session?.user.image,
-                status: "Online",
-                _id: session?.user.userId,
-              };
-              if (prevMessages && session?.user) {
-                return [
-                  ...prevMessages,
-                  {
-                    message,
-                    userId: userData,
-                    createdAt: new Date().toString(),
-                    isMessageDeleted: false,
-                    _id: nanoid(),
-                  },
-                ];
-              } else {
-                return [
-                  {
-                    message,
-                    userId: userData,
-                    createdAt: new Date().toString(),
-                    isMessageDeleted: false,
-                    _id: nanoid(),
-                  },
-                ];
-              }
-            }
-          );
+          const userData = {
+            name: session?.user?.name,
+            profilePic: session?.user.image,
+            status: "Online",
+            _id: session?.user.userId,
+          };
+          setAllMessages((prevMessages: PublicMessages[]) => {
+            return [
+              ...prevMessages,
+              {
+                message,
+                userId: userData,
+                createdAt: new Date().toString(),
+                isMessageDeleted: false,
+                _id: nanoid(),
+              },
+            ];
+          });
           setMessage("");
+          setTimeout(() => {
+            scrollRef.current?.scrollIntoView({ block: "end" }); //To bypass the closure nature of react :)
+          }, 0);
         }}
         className="flex-grow flex space-x-2 items-center pt-3 justify-between"
       >
