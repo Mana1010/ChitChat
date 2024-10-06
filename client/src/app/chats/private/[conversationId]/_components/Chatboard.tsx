@@ -6,7 +6,12 @@ import { useSession } from "next-auth/react";
 import { serverUrl } from "@/utils/serverUrl";
 import NewUser from "./NewUser";
 import UserNotFound from "./UserNotFound";
-import { Conversation, GetParticipantInfo, Messages } from "@/types/UserTypes";
+import {
+  Conversation,
+  FullInfoUser,
+  GetParticipantInfo,
+  Messages,
+} from "@/types/UserTypes";
 import { useSocketStore } from "@/utils/store/socket.store";
 import { nanoid } from "nanoid";
 import LoadingChat from "@/components/LoadingChat";
@@ -17,12 +22,14 @@ import ChatBubbles from "@/components/ChatBubbles";
 import MessageField from "@/components/MessageField";
 import { IoIosArrowRoundDown } from "react-icons/io";
 import { AnimatePresence, motion } from "framer-motion";
+import ProfileCard from "@/app/chats/_components/ProfileCard";
 function Chatboard({ conversationId }: { conversationId: string }) {
   const { socket } = useSocketStore();
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const currentPageRef = useRef(0);
   const scrollDivRef = useRef<HTMLDivElement | null>(null);
   const scrollPositionRef = useRef<number>(0);
+  const [openProfileModal, setOpenProfileModal] = useState(false);
   const [message, setMessage] = useState<string>("");
   const [openEmoji, setOpenEmoji] = useState(false);
   const { data: session, status } = useSession();
@@ -225,11 +232,12 @@ function Chatboard({ conversationId }: { conversationId: string }) {
   return (
     <div
       onClick={() => setOpenEmoji(false)}
-      className="flex flex-grow w-full h-full flex-col"
+      className="flex flex-grow w-full h-full flex-col relative"
     >
       <ChatHeader
-        participantInfo={participantInfo}
+        participantInfo={participantInfo?.receiver_details}
         isLoading={participantInfoLoading}
+        setOpenProfileModal={setOpenProfileModal}
       />
       <div className="flex-grow w-full p-3">
         {isLoading || !data ? (
@@ -343,6 +351,12 @@ function Chatboard({ conversationId }: { conversationId: string }) {
         setMessage={setMessage}
         setOpenEmoji={setOpenEmoji}
       />
+      {openProfileModal && (
+        <ProfileCard
+          conversationId={conversationId}
+          setOpenProfileModal={setOpenProfileModal}
+        />
+      )}
     </div>
   );
 }

@@ -1,6 +1,10 @@
 import React from "react";
 import PublicChat from "./_components/PublicChat";
 import { TbMessages } from "react-icons/tb";
+import { Metadata } from "next";
+export const metadata: Metadata = {
+  title: "Public Chat",
+};
 async function Page() {
   return (
     <div className="p-5 flex flex-col w-full space-y-2">

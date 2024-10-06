@@ -3,10 +3,11 @@ import mongoose from "mongoose";
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
-    email: { type: String },
-    profilePic: { type: String },
-    authId: { type: String },
-    provider: { type: String },
+    email: { type: String, required: true },
+    profilePic: { type: String, required: true },
+    bio: { type: String, default: "No bio" },
+    authId: { type: String, required: true },
+    provider: { type: String, required: true },
     status: { type: String, default: "Offline" },
   },
   {

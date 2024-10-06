@@ -5,6 +5,11 @@ export interface User {
   status: string;
   userId: string;
 }
+export interface FullInfoUser extends User {
+  provider: string;
+  email: string;
+  bio: string;
+}
 
 export interface Conversation {
   receiver_details: User;
@@ -37,7 +42,7 @@ export interface PublicMessages {
 }
 export interface GetParticipantInfo {
   _id: string;
-  receiver_details: User;
+  receiver_details: FullInfoUser;
   hasUnreadMessages: {
     user: User | string;
     totalUnreadMessages: number;

@@ -9,11 +9,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { MdGroups } from "react-icons/md";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { IoMegaphone } from "react-icons/io5";
 import { usePathname } from "next/navigation";
-import pic from "../../../assets/images/conversation-icon.png";
 import { useQuery } from "react-query";
 import axios from "axios";
 import { serverUrl } from "@/utils/serverUrl";
@@ -31,31 +31,43 @@ function Sidebar() {
     },
     enabled: status === "authenticated",
   });
+  const navigationBtn = [
+    {
+      btnSticker: <IoMegaphone />,
+      navigateTo: "/chats/public",
+      styling: `text-[#6486FF] text-2xl p-3 rounded-md ${
+        pathname === "/chats/public" && "bg-[#3A3B3C]"
+      }`,
+    },
+    {
+      btnSticker: <AiFillMessage />,
+      navigateTo: `/chats/private/${
+        getNotifications?.data ? getNotifications.data : "new"
+      }?type=chats`,
+      styling: `text-[#6486FF] text-2xl p-3 rounded-md ${
+        pathname.startsWith("/chats/private") && "bg-[#3A3B3C]"
+      }`,
+    },
+    {
+      btnSticker: <MdGroups />,
+      navigateTo: `/chats/group`,
+      styling: `text-[#6486FF] text-2xl p-3 rounded-md ${
+        pathname.startsWith("/chats/group") && "bg-[#3A3B3C]"
+      }`,
+    },
+  ];
   return (
     <div className=" flex justify-between items-center flex-col pt-4 h-full px-2">
       <div className="flex flex-col items-center w-full justify-center">
-        <button
-          onClick={() => router.push("/chats/public")}
-          className={`text-[#6486FF] text-2xl p-3 rounded-md ${
-            pathname === "/chats/public" && "bg-[#3A3B3C]"
-          }`}
-        >
-          <IoMegaphone />
-        </button>
-        <button
-          onClick={() =>
-            router.push(
-              `/chats/private/${
-                getNotifications?.data ? getNotifications.data : "new"
-              }?type=chats`
-            )
-          }
-          className={`text-[#6486FF] text-2xl p-3 rounded-md ${
-            pathname.startsWith("/chats/private") && "bg-[#3A3B3C]"
-          }`}
-        >
-          <AiFillMessage />
-        </button>
+        {navigationBtn.map((btn, index) => (
+          <button
+            key={index}
+            onClick={() => router.push(btn.navigateTo)}
+            className={btn.styling}
+          >
+            {btn.btnSticker}
+          </button>
+        ))}
       </div>
 
       <div className="flex flex-col items-center w-full justify-center">

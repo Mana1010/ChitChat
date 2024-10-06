@@ -1,12 +1,6 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
-import {
-  useMutation,
-  useQuery,
-  UseQueryResult,
-  useQueryClient,
-  useInfiniteQuery,
-} from "react-query";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useMutation, useQueryClient, useInfiniteQuery } from "react-query";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
@@ -70,6 +64,9 @@ function UserList({ searchUser }: { searchUser: string }) {
       toast.error(err.response?.data.message);
     },
   });
+  const userList = useMemo(() => {
+    return searchUser.length ? debouncedSearchUser : allUserList;
+  }, [searchUser.length, debouncedSearchUser, allUserList]);
   useEffect(() => {
     if (inView && hasNextPage) {
       currentPageRef.current++;
@@ -104,7 +101,7 @@ function UserList({ searchUser }: { searchUser: string }) {
         </div>
       ) : (
         <div className="pt-2 flex flex-col w-full overflow-y-auto h-full items-center px-1.5">
-          {allUserList?.map((user: User) => (
+          {userList?.map((user: User) => (
             <div
               key={user._id}
               className="flex items-center w-full p-3.5 cursor-pointer hover:bg-[#414141] rounded-lg justify-between"

@@ -1,16 +1,18 @@
 "use client";
-import React from "react";
+import React, { Dispatch, SetStateAction } from "react";
 import { useQuery, UseQueryResult } from "react-query";
 import ChatBoardHeaderSkeleton from "@/app/chats/_components/ChatBoardHeaderSkeleton";
 import Image from "next/image";
-import { GetParticipantInfo, User } from "@/types/UserTypes";
+import { GetParticipantInfo, FullInfoUser } from "@/types/UserTypes";
 import { HiOutlineDotsCircleHorizontal } from "react-icons/hi";
 function ChatHeader({
   participantInfo,
   isLoading,
+  setOpenProfileModal,
 }: {
-  participantInfo: GetParticipantInfo | undefined;
+  participantInfo: FullInfoUser | undefined;
   isLoading: boolean;
+  setOpenProfileModal: Dispatch<SetStateAction<boolean>>;
 }) {
   return (
     <header className="w-full shadow-md py-3 px-4 flex items-center justify-between">
@@ -20,7 +22,7 @@ function ChatHeader({
         <div className="flex items-center space-x-3">
           <div className="w-[40px] h-[40px] relative rounded-full">
             <Image
-              src={participantInfo.receiver_details?.profilePic}
+              src={participantInfo?.profilePic}
               alt="profile-image"
               fill
               sizes="100%"
@@ -29,25 +31,24 @@ function ChatHeader({
             />
             <span
               className={`${
-                participantInfo.receiver_details.status === "Online"
+                participantInfo.status === "Online"
                   ? "bg-green-500"
                   : "bg-zinc-500"
               } absolute bottom-[2px] right-[2px] w-2 h-2 rounded-full`}
             ></span>
           </div>
           <div>
-            <h3 className="text-white text-sm">
-              {participantInfo.receiver_details.name}
-            </h3>
+            <h3 className="text-white text-sm">{participantInfo.name}</h3>
             <small className="text-slate-300">
-              {participantInfo.receiver_details.status === "Online"
-                ? "Active Now"
-                : "Offline"}
+              {participantInfo.status === "Online" ? "Active Now" : "Offline"}
             </small>
           </div>
         </div>
       )}
-      <button className="text-[1.5rem] text-[#6486FF]">
+      <button
+        onClick={() => setOpenProfileModal((prev) => !prev)}
+        className="text-[1.5rem] text-[#6486FF]"
+      >
         <HiOutlineDotsCircleHorizontal />
       </button>
     </header>
