@@ -10,10 +10,9 @@ async function getUserConversation(conversationId: string) {
     const responseData = await axios.get(
       `${serverUrl}/api/messages/conversation-name/${getParticipantName?.user.userId}/conversation/${conversationId}`
     );
-    console.log(responseData.data);
     return responseData.data.name;
-  } catch (err: unknown) {
-    return err;
+  } catch (err: any) {
+    return err.response.data.message;
   }
 }
 export async function generateMetadata({ params }: Params) {

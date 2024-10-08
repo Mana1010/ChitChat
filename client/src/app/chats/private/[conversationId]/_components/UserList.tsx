@@ -66,7 +66,7 @@ function UserList({ searchUser }: { searchUser: string }) {
   });
   const userList = useMemo(() => {
     return searchUser.length ? debouncedSearchUser : allUserList;
-  }, [searchUser.length, debouncedSearchUser, allUserList]);
+  }, [searchUser, debouncedSearchUser, allUserList]);
   useEffect(() => {
     if (inView && hasNextPage) {
       currentPageRef.current++;

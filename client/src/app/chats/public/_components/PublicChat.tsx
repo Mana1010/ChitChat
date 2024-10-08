@@ -4,38 +4,36 @@ import { LuSend } from "react-icons/lu";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import { Socket } from "socket.io-client";
-import {
-  useInfiniteQuery,
-  useQuery,
-  useQueryClient,
-  UseQueryResult,
-} from "react-query";
+import { useInfiniteQuery, useQueryClient } from "react-query";
 import { serverUrl } from "@/utils/serverUrl";
-import axios, { AxiosError } from "axios";
-import { User } from "@/types/next-auth";
+import axios from "axios";
+import { User } from "@/types/UserTypes";
 import { initializePublicChatSocket } from "@/utils/socket";
 import Image from "next/image";
 import themeImg from "../../../../assets/images/theme-img.png";
 import { MdEmojiEmotions } from "react-icons/md";
 import Picker from "emoji-picker-react";
 import typingChatAnimation from "../../../../assets/images/gif-animation/typing-chat-animation.gif";
-import chatLoadingAnimation from "../../../../assets/images/gif-animation/chat-loading.gif";
+import { IoIosArrowRoundDown } from "react-icons/io";
 import { PublicMessages } from "@/types/UserTypes";
 import { nanoid } from "nanoid";
 import LoadingChat from "@/components/LoadingChat";
 import { useInView } from "react-intersection-observer";
-
+import { motion, AnimatePresence } from "framer-motion";
+import PublicChatBubbles from "./ChatBubbles";
 function PublicChat() {
   const [message, setMessage] = useState("");
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const { ref, inView } = useInView();
   const [openEmoji, setOpenEmoji] = useState(false);
   const socketRef = useRef<Socket | null>();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const scrollDivRef = useRef<HTMLDivElement | null>(null);
+  const scrollPositionRef = useRef(0);
   const currentPageRef = useRef(0);
-  const [allMessages, setAllMessages] = useState<PublicMessages[]>([]);
+  const [showArrowDown, setShowArrowDown] = useState(false);
+  const [allMessages, setAllMessages] = useState<PublicMessages<User>[]>([]);
   const [hasNextPage, setHasNextPage] = useState(true);
   const [typingUsers, setTypingUsers] = useState<
     { socketId: string; userImg: string }[]
@@ -56,7 +54,7 @@ function PublicChat() {
       return lastPage.nextPage ?? false;
     },
     onSuccess: (data) => {
-      const nextPage: PublicMessages[] =
+      const nextPage: PublicMessages<User>[] =
         data.pages[currentPageRef.current].getAllMessages;
       setAllMessages((prevMessages) => [...nextPage, ...prevMessages]);
       if (currentPageRef.current > 0 && scrollDivRef.current) {
@@ -72,8 +70,8 @@ function PublicChat() {
   }, [allMessages]);
   useEffect(() => {
     return () => {
-      queryClient.resetQueries(["public-messages"]);
-    }; //Reset the cache
+      queryClient.resetQueries(["public-messages"]); //Reset the cache
+    };
   }, [queryClient]);
   useEffect(() => {
     if (inView && hasNextPage) {
@@ -96,16 +94,7 @@ function PublicChat() {
   useEffect(() => {
     if (!socketRef.current) return;
     const handleGetMessages = (data: User) => {
-      queryClient.setQueryData<PublicMessages[] | undefined>(
-        ["public-messages"],
-        (prevMessages): any => {
-          if (prevMessages) {
-            return [...prevMessages, data];
-          } else {
-            return [data];
-          }
-        }
-      );
+      setAllMessages((prevMessages: any) => [...prevMessages, data]);
     };
     const handleDisplayStatus = (data: { name: string; status: string }) => {
       toast.message(`${data.name} is ${data.status}`, {
@@ -140,6 +129,19 @@ function PublicChat() {
           <LoadingChat />
         ) : (
           <div
+            onScroll={() => {
+              if (scrollDivRef.current) {
+                scrollPositionRef.current = scrollDivRef.current.scrollTop;
+                const scrollHeight =
+                  scrollDivRef.current.scrollHeight -
+                  scrollDivRef.current.clientHeight;
+                if (scrollHeight - scrollPositionRef.current > 300) {
+                  setShowArrowDown(true);
+                } else {
+                  setShowArrowDown(false);
+                }
+              }
+            }}
             ref={scrollDivRef}
             className="chat-div w-full space-y-2 p-3 overflow-y-auto h-full relative"
           >
@@ -148,69 +150,13 @@ function PublicChat() {
                 <LoadingChat />
               </div>
             )}
-            {allMessages?.map((data: PublicMessages) => (
-              <div
+            {allMessages?.map((data: PublicMessages<User>) => (
+              <PublicChatBubbles
                 key={data._id}
-                className={`flex space-x-2 w-full relative z-10 ${
-                  data.userId?._id === session?.user.userId
-                    ? "justify-end"
-                    : "justify-start"
-                }`}
-              >
-                <div
-                  className={`w-1/2 flex ${
-                    data.userId?._id === session?.user.userId
-                      ? "justify-end"
-                      : "justify-start"
-                  }`}
-                >
-                  <div
-                    className={`flex items-end gap-1  ${
-                      data.userId?._id !== session?.user.userId &&
-                      "flex-row-reverse"
-                    }`}
-                  >
-                    <div className="flex flex-col">
-                      <small
-                        className={`font-semibold text-[0.7rem] text-white ${
-                          data.userId?._id === session?.user.userId &&
-                          "text-end"
-                        }`}
-                      >
-                        {data.userId?.name.split(" ")[0] ?? ""}
-                      </small>
-                      {/* ChatBox */}
-
-                      <div
-                        className={`p-2 rounded-md flex items-center justify-center break-words ${
-                          data.userId?._id === session?.user.userId
-                            ? "bg-[#6486FF]"
-                            : "bg-[#171717]"
-                        }`}
-                      >
-                        <span className="text-white">{data?.message}</span>
-                      </div>
-                    </div>
-                    <div className="w-[32px] h-[32px] rounded-full relative px-4 py-2">
-                      <Image
-                        src={data.userId?.profilePic ?? themeImg}
-                        alt="profile-pic"
-                        fill
-                        sizes="100%"
-                        className="rounded-full absolute"
-                        priority
-                      />
-                      <span
-                        className={`w-2 h-2 ${
-                          data.userId.status === "Online"
-                            ? "bg-green-500"
-                            : "bg-slate-500"
-                        } rounded-full absolute right-[1px] bottom-[2px]`}
-                      ></span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                setMessage={setAllMessages}
+                messageDetails={data}
+                userData={session?.user as any}
+              />
             ))}
             {typingUsers.length !== 0 && (
               <div className="flex space-x-1 items-center">
@@ -249,6 +195,30 @@ function PublicChat() {
               </div>
             )}
             <div ref={scrollRef} className="relative top-5"></div>
+            <AnimatePresence mode="wait">
+              {showArrowDown && (
+                <motion.div
+                  initial={{ opacity: 0, bottom: "10px" }}
+                  animate={{ opacity: 1, bottom: "15px" }}
+                  transition={{ duration: 0.25, ease: "easeIn" }}
+                  exit={{ opacity: 0, bottom: "10px" }}
+                  className=" flex items-center justify-center z-[999] sticky bg-transparent w-12 h-12 left-[50%] right-[50%]"
+                >
+                  <button
+                    onClick={() => {
+                      setShowArrowDown(false);
+                      scrollRef.current?.scrollIntoView({
+                        block: "end",
+                        behavior: "smooth",
+                      });
+                    }}
+                    className="w-10 h-10 rounded-full flex items-center justify-center p-1 bg-[#222222] text-[#6486FF]  text-2xl"
+                  >
+                    <IoIosArrowRoundDown />
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         )}
 
@@ -266,6 +236,7 @@ function PublicChat() {
       <form
         onSubmit={(e) => {
           e.preventDefault();
+          if (status !== "authenticated") return;
           socketRef.current?.emit("send-message", message);
           const userData = {
             name: session?.user?.name,
@@ -273,15 +244,16 @@ function PublicChat() {
             status: "Online",
             _id: session?.user.userId,
           };
-          setAllMessages((prevMessages: PublicMessages[]) => {
+          setAllMessages((prevMessages: PublicMessages<User>[]) => {
             return [
               ...prevMessages,
               {
                 message,
-                userId: userData,
+                sender: userData,
                 createdAt: new Date().toString(),
                 isMessageDeleted: false,
                 _id: nanoid(),
+                reactions: [],
               },
             ];
           });

@@ -18,7 +18,7 @@ import LoadingChat from "@/components/LoadingChat";
 import { useInView } from "react-intersection-observer";
 import ChatHeader from "./ChatHeader";
 import useGetParticipantInfo from "@/hooks/getParticipantInfo.hook";
-import ChatBubbles from "@/components/ChatBubbles";
+import ChatBubbles from "@/app/chats/private/[conversationId]/_components/ChatBubbles";
 import MessageField from "@/components/MessageField";
 import { IoIosArrowRoundDown } from "react-icons/io";
 import { AnimatePresence, motion } from "framer-motion";
@@ -55,10 +55,12 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       return lastPage?.nextPage ?? null;
     },
     onSuccess: (data) => {
+      console.log(data);
       setAllMessages((prevMessages) => [
         ...data.pages[currentPageRef.current]?.getMessages,
         ...prevMessages,
       ]);
+
       if (currentPageRef.current > 0 && scrollDivRef.current) {
         scrollDivRef.current.scrollTo(0, 40);
       }
@@ -161,7 +163,8 @@ function Chatboard({ conversationId }: { conversationId: string }) {
   if (isError) {
     const errorMessage = error as AxiosError<{ message: string }>;
     if (errorMessage.response?.status === 404) {
-      return <UserNotFound />;
+      console.log(errorMessage.response.data.message);
+      return <UserNotFound errorMessage={errorMessage.response.data.message} />;
     }
   }
   function sendMessage(messageContent: string) {
@@ -200,7 +203,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       scrollRef.current?.scrollIntoView({ block: "end" }); //To bypass the closure nature of react :)
     }, 0);
   }
-  function updateChatList() {
+  function updateChatList(userMessage: string) {
     queryClient.setQueryData<Conversation[] | undefined>(
       ["chat-list"],
       (cachedData: any) => {
@@ -212,7 +215,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                   ...chatlist,
                   lastMessage: {
                     sender: session?.user.userId,
-                    text: message,
+                    text: userMessage,
                     lastMessageCreatedAt: new Date(),
                   },
                 };
@@ -254,9 +257,10 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                     socket?.emit("send-message", {
                       message: "👋",
                       conversationId,
-                      participantId: participantInfo?.receiver_details._id,
+                      receiverId: participantInfo?.receiver_details._id,
                     });
                     sendMessage("👋");
+                    updateChatList("👋");
                   }}
                   className="bg-[#414141] text-lg px-3 py-1.5 rounded-md overflow-hidden"
                 >

@@ -39,7 +39,7 @@ export function privateChat(io: Server) {
     const typingUsers = [];
     socket.on(
       "send-message",
-      async ({ message, conversationId, receiverId }, cb) => {
+      async ({ message, conversationId, receiverId }) => {
         try {
           if (conversationId) {
             const createMessage = await Private.create({
@@ -67,7 +67,6 @@ export function privateChat(io: Server) {
               },
               1
             );
-            console.log(`Receiver Id: ${receiverId}`);
             socket.broadcast
               .to(receiverId)
               .emit("display-unread-message", conversationId);
@@ -98,7 +97,7 @@ export function privateChat(io: Server) {
           if (getUnreadMessages) {
             if (
               getUnread.totalUnreadMessages !== 0 &&
-              getUnread.user.toString() === userId
+              getUnread.user === userId
             ) {
               getUnreadMessages.hasUnreadMessages.totalUnreadMessages = 0;
               await getUnreadMessages.save();

@@ -3,7 +3,7 @@ export interface User {
   profilePic: string;
   _id: string;
   status: string;
-  userId: string;
+  userId?: string;
 }
 export interface FullInfoUser extends User {
   provider: string;
@@ -33,12 +33,13 @@ export interface Messages {
   isRead: boolean;
   reaction: string;
 }
-export interface PublicMessages {
+export interface PublicMessages<UserType = string> {
   _id: string;
-  userId: User | any;
+  sender: UserType;
   message: string;
-  createdAt: string | any;
+  createdAt: string;
   isMessageDeleted: boolean;
+  reactions: string[];
 }
 export interface GetParticipantInfo {
   _id: string;

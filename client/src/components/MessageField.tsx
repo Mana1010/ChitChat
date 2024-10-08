@@ -11,7 +11,7 @@ interface MessageFieldProps {
   message: string;
   openEmoji: boolean;
   sendMessage: (messageContent: string) => void;
-  updateChatList: () => void;
+  updateChatList: (userMessage: string) => void;
   setMessage: Dispatch<SetStateAction<string>>;
   setOpenEmoji: Dispatch<SetStateAction<boolean>>;
 }
@@ -44,9 +44,8 @@ function MessageField({
             }
           }
         );
-
         sendMessage(message);
-        updateChatList();
+        updateChatList(message);
         setMessage("");
       }}
       className="px-3 py-2.5 flex items-center space-x-2 bg-[#171717]"

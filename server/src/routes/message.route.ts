@@ -26,7 +26,7 @@ router.get(
 router.post("/messages/newChat", chatUser);
 router.get("/messages/notification/:senderId", getChatNotifications);
 router.get(
-  "/messages/conversation-name/:participantId/conversation/:conversationId",
+  "/messages/conversation-name/:userId/conversation/:conversationId",
   getParticipantName
 );
 router.get("/conversation/search-user", searchUserResult);

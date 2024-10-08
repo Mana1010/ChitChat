@@ -2,9 +2,18 @@ import mongoose, { Schema } from "mongoose";
 
 const messageSchema = new mongoose.Schema(
   {
-    userId: { type: Schema.Types.ObjectId, ref: "User" },
+    sender: { type: Schema.Types.ObjectId, ref: "User" },
     message: { type: String },
     isMessageDeleted: { type: Boolean, default: false },
+    reactions: [
+      {
+        reactor: {
+          type: Schema.Types.ObjectId,
+          ref: "User",
+        },
+        reaction: String,
+      },
+    ],
   },
   {
     timestamps: true,

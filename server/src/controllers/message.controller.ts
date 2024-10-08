@@ -21,10 +21,10 @@ export const getAllPublicMessages = asyncHandler(
       .skip(PAGE * LIMIT)
       .limit(LIMIT)
       .populate({
-        path: "userId",
+        path: "sender",
         select: ["-createdAt", "-updatedAt", "-__v"],
       })
-      .select(["message", "isMessageDeleted"]);
+      .select(["message", "isMessageDeleted", "createdAt"]);
     const hasNextPage = getAllMessages.length === LIMIT;
     const nextPage = hasNextPage ? PAGE + 1 : null;
     res.status(200).json({
@@ -116,7 +116,15 @@ export const getPrivateMessages = asyncHandler(
     const { page, limit } = req.query;
     if (!mongoose.Types.ObjectId.isValid(conversationId)) {
       res.status(404);
-      throw new Error("User not found");
+      throw new Error("Conversation does not exist");
+    }
+    console.log(mongoose.Types.ObjectId.isValid(conversationId));
+    const checkConversationAvailability = await Conversation.findById(
+      conversationId
+    );
+    if (!checkConversationAvailability) {
+      res.status(404);
+      throw new Error("Conversation does not exist");
     }
     if (!page || !limit) {
       res.status(403);
@@ -124,25 +132,22 @@ export const getPrivateMessages = asyncHandler(
     }
     const LIMIT = +limit;
     const CURRENTPAGE = +page;
-    if (isFinite(CURRENTPAGE)) {
-      const getMessages = await Private.find({ conversationId })
-        .sort({ createdAt: -1 })
-        .skip(CURRENTPAGE * LIMIT)
-        .limit(LIMIT)
-        .populate([
-          { path: "sender", select: ["name", "profilePic", "status"] },
-        ])
-        .select(["sender", "message", "isRead", "createdAt", "reaction"]);
-      const hasMoreMessages = getMessages.length === LIMIT;
-      const messages = getMessages.reverse();
-      const nextPage = hasMoreMessages ? CURRENTPAGE + 1 : null;
-      res.status(200).json({
-        message: {
-          getMessages: messages,
-          nextPage,
-        },
-      });
-    }
+    const getMessages = await Private.find({ conversationId })
+      .sort({ createdAt: -1 })
+      .skip(CURRENTPAGE * LIMIT)
+      .limit(LIMIT)
+      .populate([{ path: "sender", select: ["name", "profilePic", "status"] }])
+      .select(["sender", "message", "isRead", "createdAt", "reaction"]);
+    const hasMoreMessages = getMessages.length === LIMIT;
+    const messages = getMessages.reverse();
+    const nextPage = hasMoreMessages ? CURRENTPAGE + 1 : null;
+
+    res.status(200).json({
+      message: {
+        getMessages: messages,
+        nextPage,
+      },
+    });
   }
 );
 export const getParticipantInfo = asyncHandler(
@@ -219,14 +224,20 @@ export const getChatNotifications = asyncHandler(
       res.status(200).json({ message: getLatestConversationId[0]._id });
       return;
     }
-
     res.status(200).json({ message: null }); //If the user is new and have no conversation made with other
   }
 );
 export const getParticipantName = asyncHandler(
   async (req: Request, res: Response) => {
-    const { participantId, conversationId } = req.params;
-
+    const { userId, conversationId } = req.params;
+    if (conversationId === "new") {
+      res.status(200).json({ message: null });
+      return;
+    }
+    if (!mongoose.Types.ObjectId.isValid(conversationId)) {
+      res.status(400);
+      throw new Error("User Not Found");
+    }
     const getChatMateName = await Conversation.aggregate([
       {
         $match: { _id: new mongoose.Types.ObjectId(conversationId) },
@@ -236,7 +247,7 @@ export const getParticipantName = asyncHandler(
       },
       {
         $match: {
-          participants: { $ne: new mongoose.Types.ObjectId(participantId) },
+          participants: { $ne: new mongoose.Types.ObjectId(userId) },
         },
       },
       {
@@ -255,9 +266,10 @@ export const getParticipantName = asyncHandler(
         },
       },
     ]);
-    if (!getChatMateName) {
+    console.log(getChatMateName);
+    if (getChatMateName.length === 0) {
       res.status(404);
-      throw new Error("User not found");
+      throw new Error("User Not Found");
     }
     res
       .status(200)

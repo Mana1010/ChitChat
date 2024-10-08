@@ -46,18 +46,16 @@ const reactions = [
     id: nanoid(),
   },
 ];
-function Reactions({
+function PrivateReactions({
   messageId,
   conversationId,
   messageDetails,
-  participantId,
   setMessage,
   setOpenReaction,
 }: {
   messageId: string;
-  conversationId: string;
+  conversationId?: string;
   messageDetails: Messages;
-  participantId: string;
   setMessage: Dispatch<SetStateAction<Messages[]>>;
   setOpenReaction: Dispatch<SetStateAction<string | undefined>>;
 }) {
@@ -102,4 +100,4 @@ function Reactions({
   );
 }
 
-export default Reactions;
+export default PrivateReactions;

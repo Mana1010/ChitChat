@@ -32,12 +32,12 @@ export function publicChat(io: Socket) {
     socket.on("send-message", async (message: string) => {
       const getId = await Public.create({
         message,
-        userId: userId,
+        sender: userId,
         isMessageDeleted: false,
       });
       const getUser = await Public.findById(getId._id) //Retrieving the Public messages
         .populate({
-          path: "userId",
+          path: "sender",
           select: ["name", "profilePic", "status"],
         })
         .select(["-updatedAt", "-__v"])
