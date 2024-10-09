@@ -35,6 +35,7 @@ function MessageField({
           "send-message",
           {
             message,
+            messageType: "text",
             conversationId,
             receiverId: participantInfo?.receiver_details._id,
           },
@@ -51,6 +52,12 @@ function MessageField({
       className="px-3 py-2.5 flex items-center space-x-2 bg-[#171717]"
     >
       <input
+        onFocus={() => {
+          socket?.emit("read-message", {
+            conversationId,
+            participantId: participantInfo?.receiver_details._id,
+          });
+        }}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         type="text"

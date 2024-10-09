@@ -9,6 +9,11 @@ const conversationSchema = new mongoose.Schema({
   lastMessage: {
     sender: { type: Schema.Types.ObjectId, ref: "User" },
     text: { type: String, default: "👋" },
+    messageType: {
+      type: String,
+      enum: ["text", "file"],
+      default: "text",
+    },
     lastMessageCreatedAt: { type: Date, default: () => new Date() },
   },
   createdAt: { type: Date, default: new Date() },

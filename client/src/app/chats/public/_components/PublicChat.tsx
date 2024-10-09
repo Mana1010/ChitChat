@@ -124,7 +124,7 @@ function PublicChat() {
   }, [socketRef.current]);
   return (
     <div className="h-full" onClick={() => setOpenEmoji(false)}>
-      <div className="h-[440px] bg-[#3A3B3C] w-full rounded-md relative">
+      <div className="h-[440px] bg-[#222222] w-full rounded-md relative">
         {isLoading ? (
           <LoadingChat />
         ) : (

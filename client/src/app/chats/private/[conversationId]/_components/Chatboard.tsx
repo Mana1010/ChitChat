@@ -145,25 +145,18 @@ function Chatboard({ conversationId }: { conversationId: string }) {
   }, [conversationId, queryClient, socket]);
 
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !participantInfo?.receiver_details._id) return;
     socket.emit("read-message", {
       conversationId,
-      participantId: participantInfo?.receiver_details?._id,
+      participantId: participantInfo.receiver_details._id,
     });
-  }, [
-    conversationId,
-    participantInfo?.receiver_details._id,
-    socket,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    data?.pages[0]?.getMessages,
-  ]);
+  }, [conversationId, participantInfo?.receiver_details._id, socket]);
   if (conversationId.toLowerCase() === "new") {
     return <NewUser />;
   }
   if (isError) {
     const errorMessage = error as AxiosError<{ message: string }>;
     if (errorMessage.response?.status === 404) {
-      console.log(errorMessage.response.data.message);
       return <UserNotFound errorMessage={errorMessage.response.data.message} />;
     }
   }

@@ -7,6 +7,7 @@ interface Payload {
   conversationId: string;
   userId: string;
   message: string;
+  messageType: string;
   participantId?: string;
 }
 async function updateConversation(payload: Payload, addUnreadMessage: number) {
@@ -20,6 +21,7 @@ async function updateConversation(payload: Payload, addUnreadMessage: number) {
         "lastMessage.sender": payload.userId,
         "lastMessage.text": payload.message,
         "lastMessage.lastMessageCreatedAt": new Date(),
+        "lastMessage.messageType": payload.messageType,
         "hasUnreadMessages.user": payload.participantId,
         "hasUnreadMessages.totalUnreadMessages":
           getTotalUnreadMessages.hasUnreadMessages.totalUnreadMessages +
@@ -39,7 +41,7 @@ export function privateChat(io: Server) {
     const typingUsers = [];
     socket.on(
       "send-message",
-      async ({ message, conversationId, receiverId }) => {
+      async ({ message, messageType, conversationId, receiverId }) => {
         try {
           if (conversationId) {
             const createMessage = await Private.create({
@@ -63,6 +65,7 @@ export function privateChat(io: Server) {
                 conversationId,
                 userId,
                 message,
+                messageType,
                 participantId: receiverId,
               },
               1
@@ -86,6 +89,8 @@ export function privateChat(io: Server) {
       }
     );
     socket.on("read-message", async ({ conversationId, participantId }) => {
+      console.log("Running the read message");
+
       try {
         if (conversationId && participantId) {
           const getUnreadMessages = await Conversation.findById(
@@ -97,12 +102,13 @@ export function privateChat(io: Server) {
           if (getUnreadMessages) {
             if (
               getUnread.totalUnreadMessages !== 0 &&
-              getUnread.user === userId
+              getUnread.user.toString() === userId
             ) {
-              getUnreadMessages.hasUnreadMessages.totalUnreadMessages = 0;
+              getUnread.totalUnreadMessages = 0;
               await getUnreadMessages.save();
             }
           }
+
           socket.emit("seen-message", {
             conversationId,
             hasUnreadMessages: getUnread,
@@ -118,34 +124,17 @@ export function privateChat(io: Server) {
     });
     socket.on(
       "send-reaction",
-      async ({ reaction, messageId, conversationId, participantId }) => {
+      async ({ reaction, messageId, conversationId }) => {
         await Private.findByIdAndUpdate(messageId, {
           reaction,
         });
-        const updatedConversation = await updateConversation(
-          {
-            conversationId,
-            userId,
-            message: `Reacted ${reaction} to a message`,
-            participantId,
-          },
-          0
-        );
         socket.broadcast
           .to(conversationId)
           .emit("display-reaction", { reaction, messageId });
-        socket.broadcast.to(conversationId)?.emit("display-updated-chatlist", {
-          newMessage: `Reacted ${reaction} to a message`,
-          conversationId,
-          participantId: userId,
-          lastMessageCreatedAt:
-            updatedConversation.lastMessage.lastMessageCreatedAt,
-        });
       }
     );
     socket.on("join-room", (conversationId) => {
       socket.join(conversationId);
-      console.log(`Joined room ${conversationId}`);
     });
     socket.on("join-receiverId-room", (receiverId) => {
       if (receiverId) {
@@ -154,7 +143,6 @@ export function privateChat(io: Server) {
     });
     socket.on("leave-room", (conversationId) => {
       socket.leave(conversationId);
-      console.log("Leaving room");
     });
     socket.on("leave-receiverId-room", (receiverId) => {
       socket.leave(receiverId);

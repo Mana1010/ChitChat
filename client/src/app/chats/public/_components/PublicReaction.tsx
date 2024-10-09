@@ -1,7 +1,6 @@
 "use client";
 import React, { Dispatch, SetStateAction, useState } from "react";
 import { nanoid } from "nanoid";
-import { useSocketStore } from "@/utils/store/socket.store";
 import { Messages, PublicMessages } from "@/types/UserTypes";
 import { User } from "next-auth";
 
@@ -58,18 +57,16 @@ function PublicReactions({
   setMessage: Dispatch<SetStateAction<PublicMessages<User>[]>>;
   setOpenReaction: Dispatch<SetStateAction<string | undefined>>;
 }) {
-  const { socket } = useSocketStore();
-
   return (
     <div className="absolute -top-10 -left-25 rounded-md bg-[#414141] flex items-center justify-center h-[40px] z-[99999]">
       {reactions.map((reaction) => (
         <button
           onClick={() => {
-            if (!socket) return;
-            socket.emit("send-reaction", {
-              reaction: reaction.emoji,
-              messageId,
-            });
+            // if (!socket) return;
+            // socket.emit("send-reaction", {
+            //   reaction: reaction.emoji,
+            //   messageId,
+            // });
             // setMessage((prev) => {
             //   return prev.map((message: PublicMessages<User>) => {
             //     if (messageId === message._id) {
@@ -85,7 +82,7 @@ function PublicReactions({
             setOpenReaction("");
           }}
           key={reaction.id}
-          className={`text-2xl h-full p-1 bg-slate-500`}
+          className={`text-2xl h-full p-1 hover:bg-[#171717]`}
         >
           {reaction.emoji}
         </button>

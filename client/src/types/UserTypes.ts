@@ -21,6 +21,7 @@ export interface Conversation {
   lastMessage: {
     sender: User | string;
     text: string;
+    messageType: string;
     lastMessageCreatedAt: Date;
   };
   updatedAt: string;

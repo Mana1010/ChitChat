@@ -60,25 +60,26 @@ function PrivateReactions({
   setOpenReaction: Dispatch<SetStateAction<string | undefined>>;
 }) {
   const { socket } = useSocketStore();
-
+  function sendReaction(content: string) {
+    if (!socket) return;
+    socket.emit("send-reaction", {
+      reaction: content,
+      messageId,
+      conversationId,
+    });
+  }
   return (
     <div className=" absolute -top-14 -left-25 rounded-md bg-[#414141] flex items-center justify-center h-[40px] z-[99999]">
       {reactions.map((reaction) => (
         <button
           onClick={() => {
-            if (!socket) return;
-            socket.emit("send-reaction", {
-              reaction: reaction.emoji,
-              messageId,
-              conversationId,
-            });
             setMessage((prev) => {
               return prev.map((message) => {
                 if (messageId === message._id) {
-                  if (reaction.emoji === message.reaction) {
-                    return { ...message, reaction: "" };
-                  }
-                  return { ...message, reaction: reaction.emoji };
+                  const newReaction =
+                    reaction.emoji === message.reaction ? "" : reaction.emoji;
+                  sendReaction(newReaction);
+                  return { ...message, reaction: newReaction };
                 } else {
                   return message;
                 }
@@ -89,8 +90,8 @@ function PrivateReactions({
           key={reaction.id}
           className={`text-2xl h-full p-1 ${
             messageDetails.reaction === reaction.emoji
-              ? "bg-slate-800"
-              : "hover:bg-slate-800"
+              ? "bg-[#171717]"
+              : "hover:bg-[#171717]"
           }`}
         >
           {reaction.emoji}

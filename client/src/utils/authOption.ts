@@ -65,10 +65,7 @@ const authOptions: NextAuthOptions = {
             authId: profile?.sub,
             provider: account?.provider,
           };
-          const message = await axios.post(
-            `${serverUrl}/api/auth/createUser`,
-            payload
-          );
+          await axios.post(`${serverUrl}/api/auth/createUser`, payload);
         }
         return true;
       } catch (err) {

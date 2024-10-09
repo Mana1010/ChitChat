@@ -1,7 +1,7 @@
 "use client";
 import { serverUrl } from "@/utils/serverUrl";
 import axios, { AxiosError } from "axios";
-import React, { useRef } from "react";
+import React from "react";
 import { useEffect } from "react";
 import { useQuery, UseQueryResult, useQueryClient } from "react-query";
 import { useSession } from "next-auth/react";
@@ -11,9 +11,7 @@ import noSearchFoundImg from "../../../../../assets/images/not-found.png";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useSocketStore } from "@/utils/store/socket.store";
-import { motion } from "framer-motion";
 import ConversationListSkeleton from "@/app/chats/_components/ConversationListSkeleton";
-import { useChatStore } from "@/utils/store/chat.store";
 function ChatList({
   searchChat,
   conversationId,
@@ -42,7 +40,13 @@ function ChatList({
     if (!socket || status === "unauthenticated") return;
     socket.on(
       "display-updated-chatlist",
-      ({ newMessage, conversationId, participantId, lastMessageCreatedAt }) => {
+      ({
+        newMessage,
+        messageType,
+        conversationId,
+        participantId,
+        lastMessageCreatedAt,
+      }) => {
         queryClient.setQueryData<Conversation[] | undefined>(
           ["chat-list"],
           (prevData) => {
@@ -55,6 +59,7 @@ function ChatList({
                       lastMessage: {
                         sender: participantId,
                         text: newMessage,
+                        messageType,
                         lastMessageCreatedAt,
                       },
                     };
@@ -142,11 +147,10 @@ function ChatList({
       ) : (
         <div className="pt-2 flex flex-col w-full overflow-y-auto h-full items-center px-1.5">
           {searchResult?.map((user: Conversation, index: number) => (
-            <motion.button
+            <button
               onClick={() =>
                 router.push(`/chats/private/${user._id}?type=chats`)
               }
-              layout
               key={index}
               className={`flex items-center w-full p-3.5 cursor-pointer hover:bg-[#414141] rounded-lg justify-between ${
                 user._id === conversationId && "bg-[#414141]"
@@ -204,7 +208,7 @@ function ChatList({
                     : "hidden"
                 }`}
               ></div>
-            </motion.button>
+            </button>
           ))}{" "}
         </div>
       )}

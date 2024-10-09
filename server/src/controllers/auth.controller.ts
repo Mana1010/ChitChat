@@ -11,6 +11,15 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
 
 export const checkUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
+  if (!id) {
+    res.status(403);
+    throw new Error("Forbidden"); //If no id provided then forbidden
+  }
   const checkUserExist = await User.findOne({ authId: id });
+
+  if (!checkUserExist) {
+    res.status(404);
+    throw new Error("User does not exist");
+  }
   res.status(200).json({ message: checkUserExist });
 });
