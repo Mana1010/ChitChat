@@ -24,7 +24,7 @@ export const getAllPublicMessages = asyncHandler(
         path: "sender",
         select: ["-createdAt", "-updatedAt", "-__v"],
       })
-      .select(["message", "isMessageDeleted", "createdAt"]);
+      .select(["message", "isMessageDeleted", "createdAt", "reactions"]);
     const hasNextPage = getAllMessages.length === LIMIT;
     const nextPage = hasNextPage ? PAGE + 1 : null;
     res.status(200).json({

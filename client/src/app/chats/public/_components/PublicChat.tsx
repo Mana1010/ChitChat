@@ -67,7 +67,7 @@ function PublicChat() {
     if (currentPageRef.current <= 0) {
       scrollRef.current?.scrollIntoView({ block: "end" });
     }
-  }, [allMessages]);
+  }, [allMessages.length]);
   useEffect(() => {
     return () => {
       queryClient.resetQueries(["public-messages"]); //Reset the cache
@@ -122,6 +122,7 @@ function PublicChat() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socketRef.current]);
+
   return (
     <div className="h-full" onClick={() => setOpenEmoji(false)}>
       <div className="h-[440px] bg-[#222222] w-full rounded-md relative">
@@ -152,7 +153,8 @@ function PublicChat() {
             )}
             {allMessages?.map((data: PublicMessages<User>) => (
               <PublicChatBubbles
-                key={data._id}
+                key={data?._id}
+                socket={socketRef.current as Socket}
                 setMessage={setAllMessages}
                 messageDetails={data}
                 userData={session?.user as any}
@@ -212,7 +214,7 @@ function PublicChat() {
                         behavior: "smooth",
                       });
                     }}
-                    className="w-10 h-10 rounded-full flex items-center justify-center p-1 bg-[#222222] text-[#6486FF]  text-2xl"
+                    className="w-10 h-10 rounded-full flex items-center justify-center p-1 bg-[#414141] text-[#6486FF] text-2xl"
                   >
                     <IoIosArrowRoundDown />
                   </button>

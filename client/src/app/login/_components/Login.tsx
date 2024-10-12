@@ -66,17 +66,6 @@ function Login() {
               </span>
               <span>Login with Google</span>
             </button>
-            <button
-              onClick={() => {
-                signIn("github", { callbackUrl: "/chats/public" });
-              }}
-              className="flex space-x-2 py-2.5 px-4 items-center rounded-xl text-white font-semibold border border-[#6486FF] w-full justify-center"
-            >
-              <span>
-                <FaGithub />
-              </span>
-              <span>Login with Github</span>
-            </button>
           </div>
         )}
       </div>

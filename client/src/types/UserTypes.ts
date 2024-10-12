@@ -1,3 +1,5 @@
+import React from "react";
+
 export interface User {
   name: string;
   profilePic: string;
@@ -34,13 +36,18 @@ export interface Messages {
   isRead: boolean;
   reaction: string;
 }
+export interface Reaction<ReactionType = string> {
+  reactor: ReactionType;
+  reactionEmoji: string;
+  reactionCreatedAt: string;
+}
 export interface PublicMessages<UserType = string> {
   _id: string;
   sender: UserType;
   message: string;
   createdAt: string;
   isMessageDeleted: boolean;
-  reactions: string[];
+  reactions: Reaction[];
 }
 export interface GetParticipantInfo {
   _id: string;

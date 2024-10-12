@@ -47,6 +47,9 @@ export function publicChat(io: Socket) {
         socket.broadcast.emit("display-status", data);
       });
     });
+    socket.on("send-reaction", (data) => {
+      console.log(`Send Reaction Data ${data}`);
+    });
     socket.on("during-typing", ({ userImg, socketId }) => {
       const checkSocketId = typingUsers.some(
         (typeUser) => typeUser.socketId === socketId
@@ -57,6 +60,7 @@ export function publicChat(io: Socket) {
       socket.broadcast.emit("display-during-typing", typingUsers);
     });
     stopTyping(socket, typingUsers);
+
     socket.on("user-disconnect", async () => {
       const disconnectUser = await User.findById(userId).select([
         "name",

@@ -2,7 +2,7 @@ import mongoose, { Schema } from "mongoose";
 
 const messageSchema = new mongoose.Schema(
   {
-    sender: { type: Schema.Types.ObjectId, ref: "User" },
+    sender: { type: Schema.Types.ObjectId, ref: "User", required: true },
     message: { type: String },
     isMessageDeleted: { type: Boolean, default: false },
     reactions: [
@@ -10,8 +10,10 @@ const messageSchema = new mongoose.Schema(
         reactor: {
           type: Schema.Types.ObjectId,
           ref: "User",
+          required: true,
         },
-        reaction: String,
+        reactionEmoji: String,
+        reactionCreatedAt: { type: Date, default: () => new Date() },
       },
     ],
   },

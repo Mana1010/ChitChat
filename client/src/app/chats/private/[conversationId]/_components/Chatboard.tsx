@@ -2,6 +2,7 @@
 import axios, { AxiosError } from "axios";
 import React, { useEffect, useRef, useState, useLayoutEffect } from "react";
 import { useInfiniteQuery, useQueryClient } from "react-query";
+import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { serverUrl } from "@/utils/serverUrl";
 import NewUser from "./NewUser";
@@ -36,6 +37,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
   const [hasNextPage, setHasNextPage] = useState(true);
   const [allMessages, setAllMessages] = useState<Messages[]>([]);
   const [showArrowDown, setShowArrowDown] = useState(false);
+  const [displaySeen, setDisplaySeen] = useState(true);
   const { ref, inView } = useInView();
   const { participantInfo, isLoading: participantInfoLoading } =
     useGetParticipantInfo(conversationId, status, session);
@@ -99,7 +101,6 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       !participantInfo?.receiver_details._id
     )
       return;
-    const participantID = participantInfo.receiver_details._id ?? "";
     socket.emit("join-room", conversationId);
 
     socket.on("display-message", ({ getProfile, conversation }) => {
@@ -296,16 +297,25 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                   />
                 ))}
                 <div
-                  className={`w-full justify-end items-end relative bottom-3 pr-1 ${
+                  className={`w-full justify-end items-end relative bottom-3 pr-1 pt-1.5 ${
                     participantInfo?.hasUnreadMessages?.user !==
                       session?.user.userId &&
                     participantInfo?.hasUnreadMessages?.totalUnreadMessages ===
-                      0
+                      0 &&
+                    displaySeen
                       ? "flex"
                       : "hidden"
                   } `}
                 >
-                  <small className="text-zinc-500">Seen</small>
+                  {/* <small className="text-zinc-500">Seen</small> */}
+                  <Image
+                    src={participantInfo?.receiver_details.profilePic ?? ""}
+                    width={15}
+                    height={15}
+                    className="rounded-full"
+                    alt="Profile Image"
+                    priority
+                  />
                 </div>
                 <div ref={scrollRef} className="relative w-full"></div>
                 <AnimatePresence mode="wait">

@@ -89,8 +89,6 @@ export function privateChat(io: Server) {
       }
     );
     socket.on("read-message", async ({ conversationId, participantId }) => {
-      console.log("Running the read message");
-
       try {
         if (conversationId && participantId) {
           const getUnreadMessages = await Conversation.findById(
