@@ -17,6 +17,32 @@ function stopTyping(
     socket.broadcast.emit("display-during-typing", typingUsers);
   });
 }
+async function userReactionAggregate(userId: string, messageId: string) {
+  const findMessageAndCheckUserReaction = await Public.aggregate([
+    {
+      $match: { _id: new mongoose.Types.ObjectId(messageId) },
+    },
+    {
+      $project: {
+        reaction: {
+          $filter: {
+            input: "$reactions",
+            cond: {
+              $eq: ["$$this.reactor", new mongoose.Types.ObjectId(userId)],
+            },
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        reaction: { $arrayElemAt: ["$reaction", 0] },
+        _id: 0,
+      },
+    },
+  ]);
+  return findMessageAndCheckUserReaction;
+}
 export function publicChat(io: Socket) {
   let typingUsers: { socketId: string; userImg: string }[] = [];
   io.on("connection", async (socket: Socket) => {
@@ -48,61 +74,75 @@ export function publicChat(io: Socket) {
         socket.broadcast.emit("display-status", data);
       });
     });
-    socket.on("send-reaction", async ({ reaction, messageId }) => {
-      if (!reaction || !messageId || !userId) return; //To ensure that those fields is not empty
-      const findMessageAndCheckUserReaction = await Public.aggregate([
-        {
-          $match: { _id: new mongoose.Types.ObjectId(messageId) },
-        },
-        {
-          $unwind: "$reactions",
-        },
-        {
-          $match: { "reactions.reactor": new mongoose.Types.ObjectId(userId) },
-        },
-        {
-          $project: {
-            reactions: 1,
-          },
-        },
-      ]);
+    socket.on(
+      "send-reaction",
+      async ({
+        reaction,
+        messageId,
+      }: {
+        reaction: string;
+        messageId: string;
+      }) => {
+        if (!reaction || !messageId || !userId) return; //To ensure that those fields is not empty
+        const findMessageAndCheckUserReaction = await userReactionAggregate(
+          userId,
+          messageId
+        );
+        //To check if the obj is empty then false else true
 
-      if (findMessageAndCheckUserReaction.length !== 0) {
-        //If the user already reacted
-        if (
-          findMessageAndCheckUserReaction[0].reactions.reactionEmoji ===
-          reaction
-        ) {
+        if (Object.keys(findMessageAndCheckUserReaction[0]).length !== 0) {
+          //If the user already reacted
+          if (
+            findMessageAndCheckUserReaction[0].reaction.reactionEmoji ===
+            reaction
+          ) {
+            // this code is to remove or delete their reaction
+            await Public.findByIdAndUpdate(messageId, {
+              $pull: {
+                reactions: {
+                  reactor: userId,
+                },
+              },
+            });
+          } else {
+            //This code is to update the reaction
+            await Public.updateOne(
+              { _id: messageId, "reactions.reactor": userId },
+              { $set: { "reactions.$.reactionEmoji": reaction } } //The $ sign is to check the very first matched element then update its reaction
+            );
+          }
+        } else {
+          // this code is to add their reaction to a message
           await Public.findByIdAndUpdate(messageId, {
-            $pull: {
+            $push: {
               reactions: {
                 reactor: userId,
+                reactionEmoji: reaction,
               },
             },
           });
-        } else {
-          await Public.updateOne(
-            { _id: messageId, "reactions.reactor": userId },
-            { $set: { "reactions.$.reactionEmoji": reaction } } //The $ sign is to check the very first match element then update its reaction
-          );
         }
-      } else {
-        await Public.findByIdAndUpdate(messageId, {
-          $push: {
-            reactions: {
-              reactor: userId,
-              reactionEmoji: reaction,
+        const getUpdatedUserReaction = await userReactionAggregate(
+          userId,
+          messageId
+        );
+        if (Object.keys(getUpdatedUserReaction[0]).length) {
+          socket.broadcast.emit("display-reaction", {
+            isUserRemoveReaction: false,
+            data: {
+              reactor: getUpdatedUserReaction[0].reaction.reactor,
+              reactionCreatedAt: getUpdatedUserReaction[0].reactor,
+              reactionEmoji: getUpdatedUserReaction[0].reactionEmoji,
             },
-          },
-        });
+          });
+        } else {
+          socket.broadcast.emit("display-reaction", {
+            isUserRemoveReaction: true,
+            reactor: userId,
+          });
+        }
       }
-      const getChangedReaction = await Public.findById(messageId).select([
-        "reactions",
-        "-_id",
-      ]);
-      console.log(getChangedReaction);
-      socket.broadcast.emit("display-reaction", { data: getChangedReaction });
-    });
+    );
     socket.on("during-typing", ({ userImg, socketId }) => {
       const checkSocketId = typingUsers.some(
         (typeUser) => typeUser.socketId === socketId

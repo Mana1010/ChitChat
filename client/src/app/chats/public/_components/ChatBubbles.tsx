@@ -1,5 +1,5 @@
 "use client";
-import React, { Dispatch, SetStateAction, useState } from "react";
+import React, { Dispatch, SetStateAction, useMemo, useState } from "react";
 import Image from "next/image";
 import { PublicMessages, User } from "@/types/UserTypes";
 import PublicReactions from "./PublicReaction";
@@ -20,6 +20,10 @@ function PublicChatBubbles({
 }) {
   const [hoveredMessage, setHoveredMessage] = useState<string | undefined>("");
   const [openReaction, setOpenReaction] = useState<string | undefined>("");
+  const reactionOnly = useMemo(() => {
+    return messageDetails.reactions.map(({ reactionEmoji }) => reactionEmoji);
+  }, [messageDetails]);
+  const reactionList = new Set(reactionOnly); //To remove duplicate reaction
   if (!userData) return;
   return (
     <Linkify
@@ -78,19 +82,25 @@ function PublicChatBubbles({
                 >
                   <span className="text-white">{messageDetails?.message}</span>
                   {/* Display Reactions */}
-                  {messageDetails.reactions && (
+                  {messageDetails.reactions.length ? (
                     <button
-                      className={`absolute bottom-[-5px] text-[0.8rem] flex ${
+                      className={`absolute bottom-[-8px] text-[0.8rem] flex bg-[#3A3B3C] rounded-md px-1 items-center ${
                         messageDetails.sender?._id === userData.userId
                           ? "left-0"
                           : "right-0"
                       }`}
                     >
-                      {messageDetails.reactions.map((reaction, index) => (
-                        <span key={index}>{reaction.reactionEmoji}</span>
-                      ))}
+                      <div className="pr-[0.2rem]">
+                        {Array.from(reactionList).map((reaction, index) => (
+                          <span key={index}>{reaction}</span>
+                        ))}
+                      </div>
+
+                      <span className="text-white text-[0.6rem]">
+                        {reactionOnly.length}
+                      </span>
                     </button>
-                  )}
+                  ) : null}
                 </div>
 
                 {/* Reactions */}
