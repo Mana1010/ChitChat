@@ -116,6 +116,7 @@ function PublicReactions({
             socket.emit("send-reaction", {
               reaction: reaction.emoji,
               messageId: messageDetails._id,
+              userId,
             });
             setMessage((prev): any => {
               return prev.map((message: PublicMessages<User>) => {

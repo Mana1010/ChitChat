@@ -1,6 +1,7 @@
 import { Socket } from "socket.io";
 import { Public } from "../model/public.model";
 import { User } from "../model/user.model";
+import mongoose from "mongoose";
 
 function stopTyping(
   socket: Socket,
@@ -47,8 +48,60 @@ export function publicChat(io: Socket) {
         socket.broadcast.emit("display-status", data);
       });
     });
-    socket.on("send-reaction", (data) => {
-      console.log(`Send Reaction Data ${data}`);
+    socket.on("send-reaction", async ({ reaction, messageId }) => {
+      if (!reaction || !messageId || !userId) return; //To ensure that those fields is not empty
+      const findMessageAndCheckUserReaction = await Public.aggregate([
+        {
+          $match: { _id: new mongoose.Types.ObjectId(messageId) },
+        },
+        {
+          $unwind: "$reactions",
+        },
+        {
+          $match: { "reactions.reactor": new mongoose.Types.ObjectId(userId) },
+        },
+        {
+          $project: {
+            reactions: 1,
+          },
+        },
+      ]);
+
+      if (findMessageAndCheckUserReaction.length !== 0) {
+        //If the user already reacted
+        if (
+          findMessageAndCheckUserReaction[0].reactions.reactionEmoji ===
+          reaction
+        ) {
+          await Public.findByIdAndUpdate(messageId, {
+            $pull: {
+              reactions: {
+                reactor: userId,
+              },
+            },
+          });
+        } else {
+          await Public.updateOne(
+            { _id: messageId, "reactions.reactor": userId },
+            { $set: { "reactions.$.reactionEmoji": reaction } } //The $ sign is to check the very first match element then update its reaction
+          );
+        }
+      } else {
+        await Public.findByIdAndUpdate(messageId, {
+          $push: {
+            reactions: {
+              reactor: userId,
+              reactionEmoji: reaction,
+            },
+          },
+        });
+      }
+      const getChangedReaction = await Public.findById(messageId).select([
+        "reactions",
+        "-_id",
+      ]);
+      console.log(getChangedReaction);
+      socket.broadcast.emit("display-reaction", { data: getChangedReaction });
     });
     socket.on("during-typing", ({ userImg, socketId }) => {
       const checkSocketId = typingUsers.some(

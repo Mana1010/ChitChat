@@ -4,7 +4,6 @@ import { Public } from "../model/public.model";
 import { User } from "../model/user.model";
 import { Conversation } from "../model/conversation.model";
 import { Private } from "../model/private.model";
-import { ObjectId } from "mongodb";
 import mongoose from "mongoose";
 
 export const getAllPublicMessages = asyncHandler(
