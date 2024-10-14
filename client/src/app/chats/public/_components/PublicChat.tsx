@@ -1,6 +1,5 @@
 "use client";
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { LuSend } from "react-icons/lu";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import { Socket } from "socket.io-client";
@@ -11,8 +10,6 @@ import { User, Reaction } from "@/types/UserTypes";
 import { initializePublicChatSocket } from "@/utils/socket";
 import Image from "next/image";
 import themeImg from "../../../../assets/images/theme-img.png";
-import { MdEmojiEmotions } from "react-icons/md";
-import Picker from "emoji-picker-react";
 import typingChatAnimation from "../../../../assets/images/gif-animation/typing-chat-animation.gif";
 import { IoIosArrowRoundDown } from "react-icons/io";
 import { PublicMessages } from "@/types/UserTypes";
@@ -21,12 +18,13 @@ import LoadingChat from "@/components/LoadingChat";
 import { useInView } from "react-intersection-observer";
 import { motion, AnimatePresence } from "framer-motion";
 import PublicChatBubbles from "./ChatBubbles";
+import PublicMessageField from "./PublicMessageField";
 function PublicChat() {
   const [message, setMessage] = useState("");
   const { data: session, status } = useSession();
   const { ref, inView } = useInView();
   const [openEmoji, setOpenEmoji] = useState(false);
-  const socketRef = useRef<Socket | null>();
+  const socketRef = useRef<Socket | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const scrollDivRef = useRef<HTMLDivElement | null>(null);
@@ -38,7 +36,7 @@ function PublicChat() {
   const [typingUsers, setTypingUsers] = useState<
     { socketId: string; userImg: string }[]
   >([]);
-  const { data, isError, fetchNextPage, isLoading } = useInfiniteQuery({
+  const { isError, fetchNextPage, isLoading } = useInfiniteQuery({
     queryKey: ["public-messages"],
     queryFn: async ({ pageParam = 0 }) => {
       const response = await axios.get(
@@ -171,7 +169,29 @@ function PublicChat() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socketRef.current]);
-  console.log(allMessages);
+  function sendMessage() {
+    if (status !== "authenticated") return;
+    socketRef.current?.emit("send-message", message);
+    const userData = {
+      name: session?.user?.name,
+      profilePic: session?.user.image,
+      status: "Online",
+      _id: session?.user.userId,
+    };
+    setAllMessages((prevMessages: PublicMessages<User>[]) => {
+      return [
+        ...prevMessages,
+        {
+          message,
+          sender: userData,
+          createdAt: new Date().toString(),
+          isMessageDeleted: false,
+          _id: nanoid(),
+          reactions: [],
+        },
+      ];
+    });
+  }
   return (
     <div className="h-full" onClick={() => setOpenEmoji(false)}>
       <div className="h-[440px] bg-[#222222] w-full rounded-md relative">
@@ -283,105 +303,17 @@ function PublicChat() {
           />
         </div>
       </div>
-
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (status !== "authenticated") return;
-          socketRef.current?.emit("send-message", message);
-          const userData = {
-            name: session?.user?.name,
-            profilePic: session?.user.image,
-            status: "Online",
-            _id: session?.user.userId,
-          };
-          setAllMessages((prevMessages: PublicMessages<User>[]) => {
-            return [
-              ...prevMessages,
-              {
-                message,
-                sender: userData,
-                createdAt: new Date().toString(),
-                isMessageDeleted: false,
-                _id: nanoid(),
-                reactions: [],
-              },
-            ];
-          });
-          setMessage("");
-          setTimeout(() => {
-            scrollRef.current?.scrollIntoView({ block: "end" }); //To bypass the closure nature of react :)
-          }, 0);
-        }}
-        className="flex-grow flex space-x-2 items-center pt-3 justify-between"
-      >
-        <input
-          onChange={(e) => {
-            setMessage(e.target.value);
-          }}
-          onFocus={() => {
-            socketRef.current?.emit("during-typing", {
-              userImg: session?.user?.image,
-              socketId: socketRef.current.id,
-            });
-          }}
-          onBlur={() => {
-            socketRef.current?.emit("stop-typing", {
-              socketId: socketRef.current.id,
-            });
-          }}
-          ref={inputRef}
-          value={message}
-          type="text"
-          placeholder="Send a message"
-          className="text-zinc-100 placeholder:text-zinc-300 py-3 rounded-md bg-[#3A3B3C] px-3 flex-grow"
-        />
-        {/* For Emoji */}
-        <div className="relative">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setOpenEmoji((prev) => !prev);
-            }}
-            className={`px-4 flex  py-3.5 rounded-md items-center text-[#6486FF] text-xl ${
-              openEmoji ? "bg-[#6486FF]/20" : "bg-[#3A3B3C]"
-            }`}
-          >
-            <MdEmojiEmotions />
-          </button>
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-            }}
-          >
-            <Picker
-              style={{
-                position: "absolute",
-                bottom: "52px",
-                right: "0",
-                zIndex: "100000",
-              }}
-              onEmojiClick={(emoji) => {
-                setMessage((prev) => `${prev}${emoji.emoji}`);
-              }}
-              open={openEmoji}
-              theme="dark"
-            />
-          </div>
-        </div>
-        {/* End For Emoji */}
-        <button
-          type="submit"
-          disabled={!message.trim()}
-          className="px-5 flex space-x-2 bg-[#6486FF] py-3 rounded-md items-center text-zinc-200 disabled:bg-slate-700 disabled:text-zinc-400"
-        >
-          <span>
-            <LuSend />
-          </span>
-          <span className="font-bold">Send</span>
-        </button>
-      </form>
+      <PublicMessageField
+        openEmoji={openEmoji}
+        message={message}
+        sendMessage={sendMessage}
+        sessionData={session?.user}
+        scrollRef={scrollRef.current}
+        socketRef={socketRef?.current}
+        inputRef={inputRef}
+        setMessage={setMessage}
+        setOpenEmoji={setOpenEmoji}
+      />
     </div>
   );
 }
