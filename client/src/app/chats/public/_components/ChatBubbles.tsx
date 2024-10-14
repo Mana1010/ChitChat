@@ -1,5 +1,11 @@
 "use client";
-import React, { Dispatch, SetStateAction, useMemo, useState } from "react";
+import React, {
+  Dispatch,
+  SetStateAction,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import Image from "next/image";
 import { PublicMessages, User } from "@/types/UserTypes";
 import PublicReactions from "./PublicReaction";
@@ -25,6 +31,7 @@ function PublicChatBubbles({
   }, [messageDetails]);
   const reactionList = new Set(reactionOnly); //To remove duplicate reaction
   if (!userData) return;
+
   return (
     <Linkify
       options={{

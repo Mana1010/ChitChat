@@ -7,7 +7,7 @@ import { Socket } from "socket.io-client";
 import { useInfiniteQuery, useQueryClient } from "react-query";
 import { serverUrl } from "@/utils/serverUrl";
 import axios from "axios";
-import { User } from "@/types/UserTypes";
+import { User, Reaction } from "@/types/UserTypes";
 import { initializePublicChatSocket } from "@/utils/socket";
 import Image from "next/image";
 import themeImg from "../../../../assets/images/theme-img.png";
@@ -109,11 +109,60 @@ function PublicChat() {
     ) => {
       setTypingUsers(data);
     };
+    const handleDisplayReaction = ({
+      isUserRemoveReaction,
+      data,
+    }: {
+      isUserRemoveReaction: boolean;
+      data: Reaction & { messageId: string };
+    }) => {
+      if (!isUserRemoveReaction) {
+        setAllMessages((allMessages) => {
+          return allMessages.map((messageDetails) => {
+            if (messageDetails._id === data.messageId) {
+              return {
+                ...messageDetails,
+                reactions: messageDetails.reactions.map((reaction) => {
+                  if (reaction.reactor === data.reactor) {
+                    return {
+                      ...reaction,
+                      reactionEmoji: data.reactionEmoji,
+                      reactionCreatedAt: data.reactionCreatedAt,
+                    };
+                  } else {
+                    return reaction;
+                  }
+                }),
+              };
+            } else {
+              return messageDetails;
+            }
+          });
+        });
+      } else {
+        setAllMessages((allMessages): any => {
+          return allMessages.map((messageDetails) => {
+            if (messageDetails._id === data.messageId) {
+              return {
+                ...messageDetails,
+                reactions: messageDetails.reactions.filter((reaction) => {
+                  return reaction.reactor !== data.reactor;
+                }),
+              };
+            } else {
+              return messageDetails;
+            }
+          });
+        });
+      }
+    };
     socketRef.current.on("get-message", handleGetMessages);
+    socketRef.current.on("display-reaction", handleDisplayReaction);
     socketRef.current.once("display-status", handleDisplayStatus);
     socketRef.current.on("display-during-typing", handleDisplayDuringTyping);
     return () => {
       socketRef.current?.off("get-message", handleGetMessages);
+      socketRef.current?.off("display-reaction", handleDisplayReaction);
       socketRef.current?.off("display-status", handleDisplayStatus);
       socketRef.current?.off(
         "display-during-typing",
@@ -122,7 +171,7 @@ function PublicChat() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socketRef.current]);
-
+  console.log(allMessages);
   return (
     <div className="h-full" onClick={() => setOpenEmoji(false)}>
       <div className="h-[440px] bg-[#222222] w-full rounded-md relative">

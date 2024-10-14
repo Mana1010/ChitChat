@@ -131,14 +131,18 @@ export function publicChat(io: Socket) {
             isUserRemoveReaction: false,
             data: {
               reactor: getUpdatedUserReaction[0].reaction.reactor,
-              reactionCreatedAt: getUpdatedUserReaction[0].reactor,
-              reactionEmoji: getUpdatedUserReaction[0].reactionEmoji,
+              reactionCreatedAt: getUpdatedUserReaction[0].reaction.reactor,
+              reactionEmoji: getUpdatedUserReaction[0].reaction.reactionEmoji,
+              messageId,
             },
           });
         } else {
           socket.broadcast.emit("display-reaction", {
             isUserRemoveReaction: true,
-            reactor: userId,
+            data: {
+              reactor: userId,
+              messageId,
+            },
           });
         }
       }
