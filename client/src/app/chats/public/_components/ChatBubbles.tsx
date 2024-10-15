@@ -1,11 +1,5 @@
 "use client";
-import React, {
-  Dispatch,
-  SetStateAction,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import React, { Dispatch, SetStateAction, useMemo, useState } from "react";
 import Image from "next/image";
 import { PublicMessages, User } from "@/types/UserTypes";
 import PublicReactions from "./PublicReaction";
@@ -16,13 +10,15 @@ import { Socket } from "socket.io-client";
 function PublicChatBubbles({
   messageDetails,
   socket,
-  setMessage,
   userData,
+  setMessage,
+  setOpenMessageIdReactionList,
 }: {
   messageDetails: PublicMessages<User>;
   socket: Socket | null;
+  userData: User | undefined;
   setMessage: Dispatch<SetStateAction<PublicMessages<User>[]>>;
-  userData: User;
+  setOpenMessageIdReactionList: Dispatch<SetStateAction<string | null>>;
 }) {
   const [hoveredMessage, setHoveredMessage] = useState<string | undefined>("");
   const [openReaction, setOpenReaction] = useState<string | undefined>("");
@@ -91,6 +87,9 @@ function PublicChatBubbles({
                   {/* Display Reactions */}
                   {messageDetails.reactions.length ? (
                     <button
+                      onClick={() =>
+                        setOpenMessageIdReactionList(messageDetails._id)
+                      }
                       className={`absolute bottom-[-8px] text-[0.8rem] flex bg-[#3A3B3C] rounded-md px-1 items-center ${
                         messageDetails.sender?._id === userData.userId
                           ? "left-0"

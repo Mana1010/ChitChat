@@ -3,49 +3,7 @@ import React, { Dispatch, SetStateAction, useState } from "react";
 import { nanoid } from "nanoid";
 import { useSocketStore } from "@/utils/store/socket.store";
 import { Messages } from "@/types/UserTypes";
-
-const reactions = [
-  {
-    emoji: "👍",
-    name: "like",
-    id: nanoid(),
-  },
-  {
-    emoji: "❤️",
-    name: "love",
-    id: nanoid(),
-  },
-  {
-    emoji: "😆",
-    name: "haha",
-    id: nanoid(),
-  },
-  {
-    emoji: "😢",
-    name: "sad",
-    id: nanoid(),
-  },
-  {
-    emoji: "😮",
-    name: "wow",
-    id: nanoid(),
-  },
-  {
-    emoji: "😡",
-    name: "angry",
-    id: nanoid(),
-  },
-  {
-    emoji: "🤡",
-    name: "clown",
-    id: nanoid(),
-  },
-  {
-    emoji: "💀",
-    name: "skull",
-    id: nanoid(),
-  },
-];
+import { reactions } from "@/utils/reactions";
 function PrivateReactions({
   messageId,
   conversationId,

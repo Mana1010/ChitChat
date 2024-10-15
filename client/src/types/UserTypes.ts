@@ -62,3 +62,17 @@ export interface InfiniteScrollingMessageSchema {
   pages: [{ getMessages: Messages[]; nextPage: number | null }];
   pageParams: [undefined | number];
 }
+
+export interface ReactionSchema {
+  emoji: string;
+  name: string;
+  id: string;
+}
+export interface ReactionListSchema {
+  _id: string;
+  reactions: Reaction;
+  reactor_details: {
+    name: string;
+    profilePic: string;
+  };
+}

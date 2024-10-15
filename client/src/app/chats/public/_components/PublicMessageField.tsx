@@ -45,7 +45,7 @@ function PublicMessageField({
       setTimer((prevTimer) => prevTimer - 1);
     }, 1000);
 
-    return () => clearInterval(timerInterval);
+    return () => clearInterval(timerInterval); //To avoid stacking the interval so lets clear the previous interval for every dependency changes
   }, [timer]);
   return (
     <form
@@ -79,7 +79,7 @@ function PublicMessageField({
         ref={inputRef}
         value={
           timer > 0
-            ? `Please wait 3 seconds before sending your next message.`
+            ? `Please wait ${timer} seconds before sending your next message.`
             : message
         }
         disabled={timer > 0}

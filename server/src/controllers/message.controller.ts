@@ -286,3 +286,41 @@ export const searchUserResult = asyncHandler(
     res.status(200).json({ message: getUserResult });
   }
 );
+
+export const getPublicReactionList = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { messageId } = req.params;
+    if (!messageId || messageId === "null") return;
+
+    const getAllMessageReaction = await Public.aggregate([
+      {
+        $match: { _id: new mongoose.Types.ObjectId(messageId) },
+      },
+      {
+        $unwind: "$reactions",
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "reactions.reactor",
+          foreignField: "_id",
+          as: "reactor_details",
+        },
+      },
+      {
+        $addFields: { reactor_details: { $first: "$reactor_details" } },
+      },
+      {
+        $project: {
+          reactions: 1,
+          reactor_details: {
+            name: 1,
+            profilePic: 1,
+          },
+        },
+      },
+    ]);
+    console.log(getAllMessageReaction);
+    res.status(200).json({ message: getAllMessageReaction });
+  }
+);

@@ -9,6 +9,7 @@ import {
   getChatNotifications,
   getParticipantName,
   searchUserResult,
+  getPublicReactionList,
 } from "../controllers/message.controller";
 export const router = express.Router();
 
@@ -25,6 +26,7 @@ router.get(
 );
 router.post("/messages/newChat", chatUser);
 router.get("/messages/notification/:senderId", getChatNotifications);
+router.get("/messages/public/reaction-list/:messageId", getPublicReactionList);
 router.get(
   "/messages/conversation-name/:userId/conversation/:conversationId",
   getParticipantName

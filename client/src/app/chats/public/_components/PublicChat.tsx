@@ -19,6 +19,7 @@ import { useInView } from "react-intersection-observer";
 import { motion, AnimatePresence } from "framer-motion";
 import PublicChatBubbles from "./ChatBubbles";
 import PublicMessageField from "./PublicMessageField";
+import PublicReactionList from "./PublicReactionList";
 function PublicChat() {
   const [message, setMessage] = useState("");
   const { data: session, status } = useSession();
@@ -32,6 +33,9 @@ function PublicChat() {
   const currentPageRef = useRef(0);
   const [showArrowDown, setShowArrowDown] = useState(false);
   const [allMessages, setAllMessages] = useState<PublicMessages<User>[]>([]);
+  const [openMessageIdReactionList, setOpenMessageIdReactionList] = useState<
+    string | null
+  >(null);
   const [hasNextPage, setHasNextPage] = useState(true);
   const [typingUsers, setTypingUsers] = useState<
     { socketId: string; userImg: string }[]
@@ -78,6 +82,7 @@ function PublicChat() {
     }
   }, [fetchNextPage, hasNextPage, inView]);
   useEffect(() => {
+    console.log("Running asf");
     function onDisconnect() {
       socketRef.current?.emit("user-disconnect", { status: "Offline" });
     }
@@ -193,7 +198,7 @@ function PublicChat() {
     });
   }
   return (
-    <div className="h-full" onClick={() => setOpenEmoji(false)}>
+    <div className="h-full relative" onClick={() => setOpenEmoji(false)}>
       <div className="h-[440px] bg-[#222222] w-full rounded-md relative">
         {isLoading ? (
           <LoadingChat />
@@ -226,7 +231,8 @@ function PublicChat() {
                 socket={socketRef.current as Socket}
                 setMessage={setAllMessages}
                 messageDetails={data}
-                userData={session?.user as any}
+                userData={session?.user as User | undefined}
+                setOpenMessageIdReactionList={setOpenMessageIdReactionList}
               />
             ))}
             {typingUsers.length !== 0 && (
@@ -314,6 +320,12 @@ function PublicChat() {
         setMessage={setMessage}
         setOpenEmoji={setOpenEmoji}
       />
+      {openMessageIdReactionList && (
+        <PublicReactionList
+          messageId={openMessageIdReactionList}
+          setOpenMessageIdReactionList={setOpenMessageIdReactionList}
+        />
+      )}
     </div>
   );
 }
