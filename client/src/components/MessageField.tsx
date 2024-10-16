@@ -57,7 +57,9 @@ function MessageField({
             conversationId,
             participantId: participantInfo?.receiver_details._id,
           });
+          socket?.emit("during-typing");
         }}
+        onBlur={() => socket?.emit("stop-typing")}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         type="text"

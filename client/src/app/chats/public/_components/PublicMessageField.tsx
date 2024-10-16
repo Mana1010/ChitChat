@@ -68,13 +68,10 @@ function PublicMessageField({
         onFocus={() => {
           socketRef?.emit("during-typing", {
             userImg: sessionData?.image,
-            socketId: socketRef.id,
           });
         }}
         onBlur={() => {
-          socketRef?.emit("stop-typing", {
-            socketId: socketRef.id,
-          });
+          socketRef?.emit("stop-typing");
         }}
         ref={inputRef}
         value={

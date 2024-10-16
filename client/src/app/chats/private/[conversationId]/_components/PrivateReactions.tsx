@@ -27,7 +27,7 @@ function PrivateReactions({
     });
   }
   return (
-    <div className=" absolute -top-14 -left-25 rounded-md bg-[#414141] flex items-center justify-center h-[40px] z-[99999]">
+    <div className=" absolute -top-10 -left-25 rounded-md bg-[#414141] flex items-center justify-center h-[40px] z-[99999]">
       {reactions.map((reaction) => (
         <button
           onClick={() => {

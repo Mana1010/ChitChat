@@ -82,7 +82,6 @@ function PublicChat() {
     }
   }, [fetchNextPage, hasNextPage, inView]);
   useEffect(() => {
-    console.log("Running asf");
     function onDisconnect() {
       socketRef.current?.emit("user-disconnect", { status: "Offline" });
     }
@@ -91,6 +90,7 @@ function PublicChat() {
       const socket = initializePublicChatSocket(session.user.userId as string);
       socketRef.current = socket;
       socket.on("connect", () => console.log("Connected Successfully"));
+      socket.emit("stop-typing"); //To ensure that the typing animation will be remove or cancel once the user refresh the page
       socket.on("disconnect", onDisconnect);
     }
   }, [session?.user]);
@@ -196,6 +196,7 @@ function PublicChat() {
         },
       ];
     });
+    socketRef.current?.emit("stop-typing");
   }
   return (
     <div className="h-full relative" onClick={() => setOpenEmoji(false)}>

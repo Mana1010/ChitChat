@@ -5,13 +5,13 @@ import mongoose from "mongoose";
 
 function stopTyping(
   socket: Socket,
-  typingUsers: { socketId: string; userImg: string }[]
+  typingUsers: { userId: string; userImg: string }[],
+  userId: string
 ) {
-  socket.on("stop-typing", ({ socketId }) => {
-    const findIndex = typingUsers.findIndex(
-      (user) => user.socketId === socketId
-    );
+  socket.on("stop-typing", () => {
+    const findIndex = typingUsers.findIndex((user) => user.userId === userId);
     if (findIndex !== -1) {
+      //If the id is exist in the typingUser array[]
       typingUsers.splice(findIndex, 1);
     }
     socket.broadcast.emit("display-during-typing", typingUsers);
@@ -44,7 +44,7 @@ async function userReactionAggregate(userId: string, messageId: string) {
   return findMessageAndCheckUserReaction;
 }
 export function publicChat(io: Socket) {
-  let typingUsers: { socketId: string; userImg: string }[] = [];
+  const typingUsers: { userId: string; userImg: string }[] = [];
   io.on("connection", async (socket: Socket) => {
     const { userId } = socket.handshake.auth;
     const getInfo = await User.findById(userId).select(["name", "status"]);
@@ -147,16 +147,17 @@ export function publicChat(io: Socket) {
         }
       }
     );
-    socket.on("during-typing", ({ userImg, socketId }) => {
+    socket.on("during-typing", ({ userImg }) => {
       const checkSocketId = typingUsers.some(
-        (typeUser) => typeUser.socketId === socketId
+        (typeUser) => typeUser.userId === userId
       );
-      if (!checkSocketId && typingUsers.length < 10) {
-        typingUsers.push({ socketId, userImg });
+      // if the socketId is not yet exist inside of an array and the typingUsers length should be atleast 5 users only.
+      if (!checkSocketId && typingUsers.length <= 5) {
+        typingUsers.push({ userId, userImg });
       }
       socket.broadcast.emit("display-during-typing", typingUsers);
     });
-    stopTyping(socket, typingUsers);
+    stopTyping(socket, typingUsers, userId);
 
     socket.on("user-disconnect", async () => {
       const disconnectUser = await User.findById(userId).select([

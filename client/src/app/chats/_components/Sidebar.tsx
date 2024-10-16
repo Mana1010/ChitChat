@@ -13,6 +13,7 @@ import { MdGroups } from "react-icons/md";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { IoMegaphone } from "react-icons/io5";
+import { PiMailboxFill } from "react-icons/pi";
 import { usePathname } from "next/navigation";
 import { useQuery } from "react-query";
 import axios from "axios";
@@ -53,6 +54,13 @@ function Sidebar() {
       navigateTo: `/chats/group`,
       styling: `text-[#6486FF] text-2xl p-3 rounded-md ${
         pathname.startsWith("/chats/group") && "bg-[#3A3B3C]"
+      }`,
+    },
+    {
+      btnSticker: <PiMailboxFill />,
+      navigateTo: `/mailbox/group`,
+      styling: `text-[#6486FF] text-2xl p-3 rounded-md ${
+        pathname.startsWith("/mailbox/group") && "bg-[#3A3B3C]"
       }`,
     },
   ];
