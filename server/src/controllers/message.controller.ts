@@ -91,7 +91,7 @@ export const getAllUsersConversation = asyncHandler(
   }
 );
 export const chatUser = asyncHandler(async (req: Request, res: Response) => {
-  const { senderId, receiverId } = req.body; //userId is an id for the receiver
+  const { senderId, receiverId } = req.body;
   if (!senderId || !receiverId) {
     res.status(401).json({ message: "Please provide senderId and receiverId" });
     return;
@@ -99,6 +99,7 @@ export const chatUser = asyncHandler(async (req: Request, res: Response) => {
   const checkExistingConversation = await Conversation.findOne({
     participants: { $all: [senderId, receiverId] },
   });
+  //Check first if the conversation already exist
   if (!checkExistingConversation) {
     const addConversation = await Conversation.create({
       participants: [senderId, receiverId],
@@ -117,7 +118,6 @@ export const getPrivateMessages = asyncHandler(
       res.status(404);
       throw new Error("Conversation does not exist");
     }
-    console.log(mongoose.Types.ObjectId.isValid(conversationId));
     const checkConversationAvailability = await Conversation.findById(
       conversationId
     );

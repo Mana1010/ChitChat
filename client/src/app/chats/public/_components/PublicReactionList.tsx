@@ -1,6 +1,6 @@
 "use client";
 import React, { Dispatch, SetStateAction, useState } from "react";
-import { useQuery, useQueryClient, UseQueryResult } from "react-query";
+import { useQuery, useMutation, UseQueryResult } from "react-query";
 import { reactions } from "@/utils/reactions";
 import { FaXmark } from "react-icons/fa6";
 import { serverUrl } from "@/utils/serverUrl";
@@ -8,15 +8,21 @@ import axios, { AxiosError } from "axios";
 import { ReactionListSchema } from "@/types/UserTypes";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { TbMessage2 } from "react-icons/tb";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 function PublicReactionList({
   messageId,
   setOpenMessageIdReactionList,
+  userId,
 }: {
   messageId: string | null;
   setOpenMessageIdReactionList: Dispatch<SetStateAction<string | null>>;
+  userId: string;
 }) {
   const [selectedReaction, setSelectedReaction] = useState("All");
   const [allReactions, setAllReactions] = useState<ReactionListSchema[]>([]);
+  const router = useRouter();
   const getReactionList: UseQueryResult<
     ReactionListSchema[],
     AxiosError<{ message: string }>
@@ -31,6 +37,22 @@ function PublicReactionList({
     },
     refetchOnWindowFocus: false,
     enabled: messageId !== null,
+  });
+
+  const chatUser = useMutation({
+    mutationFn: async (data: { senderId: string; receiverId: string }) => {
+      const response = await axios.post(
+        `${serverUrl}/api/messages/newChat`,
+        data
+      );
+      return response.data.message;
+    },
+    onSuccess: (id) => {
+      router.push(`/chats/private/${id}?type=chats`);
+    },
+    onError: (err: AxiosError<{ message: string }>) => {
+      toast.error(err.response?.data.message);
+    },
   });
   const reactionOnly = getReactionList.data?.map(
     ({ reactions }) => reactions.reactionEmoji
@@ -61,12 +83,12 @@ function PublicReactionList({
   }
 
   return (
-    <div className="absolute bg-black/60 flex items-center justify-center w-full inset-0 z-[9999999]">
+    <div className="absolute bg-black/60 flex items-center justify-center w-full inset-0 z-[9999999] px-3">
       <div className="bg-[#222222] md:w-1/2 w-full h-[70%] rounded-sm">
         <div className="flex flex-col w-full h-full py-3.5 px-3">
           <header className="flex space-x-2 justify-between items-center w-full">
-            <div className="space-x-2 flex items-center">
-              {removeDuplicatedReaction.map((reaction, index) => (
+            <div className="space-x-2 flex items-center overflow-x-auto">
+              {removeDuplicatedReaction.map((reaction) => (
                 <div key={reaction} className={`relative`}>
                   <button
                     onClick={() => {
@@ -76,7 +98,12 @@ function PublicReactionList({
                       selectedReaction !== "All" && "text-white"
                     }`}
                   >
-                    {reaction}
+                    <span>{reaction}</span>
+                    {reaction === "All" && (
+                      <span className="pl-1.5 text-sm">
+                        {getReactionList.data?.length}
+                      </span>
+                    )}
                   </button>
                   {selectedReaction === reaction && (
                     <span className="bg-[#6486FF] left-0 right-0 bottom-0 h-[2px] absolute"></span>
@@ -95,24 +122,40 @@ function PublicReactionList({
             {allReactions.map((reactionList) => (
               <div
                 key={reactionList._id}
-                className="p-2.5 flex space-x-2 items-center"
+                className="p-2.5 flex items-center justify-between"
               >
-                <div className="relative w-9 h-9 rounded-full">
-                  <Image
-                    src={reactionList.reactor_details.profilePic}
-                    alt="profile"
-                    fill
-                    sizes="100%"
-                    className="absolute rounded-full"
-                    priority
-                  />
-                  <span className="-bottom-2 absolute -right-2">
-                    {reactionList.reactions.reactionEmoji}
-                  </span>
+                <div className="flex items-center space-x-3">
+                  <div className="relative w-9 h-9 rounded-full">
+                    <Image
+                      src={reactionList.reactor_details.profilePic}
+                      alt="profile"
+                      fill
+                      sizes="100%"
+                      className="absolute rounded-full"
+                      priority
+                    />
+                    <span className="-bottom-2 absolute -right-2">
+                      {reactionList.reactions.reactionEmoji}
+                    </span>
+                  </div>
+                  <h6 className="text-white text-sm font-semibold">
+                    {reactionList.reactor_details.name}
+                  </h6>
                 </div>
-                <h2 className="text-white">
-                  {reactionList.reactor_details.name}
-                </h2>
+                {reactionList.reactions.reactor !== userId && (
+                  <button
+                    onClick={() =>
+                      chatUser.mutate({
+                        senderId: userId,
+                        receiverId: reactionList.reactions.reactor,
+                      })
+                    }
+                    aria-label="Start chatting"
+                    className={`bg-[#6486FF] p-2.5 rounded-full text-white text-lg`}
+                  >
+                    <TbMessage2 />
+                  </button>
+                )}
               </div>
             ))}
           </div>

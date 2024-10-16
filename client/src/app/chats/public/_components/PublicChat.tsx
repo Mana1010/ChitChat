@@ -324,6 +324,7 @@ function PublicChat() {
         <PublicReactionList
           messageId={openMessageIdReactionList}
           setOpenMessageIdReactionList={setOpenMessageIdReactionList}
+          userId={session?.user.userId as string}
         />
       )}
     </div>
