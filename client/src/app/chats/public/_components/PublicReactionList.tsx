@@ -6,7 +6,8 @@ import { FaXmark } from "react-icons/fa6";
 import { serverUrl } from "@/utils/serverUrl";
 import axios, { AxiosError } from "axios";
 import { ReactionListSchema } from "@/types/UserTypes";
-
+import Image from "next/image";
+import { motion } from "framer-motion";
 function PublicReactionList({
   messageId,
   setOpenMessageIdReactionList,
@@ -14,67 +15,73 @@ function PublicReactionList({
   messageId: string | null;
   setOpenMessageIdReactionList: Dispatch<SetStateAction<string | null>>;
 }) {
-  const [selectedReaction, setWSelectedReaction] = useState("All");
+  const [selectedReaction, setSelectedReaction] = useState("All");
   const [allReactions, setAllReactions] = useState<ReactionListSchema[]>([]);
   const getReactionList: UseQueryResult<
     ReactionListSchema[],
     AxiosError<{ message: string }>
   > = useQuery({
-    queryKey: ["public-reaction-list"],
+    queryKey: ["public-reaction-list", messageId],
     queryFn: async () => {
       const response = await axios.get(
         `${serverUrl}/api/messages/public/reaction-list/${messageId}`
       );
-      setAllReactions(allReactions);
+      setAllReactions(response.data.message);
       return response.data.message;
     },
     refetchOnWindowFocus: false,
     enabled: messageId !== null,
   });
-  const queryClient = useQueryClient();
-  const reactionOnly = allReactions.map(
+  const reactionOnly = getReactionList.data?.map(
     ({ reactions }) => reactions.reactionEmoji
   );
-  const removeDuplicatedReaction = Array.from(new Set(reactionOnly));
+  const removeDuplicatedReaction = [
+    "All",
+    ...Array.from(new Set(reactionOnly)),
+  ];
+  function resetReactionList() {
+    setSelectedReaction("All");
+    setAllReactions(getReactionList.data as ReactionListSchema[]);
+  }
 
   function filterReactions(reactionCategory: string) {
-    queryClient.setQueryData<ReactionListSchema[] | undefined>(
-      ["public-reaction-list"],
-      (oldData) => {
-        if (oldData) {
-          return oldData.filter((reaction: ReactionListSchema) => {
-            return reaction.reactions.reactionEmoji === reactionCategory;
-          });
-        }
-      }
+    setSelectedReaction(reactionCategory);
+    const filterReactions = getReactionList.data?.filter(
+      (reaction) => reaction.reactions.reactionEmoji === reactionCategory
     );
+    setAllReactions(filterReactions as ReactionListSchema[]);
   }
-  function resetReactionList() {
-    queryClient.setQueryData(["public-reaction-list"], allReactions);
+
+  function handlefilterReactions(reactionCategory: string) {
+    if (reactionCategory === "All") {
+      resetReactionList();
+    } else {
+      filterReactions(reactionCategory);
+    }
   }
-  console.log(getReactionList.data);
+
   return (
-    <div className="absolute bg-black/60 flex items-center justify-center w-full inset-0 z-[9999999] ">
+    <div className="absolute bg-black/60 flex items-center justify-center w-full inset-0 z-[9999999]">
       <div className="bg-[#222222] md:w-1/2 w-full h-[70%] rounded-sm">
-        <div className="flex flex-col items-center w-full h-full py-3.5 px-3">
+        <div className="flex flex-col w-full h-full py-3.5 px-3">
           <header className="flex space-x-2 justify-between items-center w-full">
-            <div className="space-x-2 flex items-center overflow-x-auto w-full">
-              <button
-                onClick={resetReactionList}
-                className="px-3 py-2 text-white font-bold"
-              >
-                All
-              </button>
-              {removeDuplicatedReaction.map((reaction) => (
-                <button
-                  onClick={() => {
-                    filterReactions(reaction);
-                  }}
-                  className="px-3 py-2"
-                  key={reaction}
-                >
-                  {reaction}
-                </button>
+            <div className="space-x-2 flex items-center">
+              {removeDuplicatedReaction.map((reaction, index) => (
+                <div key={reaction} className={`relative`}>
+                  <button
+                    onClick={() => {
+                      handlefilterReactions(reaction);
+                    }}
+                    className={`px-3 h-[45px] text-[#6486FF] font-bold ${
+                      selectedReaction !== "All" && "text-white"
+                    }`}
+                  >
+                    {reaction}
+                  </button>
+                  {selectedReaction === reaction && (
+                    <span className="bg-[#6486FF] left-0 right-0 bottom-0 h-[2px] absolute"></span>
+                  )}
+                </div>
               ))}
             </div>
             <button
@@ -84,6 +91,31 @@ function PublicReactionList({
               <FaXmark />
             </button>
           </header>
+          <div className="pt-3 flex flex-col overflow-auto-y flex-grow">
+            {allReactions.map((reactionList) => (
+              <div
+                key={reactionList._id}
+                className="p-2.5 flex space-x-2 items-center"
+              >
+                <div className="relative w-9 h-9 rounded-full">
+                  <Image
+                    src={reactionList.reactor_details.profilePic}
+                    alt="profile"
+                    fill
+                    sizes="100%"
+                    className="absolute rounded-full"
+                    priority
+                  />
+                  <span className="-bottom-2 absolute -right-2">
+                    {reactionList.reactions.reactionEmoji}
+                  </span>
+                </div>
+                <h2 className="text-white">
+                  {reactionList.reactor_details.name}
+                </h2>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
