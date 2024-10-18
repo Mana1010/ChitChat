@@ -24,6 +24,7 @@ import MessageField from "@/components/MessageField";
 import { IoIosArrowRoundDown } from "react-icons/io";
 import { AnimatePresence, motion } from "framer-motion";
 import ProfileCard from "@/app/chats/_components/ProfileCard";
+import typingAnimation from "../../../../../assets/images/gif-animation/typing-animation-ver-2.gif";
 function Chatboard({ conversationId }: { conversationId: string }) {
   const { socket } = useSocketStore();
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -37,7 +38,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
   const [hasNextPage, setHasNextPage] = useState(true);
   const [allMessages, setAllMessages] = useState<Messages[]>([]);
   const [showArrowDown, setShowArrowDown] = useState(false);
-  const [displaySeen, setDisplaySeen] = useState(true);
+  const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const { ref, inView } = useInView();
   const { participantInfo, isLoading: participantInfoLoading } =
     useGetParticipantInfo(conversationId, status, session);
@@ -57,7 +58,6 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       return lastPage?.nextPage ?? null;
     },
     onSuccess: (data) => {
-      console.log(data);
       setAllMessages((prevMessages) => [
         ...data.pages[currentPageRef.current]?.getMessages,
         ...prevMessages,
@@ -101,18 +101,19 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       !participantInfo?.receiver_details._id
     )
       return;
-    socket.emit("join-room", conversationId);
-
-    socket.on("display-message", ({ getProfile, conversation }) => {
-      setAllMessages((prevMessages) => [...prevMessages, getProfile]);
+    socket.emit("join-room", {
+      conversationId,
+      receiverId: participantInfo.receiver_details._id,
+    });
+    socket.emit("read-message", {
+      conversationId,
+      participantId: participantInfo.receiver_details._id,
     });
     return () => {
-      socket.off("display-message");
-      socket.emit("leave-room", conversationId);
-      socket.emit(
-        "leave-receiverId-room",
-        participantInfo.receiver_details._id
-      );
+      socket.emit("leave-room", {
+        conversationId,
+        receiverId: participantInfo.receiver_details?._id,
+      });
     };
   }, [
     conversationId,
@@ -121,7 +122,6 @@ function Chatboard({ conversationId }: { conversationId: string }) {
     socket,
     status,
   ]);
-  socket?.emit("join-receiverId-room", participantInfo?.receiver_details?._id);
   useEffect(() => {
     if (!socket) return;
     socket.on("display-seen-text", ({ user, totalUnreadMessages }) => {
@@ -140,18 +140,25 @@ function Chatboard({ conversationId }: { conversationId: string }) {
         }
       );
     });
+    socket.on("display-message", ({ getProfile }) => {
+      setAllMessages((prevMessages) => [...prevMessages, getProfile]);
+    });
+    socket.on("during-typing", (conversationId) => {
+      setTypingUsers((prevUsers) => [...prevUsers, conversationId]);
+    });
+    socket.on("stop-typing", (conversationId) => {
+      setTypingUsers((prevUsers) =>
+        prevUsers.filter((user) => user !== conversationId)
+      );
+    });
     return () => {
       socket.off("display-seen-text");
+      socket.off("display-message");
+      socket.off("during-typing");
+      socket.off("stop-typing");
     };
   }, [conversationId, queryClient, socket]);
 
-  useEffect(() => {
-    if (!socket || !participantInfo?.receiver_details._id) return;
-    socket.emit("read-message", {
-      conversationId,
-      participantId: participantInfo.receiver_details._id,
-    });
-  }, [conversationId, participantInfo?.receiver_details._id, socket]);
   if (conversationId.toLowerCase() === "new") {
     return <NewUser />;
   }
@@ -193,6 +200,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
         },
       ];
     });
+    socket?.emit("stop-typing", conversationId);
     setTimeout(() => {
       scrollRef.current?.scrollIntoView({ block: "end" }); //To bypass the closure nature of react :)
     }, 0);
@@ -296,18 +304,29 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                     setMessage={setAllMessages}
                   />
                 ))}
+                {typingUsers.find((user) => user === conversationId) ? (
+                  <div className="flex space-x-1 items-center">
+                    <div className="rounded-3xl bg-[#414141] py-1 px-2 ">
+                      <Image
+                        src={typingAnimation}
+                        alt="typing-animation"
+                        width={35}
+                        height={35}
+                        priority
+                      />
+                    </div>
+                  </div>
+                ) : null}
                 <div
                   className={`w-full justify-end items-end relative bottom-3 pr-1 pt-1.5 ${
                     participantInfo?.hasUnreadMessages?.user !==
                       session?.user.userId &&
                     participantInfo?.hasUnreadMessages?.totalUnreadMessages ===
-                      0 &&
-                    displaySeen
+                      0
                       ? "flex"
                       : "hidden"
                   } `}
                 >
-                  {/* <small className="text-zinc-500">Seen</small> */}
                   <Image
                     src={participantInfo?.receiver_details.profilePic ?? ""}
                     width={15}

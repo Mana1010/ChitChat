@@ -2,6 +2,7 @@ import { Server } from "socket.io";
 import { Private } from "../model/private.model";
 import { Conversation } from "../model/conversation.model";
 import mongoose from "mongoose";
+import { checkServerIdentity } from "tls";
 
 interface Payload {
   conversationId: string;
@@ -38,7 +39,6 @@ export function privateChat(io: Server) {
   const privateSocket = io.of("/private");
   privateSocket.on("connection", (socket) => {
     const { userId } = socket.handshake.auth;
-    const typingUsers = [];
     socket.on(
       "send-message",
       async ({ message, messageType, conversationId, receiverId }) => {
@@ -131,18 +131,20 @@ export function privateChat(io: Server) {
           .emit("display-reaction", { reaction, messageId });
       }
     );
-    socket.on("join-room", (conversationId) => {
+    socket.on("during-typing", (conversationId) => {
+      console.log(`During typing ${conversationId}`);
+      socket.broadcast.to(conversationId).emit("during-typing", conversationId);
+    });
+    socket.on("stop-typing", (conversationId) => {
+      console.log(`Stop typing ${conversationId}`);
+      socket.broadcast.to(conversationId).emit("stop-typing", conversationId);
+    });
+    socket.on("join-room", ({ conversationId, receiverId }) => {
       socket.join(conversationId);
+      socket.join(receiverId);
     });
-    socket.on("join-receiverId-room", (receiverId) => {
-      if (receiverId) {
-        socket.join(receiverId);
-      }
-    });
-    socket.on("leave-room", (conversationId) => {
+    socket.on("leave-room", ({ conversationId, receiverId }) => {
       socket.leave(conversationId);
-    });
-    socket.on("leave-receiverId-room", (receiverId) => {
       socket.leave(receiverId);
     });
   });

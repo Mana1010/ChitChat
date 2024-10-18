@@ -20,6 +20,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import PublicChatBubbles from "./ChatBubbles";
 import PublicMessageField from "./PublicMessageField";
 import PublicReactionList from "./PublicReactionList";
+import typingAnimate from "../../../../assets/images/gif-animation/typing-animation-ver-2.gif";
 function PublicChat() {
   const [message, setMessage] = useState("");
   const { data: session, status } = useSession();
@@ -250,7 +251,7 @@ function PublicChat() {
                         }
                       >
                         <Image
-                          src={data.userImg ?? themeImg}
+                          src={data.userImg}
                           alt="profile-picture"
                           fill
                           sizes="100%"
@@ -262,10 +263,10 @@ function PublicChat() {
                   ))}
                   <div className="pl-2 pt-2">
                     <Image
-                      src={typingChatAnimation}
+                      src={typingAnimate}
                       alt="typing-animation"
-                      width={25}
-                      height={25}
+                      width={35}
+                      height={35}
                       priority
                     />
                   </div>
