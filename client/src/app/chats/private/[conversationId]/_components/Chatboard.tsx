@@ -25,6 +25,7 @@ import { IoIosArrowRoundDown } from "react-icons/io";
 import { AnimatePresence, motion } from "framer-motion";
 import ProfileCard from "@/app/chats/_components/ProfileCard";
 import typingAnimation from "../../../../../assets/images/gif-animation/typing-animation-ver-2.gif";
+import SendAttachment from "@/components/SendAttachment";
 function Chatboard({ conversationId }: { conversationId: string }) {
   const { socket } = useSocketStore();
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -38,6 +39,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
   const [hasNextPage, setHasNextPage] = useState(true);
   const [allMessages, setAllMessages] = useState<Messages[]>([]);
   const [showArrowDown, setShowArrowDown] = useState(false);
+  const [openAttachmentModal, setOpenAttachmentModal] = useState(false);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const { ref, inView } = useInView();
   const { participantInfo, isLoading: participantInfoLoading } =
@@ -383,6 +385,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
           setOpenProfileModal={setOpenProfileModal}
         />
       )}
+      {!openAttachmentModal && <SendAttachment />}
     </div>
   );
 }

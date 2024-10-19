@@ -4,6 +4,7 @@ import { MdEmojiEmotions } from "react-icons/md";
 import { LuSend } from "react-icons/lu";
 import { Socket } from "socket.io-client";
 import { GetParticipantInfo } from "@/types/UserTypes";
+import { GrAttachment } from "react-icons/gr";
 interface MessageFieldProps {
   socket: Socket | null;
   participantInfo?: GetParticipantInfo;
@@ -99,6 +100,14 @@ function MessageField({
           />
         </div>
       </div>
+      <button
+        type="button"
+        className={`px-3 flex py-3 rounded-md items-center text-[#6486FF] text-xl ${
+          openEmoji ? "bg-[#6486FF]/20" : "bg-[#3A3B3C]"
+        }`}
+      >
+        <GrAttachment />
+      </button>
       <button
         type="submit"
         disabled={!message.trim()}
