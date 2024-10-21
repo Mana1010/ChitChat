@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
 import axios, { AxiosError } from "axios";
-import { serverUrl } from "@/utils/serverUrl";
+import { PRIVATE_SERVER_URL } from "@/utils/serverUrl";
 import { User } from "@/types/UserTypes";
 import noSearchFoundImg from "../../../../../assets/images/not-found.png";
 import LoadingChat from "@/components/LoadingChat";
@@ -29,7 +29,7 @@ function UserList({ searchUser }: { searchUser: string }) {
     queryKey: ["user-list"],
     queryFn: async ({ pageParam = 0 }) => {
       const response = await axios.get(
-        `${serverUrl}/api/messages/user-list?page=${pageParam}&limit=${10}`
+        `${PRIVATE_SERVER_URL}/all/user/list?page=${pageParam}&limit=${10}`
       );
       return response.data.message;
     },
@@ -50,10 +50,7 @@ function UserList({ searchUser }: { searchUser: string }) {
   const queryClient = useQueryClient();
   const chatUser = useMutation({
     mutationFn: async (data: { senderId: string; receiverId: string }) => {
-      const response = await axios.post(
-        `${serverUrl}/api/messages/newChat`,
-        data
-      );
+      const response = await axios.post(`${PRIVATE_SERVER_URL}/new/chat`, data);
       return response.data.message;
     },
     onSuccess: (id) => {

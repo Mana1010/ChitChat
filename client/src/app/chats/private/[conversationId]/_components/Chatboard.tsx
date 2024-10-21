@@ -4,15 +4,10 @@ import React, { useEffect, useRef, useState, useLayoutEffect } from "react";
 import { useInfiniteQuery, useQueryClient } from "react-query";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
-import { serverUrl } from "@/utils/serverUrl";
+import { PRIVATE_SERVER_URL } from "@/utils/serverUrl";
 import NewUser from "./NewUser";
 import UserNotFound from "./UserNotFound";
-import {
-  Conversation,
-  FullInfoUser,
-  GetParticipantInfo,
-  Messages,
-} from "@/types/UserTypes";
+import { Conversation, GetParticipantInfo, Messages } from "@/types/UserTypes";
 import { useSocketStore } from "@/utils/store/socket.store";
 import { nanoid } from "nanoid";
 import LoadingChat from "@/components/LoadingChat";
@@ -48,7 +43,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
     queryKey: ["messages", conversationId],
     queryFn: async ({ pageParam = 0 }): Promise<any> => {
       const response = await axios.get(
-        `${serverUrl}/api/messages/message-list/conversation/${conversationId}?page=${pageParam}&limit=${20}`
+        `${PRIVATE_SERVER_URL}/message/list/${conversationId}?page=${pageParam}&limit=${20}`
       );
 
       return response.data.message;

@@ -3,15 +3,15 @@ import PrivateChatProvider from "@/context/PrivateChatProvider";
 interface Routes {
   children: ReactNode;
   chatboard: ReactNode;
-  chatusers: ReactNode;
+  chatgroups: ReactNode;
 }
-function PrivateLayout({ chatboard, chatusers, children }: Routes) {
+function PrivateLayout({ chatboard, chatgroups, children }: Routes) {
   return (
-    <PrivateChatProvider>
-      {chatusers}
+    <div className="space-x-3 grid grid-cols-3 h-full w-full">
+      {chatgroups}
       {chatboard}
       {children}
-    </PrivateChatProvider>
+    </div>
   );
 }
 

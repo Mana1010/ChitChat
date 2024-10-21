@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import { Socket } from "socket.io-client";
 import { useInfiniteQuery, useQueryClient } from "react-query";
-import { serverUrl } from "@/utils/serverUrl";
+import { PUBLIC_SERVER_URL } from "@/utils/serverUrl";
 import axios from "axios";
 import { User, Reaction } from "@/types/UserTypes";
 import { initializePublicChatSocket } from "@/utils/socket";
@@ -45,7 +45,7 @@ function PublicChat() {
     queryKey: ["public-messages"],
     queryFn: async ({ pageParam = 0 }) => {
       const response = await axios.get(
-        `${serverUrl}/api/messages/public?page=${pageParam}&limit=${20}`
+        `${PUBLIC_SERVER_URL}/all/messages?page=${pageParam}&limit=${20}`
       );
       return response.data.message;
     },

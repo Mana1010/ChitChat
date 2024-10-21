@@ -6,10 +6,10 @@ import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import ChatList from "./ChatList";
-import UserList from "./UserList";
+import GroupList from "./GroupList";
 import useDebounce from "@/hooks/useDebounce.hook";
 import useSearchUser from "@/hooks/useSearchUser.hook";
-function ChatUsers({ conversationId }: { conversationId: string }) {
+function ChatGroups({ groupId }: { groupId: string }) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
@@ -35,7 +35,9 @@ function ChatUsers({ conversationId }: { conversationId: string }) {
             onChange={(e) => setSearch(e.target.value)}
             value={search}
             type="text"
-            placeholder={`Search ${type === "chats" ? "your Chats" : "User"}`}
+            placeholder={`Search ${
+              type === "chats" ? "your Group Chat" : "New Group Chat"
+            }`}
             className="w-full rounded-2xl h-full bg-transparent outline-none caret-zinc-400 text-white"
           />
         </div>
@@ -55,16 +57,16 @@ function ChatUsers({ conversationId }: { conversationId: string }) {
             type === "users" && "bg-[#3A3B3C]"
           }`}
         >
-          Users
+          Groups
         </button>
       </div>
       {type === "chats" ? (
-        <ChatList searchChat={search} conversationId={conversationId} />
+        <ChatList searchChat={search} groupId={groupId} />
       ) : (
-        <UserList searchUser={search} />
+        <GroupList searchUser={search} />
       )}
     </div>
   );
 }
 
-export default ChatUsers;
+export default ChatGroups;

@@ -15,7 +15,7 @@ import ConversationListSkeleton from "@/app/chats/_components/ConversationListSk
 import useDebounce from "@/hooks/useDebounce.hook";
 import useSearchUser from "@/hooks/useSearchUser.hook";
 import { InView, useInView } from "react-intersection-observer";
-function UserList({ searchUser }: { searchUser: string }) {
+function GroupList({ searchUser }: { searchUser: string }) {
   const router = useRouter();
   const { ref, inView } = useInView();
   const [hasNextPage, setHasNextPage] = useState(true);
@@ -149,4 +149,4 @@ function UserList({ searchUser }: { searchUser: string }) {
   );
 }
 
-export default UserList;
+export default GroupList;

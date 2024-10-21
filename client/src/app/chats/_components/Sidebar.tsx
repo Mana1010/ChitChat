@@ -17,7 +17,7 @@ import { PiMailboxFill } from "react-icons/pi";
 import { usePathname } from "next/navigation";
 import { useQuery } from "react-query";
 import axios from "axios";
-import { serverUrl } from "@/utils/serverUrl";
+import { PRIVATE_SERVER_URL } from "@/utils/serverUrl";
 function Sidebar() {
   const router = useRouter();
   const { data, status } = useSession();
@@ -26,7 +26,7 @@ function Sidebar() {
     queryKey: ["chat-notification"],
     queryFn: async () => {
       const response = await axios.get(
-        `${serverUrl}/api/messages/notification/${data?.user.userId}`
+        `${PRIVATE_SERVER_URL}/user/chat/status/${data?.user.userId}`
       );
       return response.data.message;
     },

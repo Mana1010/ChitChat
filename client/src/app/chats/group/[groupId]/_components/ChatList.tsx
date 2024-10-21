@@ -14,10 +14,10 @@ import { useSocketStore } from "@/utils/store/socket.store";
 import ConversationListSkeleton from "@/app/chats/_components/ConversationListSkeleton";
 function ChatList({
   searchChat,
-  conversationId,
+  groupId,
 }: {
   searchChat: string;
-  conversationId: string;
+  groupId: string;
 }) {
   const { socket } = useSocketStore();
   const { data: session, status } = useSession();
@@ -153,7 +153,7 @@ function ChatList({
               }
               key={index}
               className={`flex items-center w-full p-3.5 cursor-pointer hover:bg-[#414141] rounded-lg justify-between ${
-                user._id === conversationId && "bg-[#414141]"
+                user._id === groupId && "bg-[#414141]"
               }`}
             >
               <div className="flex items-center space-x-2">

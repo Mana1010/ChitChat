@@ -207,7 +207,7 @@ export const getParticipantInfo = asyncHandler(
   }
 );
 
-export const getChatNotifications = asyncHandler(
+export const getUserChatStatus = asyncHandler(
   async (req: Request, res: Response) => {
     const { senderId } = req.params;
     const checkIfNewUser = await Conversation.findOne({
@@ -226,6 +226,7 @@ export const getChatNotifications = asyncHandler(
     res.status(200).json({ message: null }); //If the user is new and have no conversation made with other
   }
 );
+
 export const getParticipantName = asyncHandler(
   async (req: Request, res: Response) => {
     const { userId, conversationId } = req.params;
@@ -279,7 +280,6 @@ export const getParticipantName = asyncHandler(
 export const searchUserResult = asyncHandler(
   async (req: Request, res: Response) => {
     const { search } = req.query;
-    console.log(search);
     const getUserResult = await User.find({
       name: new RegExp(`${search}`, "i"),
     }).select(["name", "profilePic", "status"]);

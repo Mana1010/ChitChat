@@ -2,7 +2,7 @@ import { type NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import GithubProvider from "next-auth/providers/github";
 import axios from "axios";
-import { serverUrl } from "./serverUrl";
+import { serverUrl, AUTH_SERVER_URL } from "./serverUrl";
 const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -55,7 +55,7 @@ const authOptions: NextAuthOptions = {
     async signIn({ profile, account }) {
       try {
         const checkUser = await axios.get(
-          `${serverUrl}/api/auth/checkUser/${profile?.sub}`
+          `${AUTH_SERVER_URL}/check/user/${profile?.sub}`
         );
         if (!checkUser.data.message) {
           const payload = {
@@ -65,7 +65,7 @@ const authOptions: NextAuthOptions = {
             authId: profile?.sub,
             provider: account?.provider,
           };
-          await axios.post(`${serverUrl}/api/auth/createUser`, payload);
+          await axios.post(`${AUTH_SERVER_URL}/create/user`, payload);
         }
         return true;
       } catch (err) {

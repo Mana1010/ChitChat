@@ -8,6 +8,9 @@ import mongoose from "mongoose";
 import http from "http";
 import "dotenv/config";
 import { router as messageRoute } from "./routes/message.route";
+import { router as publicMessageRoute } from "./routes/public.message.route";
+import { router as privateMessageRoute } from "./routes/private.message.route";
+import { router as groupMessageRoute } from "./routes/group.message.route";
 import { router as authRoute } from "./routes/auth.route";
 import { errorHandle } from "./middleware/error.handling";
 import { privateChat } from "./socket/privateChat.socket";
@@ -29,7 +32,11 @@ app.use(
     credentials: true,
   })
 );
-app.use("/api", messageRoute, authRoute);
+app.use("/api", messageRoute);
+app.use("/api/auth", authRoute);
+app.use("/api/public", publicMessageRoute);
+app.use("/api/private", privateMessageRoute);
+app.use("/api/group", groupMessageRoute);
 app.use(errorHandle);
 publicChat(io as any);
 privateChat(io as any);

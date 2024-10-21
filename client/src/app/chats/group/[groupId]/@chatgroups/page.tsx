@@ -1,16 +1,16 @@
 import React from "react";
-import ChatUsers from "../_components/ChatUsers";
+import ChatGroups from "../_components/ChatGroups";
 
 function Page({
   params,
 }: {
   params: {
-    conversationId: string;
+    groupId: string;
   };
 }) {
   return (
     <div className="w-full h-full">
-      <ChatUsers conversationId={params.conversationId} />
+      <ChatGroups groupId={params.groupId} />
     </div>
   );
 }

@@ -1,13 +1,11 @@
 "use client";
 import React, { Dispatch, SetStateAction, useState } from "react";
 import { useQuery, useMutation, UseQueryResult } from "react-query";
-import { reactions } from "@/utils/reactions";
 import { FaXmark } from "react-icons/fa6";
-import { serverUrl } from "@/utils/serverUrl";
+import { PRIVATE_SERVER_URL, PUBLIC_SERVER_URL } from "@/utils/serverUrl";
 import axios, { AxiosError } from "axios";
 import { ReactionListSchema } from "@/types/UserTypes";
 import Image from "next/image";
-import { motion } from "framer-motion";
 import { TbMessage2 } from "react-icons/tb";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -30,7 +28,7 @@ function PublicReactionList({
     queryKey: ["public-reaction-list", messageId],
     queryFn: async () => {
       const response = await axios.get(
-        `${serverUrl}/api/messages/public/reaction-list/${messageId}`
+        `${PUBLIC_SERVER_URL}/message/reaction/list/${messageId}`
       );
       setAllReactions(response.data.message);
       return response.data.message;
@@ -41,10 +39,7 @@ function PublicReactionList({
 
   const chatUser = useMutation({
     mutationFn: async (data: { senderId: string; receiverId: string }) => {
-      const response = await axios.post(
-        `${serverUrl}/api/messages/newChat`,
-        data
-      );
+      const response = await axios.post(`${PRIVATE_SERVER_URL}/new/chat`, data);
       return response.data.message;
     },
     onSuccess: (id) => {

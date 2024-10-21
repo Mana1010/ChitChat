@@ -1,5 +1,5 @@
 "use client";
-import { serverUrl } from "@/utils/serverUrl";
+import { PRIVATE_SERVER_URL } from "@/utils/serverUrl";
 import axios, { AxiosError } from "axios";
 import React from "react";
 import { useEffect } from "react";
@@ -29,7 +29,7 @@ function ChatList({
     queryKey: ["chat-list"],
     queryFn: async () => {
       const response = await axios.get(
-        `${serverUrl}/api/messages/chat-list/${session?.user.userId}`
+        `${PRIVATE_SERVER_URL}/all/chat/list/${session?.user.userId}`
       );
       return response.data.message;
     },

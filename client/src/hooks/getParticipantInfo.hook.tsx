@@ -1,11 +1,9 @@
 "use client";
 import React from "react";
 import { useQuery, UseQueryResult } from "react-query";
-import Image from "next/image";
 import axios, { AxiosError } from "axios";
-import { serverUrl } from "@/utils/serverUrl";
+import { serverUrl, PRIVATE_SERVER_URL } from "@/utils/serverUrl";
 import { GetParticipantInfo } from "@/types/UserTypes";
-import { User } from "@/types/UserTypes";
 import { Session } from "next-auth";
 function useGetParticipantInfo(
   conversationId: string,
@@ -22,7 +20,7 @@ function useGetParticipantInfo(
     queryKey: ["participant-info", conversationId],
     queryFn: async () => {
       const response = await axios.get(
-        `${serverUrl}/api/messages/participant-info/${sessionData?.user.userId}/conversation/${conversationId}`
+        `${PRIVATE_SERVER_URL}/participant/info/${sessionData?.user.userId}/${conversationId}`
       );
       return response.data.message;
     },
