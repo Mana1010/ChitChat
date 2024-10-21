@@ -1,6 +1,5 @@
 import mongoose, { Schema } from "mongoose";
 
-// const chatSchema =
 const messageSchema = new mongoose.Schema(
   {
     conversationId: {

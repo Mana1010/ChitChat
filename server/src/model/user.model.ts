@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {
@@ -9,6 +9,13 @@ const userSchema = new mongoose.Schema(
     authId: { type: String, required: true },
     provider: { type: String, required: true },
     status: { type: String, default: "Offline" },
+    notification: [
+      {
+        from: { type: Schema.Types.ObjectId, ref: "User", required: true },
+        body: String,
+        notificationCreatedAt: { type: Date, default: () => new Date() },
+      },
+    ],
   },
   {
     timestamps: true,

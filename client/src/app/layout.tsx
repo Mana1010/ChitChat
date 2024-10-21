@@ -3,6 +3,9 @@ import { Inter, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import AuthProvider from "@/context/AuthProvider";
+import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
+import { extractRouterConfig } from "uploadthing/server";
+import { ourFileRouter } from "@/api/uploadthing/core";
 
 const inter = DM_Sans({ subsets: ["latin"] });
 
@@ -27,9 +30,11 @@ export default function RootLayout({
           },
         }}
       />
-      <AuthProvider>
-        <body className={inter.className}>{children}</body>
-      </AuthProvider>
+
+      <body className={inter.className}>
+        <NextSSRPlugin routerConfig={extractRouterConfig(ourFileRouter)} />
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }

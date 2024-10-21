@@ -15,6 +15,7 @@ interface MessageFieldProps {
   updateChatList: (userMessage: string) => void;
   setMessage: Dispatch<SetStateAction<string>>;
   setOpenEmoji: Dispatch<SetStateAction<boolean>>;
+  setOpenAttachmentModal: Dispatch<SetStateAction<boolean>>;
 }
 function MessageField({
   socket,
@@ -26,6 +27,7 @@ function MessageField({
   sendMessage,
   setMessage,
   setOpenEmoji,
+  setOpenAttachmentModal,
 }: MessageFieldProps) {
   return (
     <form
@@ -101,10 +103,12 @@ function MessageField({
         </div>
       </div>
       <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpenAttachmentModal((prev) => !prev);
+        }}
         type="button"
-        className={`px-3 flex py-3 rounded-md items-center text-[#6486FF] text-xl ${
-          openEmoji ? "bg-[#6486FF]/20" : "bg-[#3A3B3C]"
-        }`}
+        className={`px-3 flex py-3 rounded-md items-center text-[#6486FF] text-xl bg-[#3A3B3C]`}
       >
         <GrAttachment />
       </button>

@@ -20,6 +20,7 @@ const io = new Server(server, {
     origin: ["http://localhost:3000", "https://admin.socket.io"],
   },
 });
+
 app.use(express.json());
 app.use(morgan("dev"));
 app.use(
@@ -32,6 +33,7 @@ app.use("/api", messageRoute, authRoute);
 app.use(errorHandle);
 publicChat(io as any);
 privateChat(io as any);
+
 async function connectDb() {
   try {
     await mongoose.connect(process.env.MONGO_URI!);
