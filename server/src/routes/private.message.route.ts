@@ -1,4 +1,5 @@
 import express from "express";
+
 import {
   getAllUsers,
   getAllUsersConversation,
@@ -8,7 +9,7 @@ import {
   getUserChatStatus,
   getParticipantName,
   searchUserResult,
-} from "../controllers/message.controller";
+} from "../controllers/private.message.controller";
 export const router = express.Router();
 
 router.get("/all/chat/list/:id", getAllUsersConversation);

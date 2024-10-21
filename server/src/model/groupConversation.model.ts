@@ -1,20 +1,20 @@
 import mongoose, { Schema } from "mongoose";
-import { referenceUser } from "../utils/referenceUser";
+import { referenceModel } from "../utils/referenceModel";
 
 const groupSchema = new mongoose.Schema({
-  admin: referenceUser,
+  admin: referenceModel("User"),
 
-  members: [referenceUser],
+  members: [referenceModel("User")],
 
   hasUnreadMessages: [
     {
-      user: referenceUser, //This field is for the user who have not unread the message.
+      user: referenceModel("User"), //This field is for the user who have not unread the message.
       totalUnreadMessages: { type: Schema.Types.Number, default: 0 },
     },
   ],
 
   lastMessage: {
-    sender: referenceUser,
+    sender: referenceModel("User"),
     text: { type: String, default: "👋" },
     messageType: {
       type: String,

@@ -1,7 +1,7 @@
 "use client";
 import { PRIVATE_SERVER_URL } from "@/utils/serverUrl";
 import axios, { AxiosError } from "axios";
-import React from "react";
+import React, { useLayoutEffect } from "react";
 import { useEffect } from "react";
 import { useQuery, UseQueryResult, useQueryClient } from "react-query";
 import { useSession } from "next-auth/react";
@@ -12,6 +12,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useSocketStore } from "@/utils/store/socket.store";
 import ConversationListSkeleton from "@/app/chats/_components/ConversationListSkeleton";
+import { usePathname } from "next/navigation";
 function ChatList({
   searchChat,
   conversationId,
@@ -106,6 +107,7 @@ function ChatList({
       socket.off("seen-message");
     };
   }, [queryClient, socket, status]);
+
   if (displayAllChats.isLoading) {
     return <ConversationListSkeleton />;
   }

@@ -1,13 +1,9 @@
 import mongoose, { Schema } from "mongoose";
-
+import { referenceModel } from "../utils/referenceModel";
 const messageSchema = new mongoose.Schema(
   {
-    conversationId: {
-      type: Schema.Types.ObjectId,
-      ref: "Conversation",
-      required: true,
-    },
-    sender: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    conversationId: referenceModel("Conversation"),
+    sender: referenceModel("User"),
     message: { type: String, required: true },
     isRead: { type: Boolean, default: false },
     reaction: { type: String, default: "" },

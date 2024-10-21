@@ -2,7 +2,7 @@ import express from "express";
 import {
   getAllPublicMessages,
   getPublicReactionList,
-} from "../controllers/message.controller";
+} from "../controllers/public.message.controller";
 export const router = express.Router();
 
 router.get("/all/messages", getAllPublicMessages);

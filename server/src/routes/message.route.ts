@@ -7,7 +7,7 @@ import {
   getPrivateMessages,
   getParticipantName,
   searchUserResult,
-} from "../controllers/message.controller";
+} from "../controllers/private.message.controller";
 export const router = express.Router();
 
 router.get("/messages/chat-list/:id", getAllUsersConversation);

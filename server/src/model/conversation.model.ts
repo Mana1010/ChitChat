@@ -1,13 +1,13 @@
 import mongoose, { Schema } from "mongoose";
-
+import { referenceModel } from "../utils/referenceModel";
 const conversationSchema = new mongoose.Schema({
-  participants: [{ type: Schema.Types.ObjectId, ref: "User" }],
+  participants: [referenceModel("User")],
   hasUnreadMessages: {
-    user: { type: Schema.Types.ObjectId, ref: "User" }, //This field is for the user who have not unread the message.
+    user: referenceModel("User"), //This field is for the user who have not unread the message.
     totalUnreadMessages: { type: Schema.Types.Number, default: 0 },
   },
   lastMessage: {
-    sender: { type: Schema.Types.ObjectId, ref: "User" },
+    sender: referenceModel("User"),
     text: { type: String, default: "👋" },
     messageType: {
       type: String,

@@ -39,7 +39,7 @@ const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       const checkUser = await axios.get(
-        `${serverUrl}/api/auth/checkUser/${token?.sub}`
+        `${AUTH_SERVER_URL}/check/user/${token?.sub}`
       );
       const data = checkUser.data.message;
       if (data) {

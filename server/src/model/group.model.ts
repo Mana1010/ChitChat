@@ -1,18 +1,14 @@
-import mongoose, { Schema } from "mongoose";
-
+import mongoose from "mongoose";
+import { referenceModel } from "../utils/referenceModel";
 const messageSchema = new mongoose.Schema(
   {
-    groupId: {
-      type: Schema.Types.ObjectId,
-      ref: "Conversation",
-      required: true,
-    },
-    sender: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    groupId: referenceModel("Conversation"),
+    sender: referenceModel("User"),
     message: { type: String, required: true },
     isRead: { type: Boolean, default: false },
     reaction: [
       {
-        reactor: { type: Schema.Types.ObjectId, ref: "User", required: true },
+        reactor: referenceModel("User"),
         reactionEmoji: String,
         reactionCreatedAt: { type: Date, default: () => new Date() },
       },

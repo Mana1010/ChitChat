@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import { referenceModel } from "../utils/referenceModel";
 
 const userSchema = new mongoose.Schema(
   {
@@ -11,8 +12,8 @@ const userSchema = new mongoose.Schema(
     status: { type: String, default: "Offline" },
     notification: [
       {
-        from: { type: Schema.Types.ObjectId, ref: "User", required: true },
-        body: String,
+        from: referenceModel("User"),
+        body: referenceModel("Group"),
         notificationCreatedAt: { type: Date, default: () => new Date() },
       },
     ],

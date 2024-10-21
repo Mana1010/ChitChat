@@ -1,17 +1,14 @@
 import mongoose, { Schema } from "mongoose";
+import { referenceModel } from "../utils/referenceModel";
 
 const messageSchema = new mongoose.Schema(
   {
-    sender: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    sender: referenceModel("User"),
     message: { type: String },
     isMessageDeleted: { type: Boolean, default: false },
     reactions: [
       {
-        reactor: {
-          type: Schema.Types.ObjectId,
-          ref: "User",
-          required: true,
-        },
+        reactor: referenceModel("User"),
         reactionEmoji: String,
         reactionCreatedAt: { type: Date, default: () => new Date() },
       },
