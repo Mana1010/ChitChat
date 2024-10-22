@@ -181,26 +181,6 @@ export const getParticipantInfo = asyncHandler(
   }
 );
 
-export const getUserChatStatus = asyncHandler(
-  async (req: Request, res: Response) => {
-    const { senderId } = req.params;
-    const checkIfNewUser = await Conversation.findOne({
-      participants: { $in: [senderId] },
-    }); //Checking if the user has already a conversation or chatmate
-    if (checkIfNewUser) {
-      const getLatestConversationId = await Conversation.find({
-        participants: { $in: [senderId] },
-      })
-        .sort({ "lastMessage.lastMessageCreatedAt": -1 })
-        .limit(1)
-        .select("_id"); //Will sort descending by updatedAt and get the very first index using limit
-      res.status(200).json({ message: getLatestConversationId[0]._id });
-      return;
-    }
-    res.status(200).json({ message: null }); //If the user is new and have no conversation made with other
-  }
-);
-
 export const getParticipantName = asyncHandler(
   async (req: Request, res: Response) => {
     const { userId, conversationId } = req.params;

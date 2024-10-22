@@ -4,7 +4,12 @@ import { referenceModel } from "../utils/referenceModel";
 const groupSchema = new mongoose.Schema({
   admin: referenceModel("User"),
 
-  members: [referenceModel("User")],
+  members: [
+    {
+      memberInfo: referenceModel("User"),
+      joinedAt: { type: Date, default: () => new Date() },
+    },
+  ],
 
   hasUnreadMessages: [
     {

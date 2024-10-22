@@ -8,7 +8,7 @@ const conversationSchema = new mongoose.Schema({
   },
   lastMessage: {
     sender: referenceModel("User"),
-    text: { type: String, default: "👋" },
+    text: { type: String, default: `Wave "👋" to them` },
     messageType: {
       type: String,
       enum: ["text", "file"],

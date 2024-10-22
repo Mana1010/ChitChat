@@ -55,6 +55,7 @@ function UserList({ searchUser }: { searchUser: string }) {
     },
     onSuccess: (id) => {
       queryClient.invalidateQueries("chat-list");
+      queryClient.invalidateQueries("user-status");
       router.push(`/chats/private/${id}?type=chats`);
     },
     onError: (err: AxiosError<{ message: string }>) => {

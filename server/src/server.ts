@@ -12,6 +12,7 @@ import { router as publicMessageRoute } from "./routes/public.message.route";
 import { router as privateMessageRoute } from "./routes/private.message.route";
 import { router as groupMessageRoute } from "./routes/group.message.route";
 import { router as authRoute } from "./routes/auth.route";
+import { router as appRoute } from "./routes/app.route";
 import { errorHandle } from "./middleware/error.handling";
 import { privateChat } from "./socket/privateChat.socket";
 
@@ -37,6 +38,8 @@ app.use("/api/auth", authRoute);
 app.use("/api/public", publicMessageRoute);
 app.use("/api/private", privateMessageRoute);
 app.use("/api/group", groupMessageRoute);
+//Consolidated route
+app.use("/api/app", appRoute);
 app.use(errorHandle);
 publicChat(io as any);
 privateChat(io as any);

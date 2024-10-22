@@ -76,3 +76,15 @@ export interface ReactionListSchema {
     profilePic: string;
   };
 }
+
+export interface SidebarSchema {
+  userChatStatusObj: {
+    privateConversationStatus: string | null;
+    groupConversationStatus: string | null;
+  };
+  userNotificationObj: {
+    privateNotificationCount: number;
+    groupNotificationCount: number;
+    mailboxNotificationCount: number;
+  };
+}
