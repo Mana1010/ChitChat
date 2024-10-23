@@ -1,27 +1,27 @@
 "use client";
-import { PRIVATE_SERVER_URL } from "@/utils/serverUrl";
+import { GROUP_SERVER_URL } from "@/utils/serverUrl";
 import axios, { AxiosError } from "axios";
 import { useQuery, UseQueryResult } from "react-query";
 import { GroupChat, User } from "@/types/UserTypes";
-function useSearchUser(searchUser: string) {
+function useSearchGroup(searchGroup: string) {
   const searchItemQuery: UseQueryResult<
-    User[],
+    GroupChat[],
     AxiosError<{ message: string }>
   > = useQuery({
-    queryKey: ["search-user", searchUser],
+    queryKey: ["search-group", searchGroup],
     queryFn: async () => {
       const response = await axios.get(
-        `${PRIVATE_SERVER_URL}/conversation/search/user?search=${searchUser}`
+        `${GROUP_SERVER_URL}/conversation/search/group?search=${searchGroup}`
       );
       return response.data.message;
     },
-    enabled: !!searchUser,
+    enabled: !!searchGroup,
   });
 
   return {
-    searchUser: searchItemQuery.data,
+    searchGroup: searchItemQuery.data,
     isLoading: searchItemQuery.isLoading,
   };
 }
 
-export default useSearchUser;
+export default useSearchGroup;

@@ -3,10 +3,12 @@ import { referenceModel } from "../utils/referenceModel";
 
 const groupSchema = new mongoose.Schema({
   admin: referenceModel("User"),
-
+  groupName: String,
+  groupPhoto: String,
   members: [
     {
       memberInfo: referenceModel("User"),
+      role: { type: String, default: "guest" },
       joinedAt: { type: Date, default: () => new Date() },
     },
   ],

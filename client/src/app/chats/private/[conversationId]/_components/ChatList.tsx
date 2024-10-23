@@ -7,12 +7,13 @@ import { useQuery, UseQueryResult, useQueryClient } from "react-query";
 import { useSession } from "next-auth/react";
 import { Conversation } from "@/types/UserTypes";
 import emptyChatImg from "../../../../../assets/images/empty-chat.png";
-import noSearchFoundImg from "../../../../../assets/images/not-found.png";
+import EmptyConversation from "@/components/EmptyConversation";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useSocketStore } from "@/utils/store/socket.store";
 import ConversationListSkeleton from "@/app/chats/_components/ConversationListSkeleton";
-import { usePathname } from "next/navigation";
+
+import NoItemFound from "@/components/NoItemFound";
 function ChatList({
   searchChat,
   conversationId,
@@ -117,35 +118,17 @@ function ChatList({
   return (
     <div className="w-full flex-grow flex">
       {displayAllChats.data?.length === 0 && searchChat.length === 0 ? (
-        <div className="flex items-center w-full justify-center flex-col space-y-2 px-2">
-          {" "}
-          <Image
-            src={emptyChatImg}
-            width={100}
-            height={100}
-            alt="empty-chat-img"
-            priority
-          />
+        <EmptyConversation>
           <h2 className="text-zinc-300 text-[1.1rem] break-all text-center">
-            You have no conversation yet
+            Your conversation list is empty.
           </h2>
-        </div>
+        </EmptyConversation>
       ) : searchChat?.length !== 0 && searchResult?.length === 0 ? (
-        <div className="flex items-center w-full justify-center flex-col space-y-2 px-2">
-          {" "}
-          <Image
-            src={noSearchFoundImg}
-            width={100}
-            height={100}
-            alt="no-search-found"
-            priority
-          />
-          <h2 className="text-zinc-300 text-[1.1rem] break-all text-center">
-            No &quot;
-            <span className="text-[#6486FF]">{searchChat.slice(0, 10)}</span>
-            &quot; user found
-          </h2>
-        </div>
+        <NoItemFound>
+          No &quot;
+          <span className="text-[#6486FF]">{searchChat.slice(0, 10)}</span>
+          &quot; user found
+        </NoItemFound>
       ) : (
         <div className="pt-2 flex flex-col w-full overflow-y-auto h-full items-center px-1.5">
           {searchResult?.map((user: Conversation, index: number) => (

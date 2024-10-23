@@ -197,6 +197,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
         },
       ];
     });
+
     socket?.emit("stop-typing", conversationId);
     setTimeout(() => {
       scrollRef.current?.scrollIntoView({ block: "end" }); //To bypass the closure nature of react :)

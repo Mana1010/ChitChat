@@ -32,7 +32,6 @@ function Sidebar() {
       return response.data.message;
     },
     enabled: status === "authenticated",
-    refetchOnWindowFocus: false,
   });
   const navigationBtn = [
     {
@@ -54,7 +53,9 @@ function Sidebar() {
     },
     {
       btnSticker: <MdGroups />,
-      path: `/chats/group`,
+      path: `/chats/group/${
+        getUserStatus.data?.userChatStatusObj?.groupConversationStatus || "new"
+      }?type=chats`,
       styling: `text-[#6486FF] text-2xl p-3 rounded-md ${
         pathname.startsWith("/chats/group") && "bg-[#3A3B3C]"
       }`,
@@ -67,7 +68,7 @@ function Sidebar() {
       }`,
     },
   ];
-  console.log(getUserStatus.data);
+
   return (
     <div className=" flex justify-between items-center flex-col pt-4 h-full px-2">
       <div className="flex flex-col items-center w-full justify-center">

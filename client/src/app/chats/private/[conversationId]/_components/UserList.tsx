@@ -15,6 +15,7 @@ import ConversationListSkeleton from "@/app/chats/_components/ConversationListSk
 import useDebounce from "@/hooks/useDebounce.hook";
 import useSearchUser from "@/hooks/useSearchUser.hook";
 import { InView, useInView } from "react-intersection-observer";
+import NoItemFound from "@/components/NoItemFound";
 function UserList({ searchUser }: { searchUser: string }) {
   const router = useRouter();
   const { ref, inView } = useInView();
@@ -55,7 +56,7 @@ function UserList({ searchUser }: { searchUser: string }) {
     },
     onSuccess: (id) => {
       queryClient.invalidateQueries("chat-list");
-      queryClient.invalidateQueries("user-status");
+      queryClient.invalidateQueries("sidebar");
       router.push(`/chats/private/${id}?type=chats`);
     },
     onError: (err: AxiosError<{ message: string }>) => {
@@ -82,21 +83,11 @@ function UserList({ searchUser }: { searchUser: string }) {
   return (
     <div className="flex-grow w-full flex">
       {debouncedSearchUser?.length === 0 ? (
-        <div className="flex w-full items-center justify-center flex-col space-y-2 px-2">
-          <Image
-            src={noSearchFoundImg}
-            width={100}
-            height={100}
-            alt="no-search-found"
-            priority
-          />
-
-          <h2 className="text-zinc-300 text-[1.1rem] break-all text-center">
-            No &quot;
-            <span className="text-[#6486FF]">{searchUser.slice(0, 10)}</span>
-            &quot; user found
-          </h2>
-        </div>
+        <NoItemFound>
+          No &quot;
+          <span className="text-[#6486FF]">{searchUser.slice(0, 10)}</span>
+          &quot; user found
+        </NoItemFound>
       ) : (
         <div className="pt-2 flex flex-col w-full overflow-y-auto h-full items-center px-1.5">
           {userList?.map((user: User) => (

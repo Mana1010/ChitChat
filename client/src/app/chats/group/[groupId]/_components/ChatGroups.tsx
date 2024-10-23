@@ -5,10 +5,15 @@ import { MdManageSearch } from "react-icons/md";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
-import ChatList from "./ChatList";
+import GroupChatList from "./GroupChatList";
 import GroupList from "./GroupList";
-import useDebounce from "@/hooks/useDebounce.hook";
-import useSearchUser from "@/hooks/useSearchUser.hook";
+import { IoCreateOutline } from "react-icons/io5";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 function ChatGroups({ groupId }: { groupId: string }) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -19,13 +24,27 @@ function ChatGroups({ groupId }: { groupId: string }) {
   return (
     <div className="bg-[#222222] h-full rounded-md flex flex-col">
       <header className="w-full p-2.5 space-y-2 ">
-        <div className="flex items-center space-x-2">
-          <span className="text-[#6486FF] text-xl">
-            <TbMessage />
-          </span>
-          <h3 className="text-white tracking-wide text-xl font-extrabold">
-            ChitChat
-          </h3>
+        <div className="flex items-center justify-between">
+          <div className="flex space-x-2 items-center">
+            <span className="text-[#6486FF] text-xl">
+              <TbMessage />
+            </span>
+            <h3 className="text-white tracking-wide text-xl font-extrabold">
+              ChitChat
+            </h3>
+          </div>
+          <div className="h-full items-center flex">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger className="text-white text-xl">
+                  <IoCreateOutline />
+                </TooltipTrigger>
+                <TooltipContent className="bg-[#6486FF]">
+                  Create Group
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         </div>
         <div className="w-full h-10 flex space-x-2 items-center justify-between bg-[#3A3B3C] rounded-2xl px-2">
           <span className="text-zinc-400 text-2xl">
@@ -52,18 +71,18 @@ function ChatGroups({ groupId }: { groupId: string }) {
           Chats
         </button>
         <button
-          onClick={() => router.push(`${pathname}?type=users`)}
+          onClick={() => router.push(`${pathname}?type=explore-groups`)}
           className={`px-3 py-1.5 hover:bg-[#3A3B3C] text-[#6486FF] rounded-lg w-1/2 transition ease-in duration-100 ${
-            type === "users" && "bg-[#3A3B3C]"
+            type === "explore-groups" && "bg-[#3A3B3C]"
           }`}
         >
-          Groups
+          Explore Groups
         </button>
       </div>
       {type === "chats" ? (
-        <ChatList searchChat={search} groupId={groupId} />
+        <GroupChatList searchChat={search} groupId={groupId} />
       ) : (
-        <GroupList searchUser={search} />
+        <GroupList searchGroup={search} />
       )}
     </div>
   );
