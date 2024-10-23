@@ -1,7 +1,7 @@
 
 # ChitChat
 
-A realtime chat application with 3 distinct sections (public, private and group) powered by socket.io/nextjs in frontend and express/mongodb for backend.
+A realtime chat application with 3 distinct sections (public, private and group).
 
 
 
@@ -14,18 +14,17 @@ A realtime chat application with 3 distinct sections (public, private and group)
 - User authentication powered by NextAuth
 - Emoji support
 - Can react to a message
-
-
+- Infinite Scrolling for chat history
 ## Tech Stack
 
-**Client:** NextTs, Socket.io-client, Zustand, React Query, Tailwind, NextAuth
+**Client:** NextTs, Socket.io-client, Zustand, React Query, Tailwind, NextAuth, Uploadthing
 
 **Server:** Socket.io-server, Mongoose, Express
 
 
 ## Optimizations
 
-Using parallel routes for the private and group message, using aggregation for the complex query and lastly indexing.
+Using parallel routes for the private and group message, implementing use infinite scrolling, using aggregation for the complex query and lastly indexing.
 
 
 ## Installation
