@@ -32,8 +32,8 @@ export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
 export const getAllUsersConversation = asyncHandler(
   async (req: Request, res: Response) => {
     const { id } = req.params;
-    const getAllUsers = await Conversation.aggregate([
-      { $match: { participants: new mongoose.Types.ObjectId(id) } },
+    const getAllConversation = await Conversation.aggregate([
+      { $match: { participants: { $in: [new mongoose.Types.ObjectId(id)] } } },
       { $unwind: "$participants" },
       {
         $match: { participants: { $ne: new mongoose.Types.ObjectId(id) } },
@@ -51,7 +51,7 @@ export const getAllUsersConversation = asyncHandler(
       },
       {
         $project: {
-          receiver_details: { $arrayElemAt: ["$receiver_details", 0] },
+          receiver_details: { $first: "$receiver_details" },
           _id: 1,
           lastMessage: 1,
           hasUnreadMessages: 1,
@@ -59,7 +59,7 @@ export const getAllUsersConversation = asyncHandler(
         },
       },
     ]);
-    res.status(200).json({ message: getAllUsers });
+    res.status(200).json({ message: getAllConversation });
   }
 );
 

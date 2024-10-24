@@ -65,7 +65,6 @@ export const getPublicReactionList = asyncHandler(
         },
       },
     ]);
-    console.log(getAllMessageReaction);
     res.status(200).json({ message: getAllMessageReaction });
   }
 );

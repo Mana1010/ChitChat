@@ -10,7 +10,7 @@ import {
 } from "../controllers/private.message.controller";
 export const router = express.Router();
 
-router.get("/messages/chat-list/:id", getAllUsersConversation);
+// router.get("/messages/chat-list/:id", getAllUsersConversation);
 router.get("/messages/user-list", getAllUsers);
 router.get(
   "/messages/participant-info/:userId/conversation/:conversationId",
