@@ -5,7 +5,7 @@ interface Routes {
   chatboard: ReactNode;
   chatgroups: ReactNode;
 }
-function PrivateLayout({ chatboard, chatgroups, children }: Routes) {
+function GroupLayout({ chatboard, chatgroups, children }: Routes) {
   return (
     <div className="space-x-3 grid grid-cols-3 h-full w-full">
       {chatgroups}
@@ -15,4 +15,4 @@ function PrivateLayout({ chatboard, chatgroups, children }: Routes) {
   );
 }
 
-export default PrivateLayout;
+export default GroupLayout;

@@ -33,7 +33,7 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
     queryKey: ["group-list"],
     queryFn: async ({ pageParam = 0 }) => {
       const response = await axios.get(
-        `${GROUP_SERVER_URL}/all/group/list?page=${pageParam}&limit=${10}`
+        `${GROUP_SERVER_URL}/explore/all/group/list?page=${pageParam}&limit=${10}`
       );
       return response.data.message;
     },

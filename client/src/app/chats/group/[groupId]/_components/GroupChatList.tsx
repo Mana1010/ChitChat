@@ -1,12 +1,11 @@
 "use client";
-import { serverUrl } from "@/utils/serverUrl";
+import { serverUrl, GROUP_SERVER_URL } from "@/utils/serverUrl";
 import axios, { AxiosError } from "axios";
 import React from "react";
 import { useEffect } from "react";
 import { useQuery, UseQueryResult, useQueryClient } from "react-query";
 import { useSession } from "next-auth/react";
 import { Conversation } from "@/types/UserTypes";
-import emptyChatImg from "../../../../../assets/images/empty-box.png";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useSocketStore } from "@/utils/store/socket.store";
@@ -27,10 +26,10 @@ function GroupChatList({
     Conversation[],
     AxiosError<{ message: string }>
   > = useQuery({
-    queryKey: ["chat-list"],
+    queryKey: ["groupchat-list"],
     queryFn: async () => {
       const response = await axios.get(
-        `${serverUrl}/api/messages/chat-list/${session?.user.userId}`
+        `${GROUP_SERVER_URL}/all/groupchat/list/${session?.user.userId}`
       );
       return response.data.message;
     },
@@ -80,28 +79,28 @@ function GroupChatList({
         );
       }
     );
-    socket.on("seen-message", ({ conversationId, hasUnreadMessages }) => {
-      queryClient.setQueryData<Conversation[] | undefined>(
-        ["chat-list"],
-        (cachedData) => {
-          if (cachedData) {
-            return cachedData.map((conversation: Conversation) => {
-              if (conversation._id === conversationId) {
-                return {
-                  ...conversation,
-                  hasUnreadMessages: {
-                    user: hasUnreadMessages.user,
-                    totalUnreadMessages: hasUnreadMessages.totalUnreadMessages,
-                  },
-                };
-              } else {
-                return conversation;
-              }
-            });
-          }
-        }
-      );
-    });
+    // socket.on("seen-message", ({ conversationId, hasUnreadMessages }) => {
+    //   queryClient.setQueryData<Conversation[] | undefined>(
+    //     ["chat-list"],
+    //     (cachedData) => {
+    //       if (cachedData) {
+    //         return cachedData.map((conversation: Conversation) => {
+    //           if (conversation._id === conversationId) {
+    //             return {
+    //               ...conversation,
+    //               hasUnreadMessages: {
+    //                 user: hasUnreadMessages.user,
+    //                 totalUnreadMessages: hasUnreadMessages.totalUnreadMessages,
+    //               },
+    //             };
+    //           } else {
+    //             return conversation;
+    //           }
+    //         });
+    //       }
+    //     }
+    //   );
+    // });
     return () => {
       socket.off("display-updated-chatlist");
       socket.off("seen-message");
@@ -113,6 +112,7 @@ function GroupChatList({
   const searchResult = displayAllChats.data?.filter((user) =>
     new RegExp(searchChat, "i").test(user.receiver_details.name as string)
   );
+  console.log(displayAllChats.data);
   return (
     <div className="w-full flex-grow flex">
       {displayAllChats.data?.length === 0 && searchChat === "" ? (

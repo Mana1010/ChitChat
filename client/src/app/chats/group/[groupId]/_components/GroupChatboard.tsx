@@ -5,14 +5,9 @@ import { useInfiniteQuery, useQueryClient } from "react-query";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { serverUrl } from "@/utils/serverUrl";
-import NewUser from "./NewUser";
+import NoGroup from "./NoGroup";
 import UserNotFound from "./UserNotFound";
-import {
-  Conversation,
-  FullInfoUser,
-  GetParticipantInfo,
-  Messages,
-} from "@/types/UserTypes";
+import { Conversation, GetParticipantInfo, Messages } from "@/types/UserTypes";
 import { useSocketStore } from "@/utils/store/socket.store";
 import { nanoid } from "nanoid";
 import LoadingChat from "@/components/LoadingChat";
@@ -26,7 +21,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import ProfileCard from "@/app/chats/_components/ProfileCard";
 import typingAnimation from "../../../../../assets/images/gif-animation/typing-animation-ver-2.gif";
 import SendAttachment from "@/components/SendAttachment";
-function Chatboard({ groupId }: { groupId: string }) {
+function GroupChatboard({ groupId }: { groupId: string }) {
   const { socket } = useSocketStore();
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const currentPageRef = useRef(0);
@@ -162,7 +157,7 @@ function Chatboard({ groupId }: { groupId: string }) {
   }, [groupId, queryClient, socket]);
 
   if (groupId.toLowerCase() === "new") {
-    return <NewUser />;
+    return <NoGroup />;
   }
   if (isError) {
     const errorMessage = error as AxiosError<{ message: string }>;
@@ -383,12 +378,12 @@ function Chatboard({ groupId }: { groupId: string }) {
         setOpenEmoji={setOpenEmoji}
         setOpenAttachmentModal={setOpenAttachmentModal}
       />
-      {openProfileModal && (
+      {/* {openProfileModal && (
         <ProfileCard
           conversationId={groupId}
           setOpenProfileModal={setOpenProfileModal}
         />
-      )}
+      )} */}
       {openAttachmentModal && (
         <SendAttachment setOpenAttachmentModal={setOpenAttachmentModal} />
       )}
@@ -396,4 +391,4 @@ function Chatboard({ groupId }: { groupId: string }) {
   );
 }
 
-export default Chatboard;
+export default GroupChatboard;

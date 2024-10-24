@@ -1,10 +1,10 @@
 import React from "react";
-import Chatboard from "../_components/Chatboard";
+import GroupChatboard from "../_components/GroupChatboard";
 
 function Page({ params }: { params: { groupId: string } }) {
   return (
     <div className="bg-[rgb(34,34,34)] rounded-md col-span-2">
-      <Chatboard groupId={params.groupId} />
+      <GroupChatboard groupId={params.groupId} />
     </div>
   );
 }

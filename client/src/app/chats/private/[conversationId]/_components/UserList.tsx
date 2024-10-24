@@ -7,7 +7,6 @@ import { useSession } from "next-auth/react";
 import axios, { AxiosError } from "axios";
 import { PRIVATE_SERVER_URL } from "@/utils/serverUrl";
 import { User } from "@/types/UserTypes";
-import noSearchFoundImg from "../../../../../assets/images/not-found.png";
 import LoadingChat from "@/components/LoadingChat";
 import { toast } from "sonner";
 import { TbMessage2 } from "react-icons/tb";
