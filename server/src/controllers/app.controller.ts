@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import { Conversation } from "../model/conversation.model";
 import { GroupConversation } from "../model/groupConversation.model";
 import mongoose from "mongoose";
-
+import { User } from "../model/user.model";
 interface HandleAggregationSchema {
   handlePrivateConversation: {
     length: number;
@@ -134,5 +134,15 @@ export const getSidebarNotificationAndCurrentConversation = asyncHandler(
         userNotificationObj,
       },
     });
+  }
+);
+
+export const searchUserResult = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { search } = req.query;
+    const getUserResult = await User.find({
+      name: new RegExp(`${search}`, "i"),
+    }).select(["name", "profilePic", "status"]);
+    res.status(200).json({ message: getUserResult });
   }
 );

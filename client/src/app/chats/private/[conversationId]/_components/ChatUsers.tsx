@@ -7,8 +7,6 @@ import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import ChatList from "./ChatList";
 import UserList from "./UserList";
-import useDebounce from "@/hooks/useDebounce.hook";
-import useSearchUser from "@/hooks/useSearchUser.hook";
 function ChatUsers({ conversationId }: { conversationId: string }) {
   const searchParams = useSearchParams();
   const pathname = usePathname();

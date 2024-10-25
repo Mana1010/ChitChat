@@ -25,7 +25,7 @@ function UserList({ searchUser }: { searchUser: string }) {
   const debouncedValue = useDebounce(searchUser);
   const { searchUser: debouncedSearchUser, isLoading: loadingSearchUser } =
     useSearchUser(debouncedValue);
-  const { data, fetchNextPage, error, isLoading, isError } = useInfiniteQuery({
+  const { fetchNextPage, error, isLoading, isError } = useInfiniteQuery({
     queryKey: ["user-list"],
     queryFn: async ({ pageParam = 0 }) => {
       const response = await axios.get(

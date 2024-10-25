@@ -230,13 +230,3 @@ export const getParticipantName = asyncHandler(
       .json({ name: getChatMateName[0].participant_name[0].name[0] }); //Retrieving the participant's name
   }
 );
-
-export const searchUserResult = asyncHandler(
-  async (req: Request, res: Response) => {
-    const { search } = req.query;
-    const getUserResult = await User.find({
-      name: new RegExp(`${search}`, "i"),
-    }).select(["name", "profilePic", "status"]);
-    res.status(200).json({ message: getUserResult });
-  }
-);

@@ -6,7 +6,6 @@ import {
   getParticipantInfo,
   getPrivateMessages,
   getParticipantName,
-  searchUserResult,
 } from "../controllers/private.message.controller";
 export const router = express.Router();
 
@@ -25,4 +24,3 @@ router.get(
   "/messages/conversation-name/:userId/conversation/:conversationId",
   getParticipantName
 );
-router.get("/conversation/search-user", searchUserResult);
