@@ -1,5 +1,6 @@
 import React, { Children, ReactNode } from "react";
-import PrivateChatProvider from "@/context/PrivateChatProvider";
+import GroupChatProvider from "@/context/GroupChatProvider";
+
 interface Routes {
   children: ReactNode;
   chatboard: ReactNode;
@@ -7,11 +8,11 @@ interface Routes {
 }
 function GroupLayout({ chatboard, chatgroups, children }: Routes) {
   return (
-    <div className="space-x-3 grid grid-cols-3 h-full w-full">
+    <GroupChatProvider>
       {chatgroups}
       {chatboard}
       {children}
-    </div>
+    </GroupChatProvider>
   );
 }
 

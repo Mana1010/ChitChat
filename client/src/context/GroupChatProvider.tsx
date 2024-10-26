@@ -1,17 +1,17 @@
 "use client";
 import React, { ReactNode, useEffect } from "react";
-import { initializePrivateChatSocket } from "@/utils/socket";
+import { initializeGroupChatSocket } from "@/utils/socket";
 import { useSocketStore } from "@/utils/store/socket.store";
 import { useSession } from "next-auth/react";
-function PrivateChatProvider({ children }: { children: ReactNode }) {
+function GroupChatProvider({ children }: { children: ReactNode }) {
   const { status, data: session } = useSession();
-  const { setPrivateSocket, socket } = useSocketStore();
+  const { setGroupSocket, groupMessageSocket } = useSocketStore();
   useEffect(() => {
-    if (!socket && status === "authenticated") {
-      const socket = initializePrivateChatSocket(session.user.userId);
-      setPrivateSocket(socket);
+    if (!groupMessageSocket && status === "authenticated") {
+      const socket = initializeGroupChatSocket(session.user.userId);
+      setGroupSocket(socket);
       socket.on("connect", () =>
-        console.log("Connected Private Chat Successfully")
+        console.log("Connected Group Socket Successfully")
       );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -21,4 +21,4 @@ function PrivateChatProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export default PrivateChatProvider;
+export default GroupChatProvider;

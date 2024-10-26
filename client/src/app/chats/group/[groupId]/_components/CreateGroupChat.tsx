@@ -7,6 +7,7 @@ import { TbUserSearch } from "react-icons/tb";
 import SearchUser from "./SearchUser";
 import useDebounce from "@/hooks/useDebounce.hook";
 import useSearchUser from "@/hooks/useSearchUser.hook";
+import { toast } from "sonner";
 
 import { motion } from "framer-motion";
 const groupFormValidation = z.object({
@@ -47,6 +48,7 @@ function CreateGroupChat() {
     e.preventDefault();
     const validateForm = groupFormValidation.safeParse(createGroupForm);
     if (validateForm.success) {
+      toast.success("Successfully created your group");
     } else {
       validateForm.error.errors.forEach((errorMessage) => {
         setErrorMessage((prevErrMessage) => {
@@ -161,6 +163,7 @@ function CreateGroupChat() {
                 allUserSearch={searchUser}
                 isLoading={isLoading}
                 addedUsers={createGroupForm.addedUsers}
+                searchUser={searchUserState}
                 setAddedUsers={setCreateGroupForm}
                 setErrorMessage={setErrorMessage}
               />

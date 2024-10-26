@@ -10,7 +10,6 @@ import { User, Reaction } from "@/types/UserTypes";
 import { initializePublicChatSocket } from "@/utils/socket";
 import Image from "next/image";
 import themeImg from "../../../../assets/images/theme-img.png";
-import typingChatAnimation from "../../../../assets/images/gif-animation/typing-chat-animation.gif";
 import { IoIosArrowRoundDown } from "react-icons/io";
 import { PublicMessages } from "@/types/UserTypes";
 import { nanoid } from "nanoid";

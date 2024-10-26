@@ -13,7 +13,7 @@ import { TbMessage2 } from "react-icons/tb";
 import ConversationListSkeleton from "@/app/chats/_components/ConversationListSkeleton";
 import useDebounce from "@/hooks/useDebounce.hook";
 import useSearchUser from "@/hooks/useSearchUser.hook";
-import { InView, useInView } from "react-intersection-observer";
+import { useInView } from "react-intersection-observer";
 import NoItemFound from "@/components/NoItemFound";
 function UserList({ searchUser }: { searchUser: string }) {
   const router = useRouter();

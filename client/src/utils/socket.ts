@@ -25,7 +25,6 @@ export const initializeNotificationSocket = (userId: string): Socket => {
 };
 export const initializeGroupChatSocket = (userId: string): Socket => {
   return io(`${URL}/group`, {
-    autoConnect: false,
     auth: {
       userId,
     },
