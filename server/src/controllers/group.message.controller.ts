@@ -99,3 +99,8 @@ export const getAllGroupChatConversation = asyncHandler(
     res.status(200).json({ message: getAllGroupChat });
   }
 );
+
+const createGroupChat = asyncHandler((req: Request, res: Response) => {
+  const {} = req.body;
+  // const createGroup = await;
+});

@@ -6,10 +6,12 @@ import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
 import noGroupYet from "../../../../../assets/images/empty-group.png";
+import { useModalStore } from "@/utils/store/modal.store";
 function NoGroup() {
   const { data: session } = useSession();
   const pathname = usePathname();
   const router = useRouter();
+  const { setShowCreateGroupForm } = useModalStore();
   return (
     <div className="flex items-center justify-center w-full h-full flex-col space-y-2">
       <Image
@@ -30,7 +32,7 @@ function NoGroup() {
       </button>
       <span className="text-[#6486FF] font-extrabold">or</span>
       <button
-        onClick={() => router.push(`${pathname}?type=users`)}
+        onClick={() => setShowCreateGroupForm(true)}
         className="bg-[#6486FF] py-2 px-5 rounded-md text-white"
       >
         Create Group

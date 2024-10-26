@@ -37,6 +37,7 @@ function GroupChatboard({ groupId }: { groupId: string }) {
   const [openAttachmentModal, setOpenAttachmentModal] = useState(false);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const { ref, inView } = useInView();
+
   const { participantInfo, isLoading: participantInfoLoading } =
     useGetParticipantInfo(groupId, status, session);
   const { data, fetchNextPage, error, isLoading, isError } = useInfiniteQuery({

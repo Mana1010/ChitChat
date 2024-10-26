@@ -1,5 +1,5 @@
 "use client";
-import React, { FormEvent, useRef, useState } from "react";
+import React, { FormEvent, useState } from "react";
 import { IoCreateOutline } from "react-icons/io5";
 import { FaXmark } from "react-icons/fa6";
 import { z } from "zod";
@@ -8,8 +8,14 @@ import SearchUser from "./SearchUser";
 import useDebounce from "@/hooks/useDebounce.hook";
 import useSearchUser from "@/hooks/useSearchUser.hook";
 import { toast } from "sonner";
-
 import { motion } from "framer-motion";
+import { useMutation } from "react-query";
+import axios from "axios";
+import { GROUP_SERVER_URL } from "@/utils/serverUrl";
+import { useSocketStore } from "@/utils/store/socket.store";
+import { useQueryClient } from "react-query";
+import { useRouter } from "next/navigation";
+import { useModalStore } from "@/utils/store/modal.store";
 const groupFormValidation = z.object({
   groupName: z
     .string()
@@ -30,7 +36,8 @@ export type ErrorMessageSchema = {
   addedUsers: string | null;
 };
 function CreateGroupChat() {
-  // const groupBgColor = ["red", "blue", "yellow", "green"];
+  const router = useRouter();
+  const { groupMessageSocket } = useSocketStore();
   const [createGroupForm, setCreateGroupForm] = useState<CreateGroupChatSchema>(
     {
       groupName: "",
@@ -41,9 +48,28 @@ function CreateGroupChat() {
     groupName: null,
     addedUsers: null,
   });
+  const { setShowCreateGroupForm, showCreateGroupForm } = useModalStore();
   const [searchUserState, setSearchUserState] = useState("");
   const debouncedValue = useDebounce(searchUserState.trim());
   const { searchUser, isLoading } = useSearchUser(debouncedValue);
+  const queryCLient = useQueryClient();
+  const createGroup = useMutation({
+    mutationFn: async (data) => {
+      const response = await axios.post(
+        `${GROUP_SERVER_URL}/create/groupchat`,
+        data
+      );
+      return response.data;
+    },
+    onSuccess: (data) => {
+      if (!groupMessageSocket) return;
+      groupMessageSocket.emit("send-request", {});
+      router.push("");
+      queryCLient.invalidateQueries("groupchat-list");
+    },
+  });
+
+  if (!showCreateGroupForm) return null;
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const validateForm = groupFormValidation.safeParse(createGroupForm);
@@ -61,7 +87,12 @@ function CreateGroupChat() {
     }
   }
   return (
-    <div className="absolute inset-0 bg-black/60 flex items-center justify-center px-3 w-full z-[99999999]">
+    <motion.div
+      initial={{ scale: 0.6, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ duration: 0.1, ease: "easeIn" }}
+      className="absolute inset-0 bg-black/60 flex items-center justify-center px-3 w-full z-[99999999]"
+    >
       <form
         onSubmit={handleSubmit}
         className="bg-[#222222] w-full md:w-[40%] h-[500px] px-3 flex flex-col rounded-md space-y-5"
@@ -73,7 +104,11 @@ function CreateGroupChat() {
             </span>
             <h1 className="text-white font-bold">CREATE GROUP</h1>
           </div>
-          <button type="button" className="text-lg text-white">
+          <button
+            onClick={() => setShowCreateGroupForm(false)}
+            type="button"
+            className="text-lg text-white"
+          >
             <FaXmark />
           </button>
         </header>
@@ -215,7 +250,7 @@ function CreateGroupChat() {
           </button>
         </div>
       </form>
-    </div>
+    </motion.div>
   );
 }
 

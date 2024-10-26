@@ -15,6 +15,7 @@ import { router as authRoute } from "./routes/auth.route";
 import { router as appRoute } from "./routes/app.route";
 import { errorHandle } from "./middleware/error.handling";
 import { privateChat } from "./socket/privateChat.socket";
+import { v2 as cloudinary } from "cloudinary";
 
 const app = express();
 const server = http.createServer(app);
@@ -23,6 +24,11 @@ const io = new Server(server, {
   cors: {
     origin: ["http://localhost:3000", "https://admin.socket.io"],
   },
+});
+cloudinary.config({
+  cloud_name: process.env.dskxv2dic,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 app.use(express.json());

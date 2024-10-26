@@ -14,12 +14,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useModalStore } from "@/utils/store/modal.store";
 function ChatGroups({ groupId }: { groupId: string }) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
   const type = searchParams.get("type");
   const [search, setSearch] = useState<string>("");
+  const { setShowCreateGroupForm } = useModalStore();
 
   return (
     <div className="bg-[#222222] h-full rounded-md flex flex-col">
@@ -36,7 +38,10 @@ function ChatGroups({ groupId }: { groupId: string }) {
           <div className="h-full items-center flex">
             <TooltipProvider>
               <Tooltip>
-                <TooltipTrigger className="text-white text-xl">
+                <TooltipTrigger
+                  onClick={() => setShowCreateGroupForm(true)}
+                  className="text-white text-xl"
+                >
                   <IoCreateOutline />
                 </TooltipTrigger>
                 <TooltipContent className="bg-[#6486FF]">

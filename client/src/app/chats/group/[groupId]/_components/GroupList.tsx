@@ -12,19 +12,19 @@ import LoadingChat from "@/components/LoadingChat";
 import { toast } from "sonner";
 import ConversationListSkeleton from "@/app/chats/_components/ConversationListSkeleton";
 import useDebounce from "@/hooks/useDebounce.hook";
-import useSearchUser from "@/hooks/useSearchUser.hook";
 import { useInView } from "react-intersection-observer";
 import { MdOutlineGroupAdd } from "react-icons/md";
 import useSearchGroup from "@/hooks/useSearchGroup.hook";
 import NoItemFound from "@/components/NoItemFound";
 import EmptyConversation from "@/components/EmptyConversation";
-
+import { useModalStore } from "@/utils/store/modal.store";
 function ParentDiv({ children }: { children: ReactNode }) {
   return <div className="flex-grow w-full flex">{children}</div>;
 }
 function GroupList({ searchGroup }: { searchGroup: string }) {
   const router = useRouter();
   const { ref, inView } = useInView();
+  const { setShowCreateGroupForm } = useModalStore();
   const [hasNextPage, setHasNextPage] = useState(true);
   const [allGroupChatList, setAllGroupChatList] = useState<GroupChat[]>([]);
   const currentPageRef = useRef(0);
@@ -92,7 +92,10 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
           <h2 className="text-zinc-300 text-[1.1rem] break-all text-center">
             No any Group Chat Found.
           </h2>
-          <button className="bg-[#6486FF] px-3 py-2 text-white rounded-sm">
+          <button
+            onClick={() => setShowCreateGroupForm(true)}
+            className="bg-[#6486FF] px-3 py-2 text-white rounded-sm"
+          >
             Create Group
           </button>
         </EmptyConversation>
