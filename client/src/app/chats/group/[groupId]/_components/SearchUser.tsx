@@ -3,7 +3,7 @@ import Image from "next/image";
 import { User } from "@/types/UserTypes";
 import LoadingChat from "@/components/LoadingChat";
 import { CreateGroupChatSchema } from "./CreateGroupChat";
-
+import { ErrorMessageSchema } from "./CreateGroupChat";
 type AddedUsers = { id: string; name: string };
 
 interface SearchUserSchema {
@@ -11,12 +11,14 @@ interface SearchUserSchema {
   isLoading: boolean;
   addedUsers: AddedUsers[];
   setAddedUsers: Dispatch<SetStateAction<CreateGroupChatSchema>>;
+  setErrorMessage: Dispatch<SetStateAction<ErrorMessageSchema>>;
 }
 function SearchUser({
   allUserSearch,
   isLoading,
   addedUsers,
   setAddedUsers,
+  setErrorMessage,
 }: SearchUserSchema) {
   function isUserAlreadyAdded(userId: string) {
     return addedUsers.some((user) => user.id === userId); //If the user already added will return true else false;
@@ -58,7 +60,7 @@ function SearchUser({
               <button
                 disabled={isUserAlreadyAdded(userDetails._id)}
                 type="button"
-                onClick={() =>
+                onClick={() => {
                   setAddedUsers((prevField) => {
                     return {
                       ...prevField,
@@ -70,8 +72,14 @@ function SearchUser({
                         },
                       ],
                     };
-                  })
-                }
+                  });
+                  setErrorMessage((prevErrorField) => {
+                    return {
+                      ...prevErrorField,
+                      addedUsers: null,
+                    };
+                  });
+                }}
                 className="bg-[#6486FF] py-2 text-white text-sm px-3 rounded-sm disabled:bg-slate-600"
               >
                 {isUserAlreadyAdded(userDetails._id) ? "Added" : "Add"}

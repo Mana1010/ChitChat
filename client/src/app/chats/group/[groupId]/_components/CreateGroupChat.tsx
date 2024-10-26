@@ -12,7 +12,7 @@ import { motion } from "framer-motion";
 const groupFormValidation = z.object({
   groupName: z
     .string()
-    .min(1, "This Field is required")
+    .min(1, "This field is required")
     .max(30, "Group name should be 30 characters below"),
   addedUsers: z
     .object({
@@ -24,7 +24,7 @@ const groupFormValidation = z.object({
 });
 
 export type CreateGroupChatSchema = z.infer<typeof groupFormValidation>;
-type ErrorMessageSchema = {
+export type ErrorMessageSchema = {
   groupName: string | null;
   addedUsers: string | null;
 };
@@ -36,12 +36,11 @@ function CreateGroupChat() {
       addedUsers: [],
     }
   );
-  const [errorMessage, setErorrMessage] = useState<ErrorMessageSchema>({
+  const [errorMessage, setErrorMessage] = useState<ErrorMessageSchema>({
     groupName: null,
     addedUsers: null,
   });
   const [searchUserState, setSearchUserState] = useState("");
-  const inputRef = useRef(null);
   const debouncedValue = useDebounce(searchUserState.trim());
   const { searchUser, isLoading } = useSearchUser(debouncedValue);
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -50,7 +49,7 @@ function CreateGroupChat() {
     if (validateForm.success) {
     } else {
       validateForm.error.errors.forEach((errorMessage) => {
-        setErorrMessage((prevErrMessage) => {
+        setErrorMessage((prevErrMessage) => {
           return {
             ...prevErrMessage,
             [errorMessage.path[0]]: errorMessage.message,
@@ -96,23 +95,49 @@ function CreateGroupChat() {
               </span>
             </div>
             <input
-              onChange={(e) =>
+              onChange={(e) => {
+                const value = e.target.value;
                 setCreateGroupForm((prev) => {
-                  return { ...prev, groupName: e.target.value };
-                })
-              }
+                  return { ...prev, groupName: value };
+                });
+                //Will check if the user already trigger the error to show the error message after this.
+                const isUserAlreadyTriggerError = Object.values(
+                  errorMessage
+                ).some((errorMessage) => errorMessage);
+
+                if (isUserAlreadyTriggerError) {
+                  const validateGroupNameField =
+                    groupFormValidation.shape.groupName.safeParse(value);
+
+                  setErrorMessage((prevField) => {
+                    if (validateGroupNameField.success) {
+                      return { ...prevField, groupName: null };
+                    }
+                    return {
+                      ...prevField,
+                      groupName:
+                        validateGroupNameField.error?.issues[0].message,
+                    };
+                  });
+                }
+              }}
               value={createGroupForm.groupName}
-              id="search-user"
-              name="search-user"
+              id="group-name"
+              name="group-name"
               type="text"
               autoComplete="off"
               className="rounded-md bg-[#414141] flex-grow px-3 py-2.5 text-white"
               placeholder="Name of your group"
             />
+            {errorMessage.groupName && (
+              <span className="text-red-500 text-[0.8rem]">
+                {errorMessage.groupName}
+              </span>
+            )}
           </div>
           <div className="flex flex-col space-y-1 relative">
             <label
-              htmlFor="group-name"
+              htmlFor="search-user"
               className="text-white text-[0.8rem] pl-1 font-bold"
             >
               Member
@@ -123,8 +148,8 @@ function CreateGroupChat() {
               </span>
               <input
                 onChange={(e) => setSearchUserState(e.target.value)}
-                id="group-name"
-                name="group-name"
+                id="search-user"
+                name="search-user"
                 type="text"
                 autoComplete="off"
                 className="bg-transparent text-white px-2 outline-none flex-grow accent-white"
@@ -137,37 +162,45 @@ function CreateGroupChat() {
                 isLoading={isLoading}
                 addedUsers={createGroupForm.addedUsers}
                 setAddedUsers={setCreateGroupForm}
+                setErrorMessage={setErrorMessage}
               />
             )}
+            {errorMessage.addedUsers && (
+              <span className="text-red-500 text-[0.8rem]">
+                {errorMessage.addedUsers}
+              </span>
+            )}
           </div>
-          <div className="h-[200px] w-full overflow-y-auto">
-            <div className="grid grid-cols-3 gap-2 w-full px-2">
-              {createGroupForm.addedUsers.map((addedUser) => (
-                <motion.div
-                  layout
-                  key={addedUser.id}
-                  className="bg-[#6486FF]/20 h-9 rounded-3xl flex items-center space-x-2 justify-center"
-                >
-                  <h6 className="text-sm text-[#6486FF]">{addedUser.name}</h6>
-                  <button
-                    className="text-sm text-white"
-                    onClick={() =>
-                      setCreateGroupForm((prevField) => {
-                        return {
-                          ...prevField,
-                          addedUsers: prevField.addedUsers.filter(
-                            (addedFilterUser) =>
-                              addedFilterUser.id !== addedUser.id
-                          ),
-                        };
-                      })
-                    }
+          <div className="h-[150px] w-full overflow-y-auto">
+            {!errorMessage.addedUsers && (
+              <div className="grid grid-cols-3 gap-2 w-full px-2">
+                {createGroupForm.addedUsers.map((addedUser) => (
+                  <motion.div
+                    layout
+                    key={addedUser.id}
+                    className="bg-[#6486FF]/20 h-9 rounded-3xl flex items-center space-x-2 justify-center"
                   >
-                    <FaXmark />
-                  </button>
-                </motion.div>
-              ))}
-            </div>
+                    <h6 className="text-sm text-[#6486FF]">{addedUser.name}</h6>
+                    <button
+                      className="text-sm text-white"
+                      onClick={() =>
+                        setCreateGroupForm((prevField) => {
+                          return {
+                            ...prevField,
+                            addedUsers: prevField.addedUsers.filter(
+                              (addedFilterUser) =>
+                                addedFilterUser.id !== addedUser.id
+                            ),
+                          };
+                        })
+                      }
+                    >
+                      <FaXmark />
+                    </button>
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
         <div className="pb-3 w-full flex">
