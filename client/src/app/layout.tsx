@@ -23,10 +23,11 @@ export default function RootLayout({
     <html lang="en">
       <Toaster
         toastOptions={{
+          duration: 2000,
           style: {
             backgroundColor: "#3A3B3C",
             border: "none",
-            color: "white",
+            color: "#60A5FA",
           },
         }}
       />

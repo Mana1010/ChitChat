@@ -7,7 +7,8 @@
     "express": "^4.19.2",
     "express-async-handler": "^1.2.0",
     "mongodb": "^6.8.0",
-    "socket.io": "^4.7.5"
+    "socket.io": "^4.7.5",
+    "zod": "^3.23.8"
   },
   "name": "server",
   "version": "1.0.0",

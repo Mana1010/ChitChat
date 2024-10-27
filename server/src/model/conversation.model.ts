@@ -3,11 +3,11 @@ import { referenceModel } from "../utils/referenceModel";
 const conversationSchema = new mongoose.Schema({
   participants: [referenceModel("User")],
   hasUnreadMessages: {
-    user: referenceModel("User"), //This field is for the user who have not unread the message.
+    user: referenceModel("User", false), //This field is for the user who have not unread the message.
     totalUnreadMessages: { type: Schema.Types.Number, default: 0 },
   },
   lastMessage: {
-    sender: referenceModel("User"),
+    sender: referenceModel("User", false),
     text: { type: String, default: `Wave "👋" to them` },
     messageType: {
       type: String,

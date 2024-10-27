@@ -126,6 +126,7 @@ export const getPrivateMessages = asyncHandler(
 export const getParticipantInfo = asyncHandler(
   async (req: Request, res: Response) => {
     const { userId, conversationId } = req.params;
+    console.log(userId, conversationId);
     if (!mongoose.Types.ObjectId.isValid(conversationId)) {
       res.status(404);
       throw new Error("User not found");

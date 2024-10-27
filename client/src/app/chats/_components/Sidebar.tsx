@@ -32,7 +32,11 @@ function Sidebar() {
       return response.data.message;
     },
     enabled: status === "authenticated",
+    onError: (err) => {
+      console.log(err);
+    },
   });
+  console.log(getUserStatus?.data);
   const navigationBtn = [
     {
       btnSticker: <IoMegaphone />,

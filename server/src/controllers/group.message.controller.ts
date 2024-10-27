@@ -4,6 +4,12 @@ import { Group } from "../model/group.model";
 import { GroupConversation } from "../model/groupConversation.model";
 import mongoose from "mongoose";
 import { getAllUsersConversation } from "./private.message.controller";
+import {
+  CreateGroupSchema,
+  createGroupSchemaValidation,
+} from "../validations/createGroupSchema.validation";
+import path from "path";
+import { uploadFileCloudinary } from "../utils/cloudinary.utils";
 
 export const getUserGroupChatStatus = asyncHandler(
   async (req: Request, res: Response) => {
@@ -100,7 +106,56 @@ export const getAllGroupChatConversation = asyncHandler(
   }
 );
 
-const createGroupChat = asyncHandler((req: Request, res: Response) => {
-  const {} = req.body;
-  // const createGroup = await;
-});
+export const createGroupChat = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { groupName, groupProfileIcon, creatorId }: CreateGroupSchema =
+      req.body;
+    const validateData = createGroupSchemaValidation.safeParse(req.body);
+
+    if (!validateData.success) {
+      res.status(422);
+      throw new Error("Validation Failed");
+    }
+
+    const groupIcon = path.join(
+      process.cwd(),
+      "public",
+      "assets",
+      "images",
+      "group-profile",
+      `${groupProfileIcon}.png`
+    );
+
+    try {
+      const uploadedPhotoDetails = await uploadFileCloudinary(
+        groupIcon,
+        "groupchat-profile"
+      );
+      const newGroupDetails = await GroupConversation.create({
+        creator: creatorId,
+        groupName,
+        groupPhoto: {
+          publicId: uploadedPhotoDetails.public_id,
+          photoUrl: uploadedPhotoDetails.url,
+        },
+        members: [
+          {
+            memberInfo: creatorId,
+            role: "admin",
+          },
+        ],
+      });
+      res.status(200).json({
+        message: {
+          content: "Successfully created your group",
+          groupId: newGroupDetails._id,
+        },
+      });
+    } catch (err: unknown) {
+      console.log(err);
+      res
+        .status(400)
+        .json({ message: "Something went wrong, please try again" });
+    }
+  }
+);

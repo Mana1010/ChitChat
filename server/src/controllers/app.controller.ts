@@ -57,11 +57,7 @@ async function handleAggregation(
         checkIfNewUserGroup: [
           {
             $match: {
-              members: {
-                $elemMatch: {
-                  memberInfo: new mongoose.Types.ObjectId(senderId),
-                },
-              },
+              "members.memberInfo": new mongoose.Types.ObjectId(senderId),
             },
           },
           {
@@ -71,7 +67,7 @@ async function handleAggregation(
         getLatestGroupConversationId: [
           {
             $match: {
-              participants: { $in: [new mongoose.Types.ObjectId(senderId)] },
+              "members.memberInfo": new mongoose.Types.ObjectId(senderId),
             },
           },
           {
@@ -107,6 +103,7 @@ async function handleAggregation(
 export const getSidebarNotificationAndCurrentConversation = asyncHandler(
   async (req: Request, res: Response) => {
     const { senderId } = req.params;
+    console.log("Running");
     const userChatStatusObj: UserChatStatusObjSchema = {
       privateConversationStatus: null,
       groupConversationStatus: null,
@@ -116,24 +113,28 @@ export const getSidebarNotificationAndCurrentConversation = asyncHandler(
       groupNotificationCount: 0,
       mailboxNotificationCount: 0,
     };
-    const { handlePrivateConversation, handleGroupConversation } =
-      await handleAggregation(senderId);
+    try {
+      const { handlePrivateConversation, handleGroupConversation } =
+        await handleAggregation(senderId);
 
-    //User conversation status in private.
-    //Checking if the user has already a conversation or chatmate
-    if (handlePrivateConversation.length) {
-      userChatStatusObj.privateConversationStatus =
-        handlePrivateConversation._id;
+      //User conversation status in private.
+      //Checking if the user has already a conversation or chatmate
+      if (handlePrivateConversation.length) {
+        userChatStatusObj.privateConversationStatus =
+          handlePrivateConversation._id;
+      }
+      if (handleGroupConversation.length) {
+        userChatStatusObj.groupConversationStatus = handleGroupConversation._id;
+      }
+      res.status(200).json({
+        message: {
+          userChatStatusObj,
+          userNotificationObj,
+        },
+      });
+    } catch (err) {
+      console.log(err);
     }
-    if (handleGroupConversation.length) {
-      userChatStatusObj.groupConversationStatus = handleGroupConversation._id;
-    }
-    res.status(200).json({
-      message: {
-        userChatStatusObj,
-        userNotificationObj,
-      },
-    });
   }
 );
 

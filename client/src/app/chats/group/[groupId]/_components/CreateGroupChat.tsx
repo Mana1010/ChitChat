@@ -16,6 +16,10 @@ import { useSocketStore } from "@/utils/store/socket.store";
 import { useQueryClient } from "react-query";
 import { useRouter } from "next/navigation";
 import { useModalStore } from "@/utils/store/modal.store";
+import { randomProfile } from "@/utils/randomProfile";
+import { useSession } from "next-auth/react";
+import loadingAnimation from "../../../../../assets/images/gif-animation/component-loading.gif";
+import Image from "next/image";
 const groupFormValidation = z.object({
   groupName: z
     .string()
@@ -35,15 +39,19 @@ export type ErrorMessageSchema = {
   groupName: string | null;
   addedUsers: string | null;
 };
+type GroupPayloadSchema = Pick<CreateGroupChatSchema, "groupName"> & {
+  creatorId: string | undefined;
+  groupProfileIcon: string;
+};
 function CreateGroupChat() {
+  const { data, status } = useSession();
   const router = useRouter();
   const { groupMessageSocket } = useSocketStore();
-  const [createGroupForm, setCreateGroupForm] = useState<CreateGroupChatSchema>(
-    {
+  const [createGroupFormPayload, setCreateGroupFormPayload] =
+    useState<CreateGroupChatSchema>({
       groupName: "",
       addedUsers: [],
-    }
-  );
+    });
   const [errorMessage, setErrorMessage] = useState<ErrorMessageSchema>({
     groupName: null,
     addedUsers: null,
@@ -54,27 +62,37 @@ function CreateGroupChat() {
   const { searchUser, isLoading } = useSearchUser(debouncedValue);
   const queryCLient = useQueryClient();
   const createGroup = useMutation({
-    mutationFn: async (data) => {
+    mutationFn: async (payload: GroupPayloadSchema) => {
       const response = await axios.post(
         `${GROUP_SERVER_URL}/create/groupchat`,
-        data
+        payload
       );
-      return response.data;
+      return response.data.message;
     },
     onSuccess: (data) => {
       if (!groupMessageSocket) return;
-      groupMessageSocket.emit("send-request", {});
-      router.push("");
+      groupMessageSocket.emit("send-request", {
+        requestedUsers: createGroupFormPayload.addedUsers,
+      });
       queryCLient.invalidateQueries("groupchat-list");
+      queryCLient.invalidateQueries("sidebar");
+      toast.success("Successfully created your group");
+      router.push("");
     },
   });
 
   if (!showCreateGroupForm) return null;
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const validateForm = groupFormValidation.safeParse(createGroupForm);
+    const validateForm = groupFormValidation.safeParse(createGroupFormPayload);
     if (validateForm.success) {
-      toast.success("Successfully created your group");
+      toast.success(data?.user.userId);
+      const updatedPayload = {
+        groupName: createGroupFormPayload.groupName,
+        creatorId: data?.user.userId,
+        groupProfileIcon: randomProfile(),
+      };
+      createGroup.mutate(updatedPayload);
     } else {
       validateForm.error.errors.forEach((errorMessage) => {
         setErrorMessage((prevErrMessage) => {
@@ -123,18 +141,18 @@ function CreateGroupChat() {
               </label>
               <span
                 className={`text-[0.75rem] font-bold ${
-                  createGroupForm.groupName.length <= 30
+                  createGroupFormPayload.groupName.length <= 30
                     ? "text-[#6486FF]"
                     : "text-red-500"
                 }`}
               >
-                {createGroupForm.groupName.length}/30
+                {createGroupFormPayload.groupName.length}/30
               </span>
             </div>
             <input
               onChange={(e) => {
                 const value = e.target.value;
-                setCreateGroupForm((prev) => {
+                setCreateGroupFormPayload((prev) => {
                   return { ...prev, groupName: value };
                 });
                 //Will check if the user already trigger the error to show the error message after this.
@@ -158,7 +176,8 @@ function CreateGroupChat() {
                   });
                 }
               }}
-              value={createGroupForm.groupName}
+              disabled={createGroup.isLoading}
+              value={createGroupFormPayload.groupName}
               id="group-name"
               name="group-name"
               type="text"
@@ -184,6 +203,7 @@ function CreateGroupChat() {
                 <TbUserSearch />
               </span>
               <input
+                disabled={createGroup.isLoading}
                 onChange={(e) => setSearchUserState(e.target.value)}
                 id="search-user"
                 name="search-user"
@@ -197,9 +217,9 @@ function CreateGroupChat() {
               <SearchUser
                 allUserSearch={searchUser}
                 isLoading={isLoading}
-                addedUsers={createGroupForm.addedUsers}
+                addedUsers={createGroupFormPayload.addedUsers}
                 searchUser={searchUserState}
-                setAddedUsers={setCreateGroupForm}
+                setAddedUsers={setCreateGroupFormPayload}
                 setErrorMessage={setErrorMessage}
               />
             )}
@@ -211,8 +231,8 @@ function CreateGroupChat() {
           </div>
           <div className="h-[150px] w-full overflow-y-auto">
             {!errorMessage.addedUsers && (
-              <div className="grid grid-cols-3 gap-2 w-full px-2">
-                {createGroupForm.addedUsers.map((addedUser) => (
+              <div className="grid grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-2 w-full px-2">
+                {createGroupFormPayload.addedUsers.map((addedUser) => (
                   <motion.div
                     layout
                     key={addedUser.id}
@@ -222,7 +242,7 @@ function CreateGroupChat() {
                     <button
                       className="text-sm text-white"
                       onClick={() =>
-                        setCreateGroupForm((prevField) => {
+                        setCreateGroupFormPayload((prevField) => {
                           return {
                             ...prevField,
                             addedUsers: prevField.addedUsers.filter(
@@ -243,10 +263,21 @@ function CreateGroupChat() {
         </div>
         <div className="pb-3 w-full flex">
           <button
+            disabled={createGroup.isLoading}
             type="submit"
-            className="mx-auto rounded-sm text-white font-bold text-sm bg-[#6486FF] py-2.5 px-5"
+            className="mx-auto rounded-sm text-white font-bold text-sm bg-[#6486FF] py-1 h-11 w-1/3 disabled:bg-slate-700 flex items-center justify-center"
           >
-            CREATE GROUP
+            {createGroup.isLoading ? (
+              <Image
+                src={loadingAnimation}
+                alt="loading-animation"
+                width={35}
+                height={35}
+                priority
+              />
+            ) : (
+              "CREATE GROUP"
+            )}
           </button>
         </div>
       </form>
