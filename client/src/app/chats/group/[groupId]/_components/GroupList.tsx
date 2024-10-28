@@ -18,6 +18,8 @@ import useSearchGroup from "@/hooks/useSearchGroup.hook";
 import NoItemFound from "@/components/NoItemFound";
 import EmptyConversation from "@/components/EmptyConversation";
 import { useModalStore } from "@/utils/store/modal.store";
+import { MdGroups } from "react-icons/md";
+
 function ParentDiv({ children }: { children: ReactNode }) {
   return <div className="flex-grow w-full flex">{children}</div>;
 }
@@ -126,7 +128,7 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
             <div className="flex items-center space-x-2">
               <div className="w-[40px] h-[40px] relative rounded-full">
                 <Image
-                  src={group.groupPhoto}
+                  src={group.groupPhoto.photoUrl}
                   alt="profile-pic"
                   fill
                   sizes="100%"
@@ -134,7 +136,17 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
                   className="rounded-full absolute"
                 />
               </div>
-              <h3>{group.groupName}</h3>
+              <div className="flex flex-col space-y-1">
+                <h3 className="text-white">{group.groupName}</h3>
+                <div className="flex items-center space-x-2">
+                  <span className="text-[#6486FF]">
+                    <MdGroups />
+                  </span>
+                  <span className="text-white text-[0.6rem] font-semibold">
+                    {group.totalMember}
+                  </span>
+                </div>
+              </div>
             </div>
             <button
               aria-label="Start chatting"

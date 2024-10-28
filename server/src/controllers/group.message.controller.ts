@@ -4,6 +4,7 @@ import { Group } from "../model/group.model";
 import { GroupConversation } from "../model/groupConversation.model";
 import mongoose from "mongoose";
 import { getAllUsersConversation } from "./private.message.controller";
+import express from "express";
 import {
   CreateGroupSchema,
   createGroupSchemaValidation,
@@ -40,10 +41,22 @@ export const getAllGroups = asyncHandler(
     }
     const LIMIT = +limit;
     const PAGE = +page;
-    const getAllGroups = await GroupConversation.find()
-      .select(["groupName", "groupPhoto"])
-      .skip(PAGE * LIMIT)
-      .limit(LIMIT);
+    const getAllGroups = await GroupConversation.aggregate([
+      {
+        $skip: PAGE * LIMIT,
+      },
+      {
+        $limit: 10,
+      },
+      {
+        $project: {
+          groupName: 1,
+          groupPhoto: 1,
+          totalMember: { $size: "$members" },
+        },
+      },
+    ]);
+    console.log(getAllGroups);
     const hasNextPage = getAllGroups.length === LIMIT;
     const nextPage = hasNextPage ? PAGE + 1 : null;
     res.status(200).json({
@@ -136,7 +149,7 @@ export const createGroupChat = asyncHandler(
         groupName,
         groupPhoto: {
           publicId: uploadedPhotoDetails.public_id,
-          photoUrl: uploadedPhotoDetails.url,
+          photoUrl: uploadedPhotoDetails.secure_url,
         },
         members: [
           {

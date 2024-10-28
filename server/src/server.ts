@@ -17,7 +17,8 @@ import { publicChat } from "./socket/publicChat.socket";
 import { privateChat } from "./socket/privateChat.socket";
 import { groupChat } from "./socket/groupChat.socket";
 import { v2 as cloudinary } from "cloudinary";
-
+import { GroupConversation } from "./model/groupConversation.model";
+import { Response } from "express";
 const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;

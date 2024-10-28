@@ -60,7 +60,7 @@ function CreateGroupChat() {
   const [searchUserState, setSearchUserState] = useState("");
   const debouncedValue = useDebounce(searchUserState.trim());
   const { searchUser, isLoading } = useSearchUser(debouncedValue);
-  const queryCLient = useQueryClient();
+  const queryClient = useQueryClient();
   const createGroup = useMutation({
     mutationFn: async (payload: GroupPayloadSchema) => {
       const response = await axios.post(
@@ -74,8 +74,9 @@ function CreateGroupChat() {
       groupMessageSocket.emit("send-request", {
         requestedUsers: createGroupFormPayload.addedUsers,
       });
-      queryCLient.invalidateQueries("groupchat-list");
-      queryCLient.invalidateQueries("sidebar");
+      queryClient.invalidateQueries("groupchat-list");
+      queryClient.invalidateQueries("sidebar");
+      queryClient.invalidateQueries("group-list");
       toast.success("Successfully created your group");
       router.push("");
     },

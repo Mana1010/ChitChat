@@ -12,7 +12,11 @@ export interface GroupChat<MemberUserType = string, AdminUserType = string> {
   admin: AdminUserType;
   members: { memberInfo: MemberUserType; role: string; joinedAt: string }[];
   groupName: string;
-  groupPhoto: string;
+  groupPhoto: {
+    groupId: string;
+    photoUrl: string;
+  };
+  totalMember: number;
 }
 export interface FullInfoUser extends User {
   provider: string;
