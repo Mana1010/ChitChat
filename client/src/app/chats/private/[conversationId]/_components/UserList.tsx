@@ -88,7 +88,7 @@ function UserList({ searchUser }: { searchUser: string }) {
           &quot; user found
         </NoItemFound>
       ) : (
-        <div className="pt-2 flex flex-col w-full overflow-y-auto h-full items-center px-1.5">
+        <div className="pt-2 flex flex-col w-full overflow-y-auto h-[98%] items-center px-1.5">
           {userList?.map((user: User) => (
             <div
               key={user._id}

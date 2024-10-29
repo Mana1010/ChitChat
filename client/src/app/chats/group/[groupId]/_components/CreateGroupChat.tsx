@@ -70,15 +70,16 @@ function CreateGroupChat() {
       return response.data.message;
     },
     onSuccess: (data) => {
+      console.log(data);
       if (!groupMessageSocket) return;
       groupMessageSocket.emit("send-request", {
         requestedUsers: createGroupFormPayload.addedUsers,
       });
+      toast.success(data.content);
       queryClient.invalidateQueries("groupchat-list");
       queryClient.invalidateQueries("sidebar");
-      queryClient.invalidateQueries("group-list");
-      toast.success("Successfully created your group");
-      router.push("");
+      setShowCreateGroupForm(false);
+      router.push(`/chats/group/${data.groupId}?type=chats`);
     },
   });
 

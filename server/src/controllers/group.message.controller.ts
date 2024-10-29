@@ -56,7 +56,6 @@ export const getAllGroups = asyncHandler(
         },
       },
     ]);
-    console.log(getAllGroups);
     const hasNextPage = getAllGroups.length === LIMIT;
     const nextPage = hasNextPage ? PAGE + 1 : null;
     res.status(200).json({
@@ -88,26 +87,13 @@ export const getAllGroupChatConversation = asyncHandler(
           "members.memberInfo": new mongoose.Types.ObjectId(id),
         },
       },
-      { $unwind: "$members" },
-      {
-        $match: {
-          "members.memberInfo": { $ne: new mongoose.Types.ObjectId(id) },
-        },
-      },
-      {
-        $lookup: {
-          from: "users",
-          localField: "members.memberInfo",
-          foreignField: "_id",
-          as: "receiver_details",
-        },
-      },
       {
         $sort: { "lastMessage.lastMessageCreatedAt": -1 },
       },
       {
         $project: {
-          receiver_details: { $first: "$receiver_details" },
+          groupName: 1,
+          groupPhoto: 1,
           _id: 1,
           lastMessage: 1,
           hasUnreadMessages: 1,
@@ -115,6 +101,7 @@ export const getAllGroupChatConversation = asyncHandler(
         },
       },
     ]);
+    console.log(getAllGroupChat);
     res.status(200).json({ message: getAllGroupChat });
   }
 );

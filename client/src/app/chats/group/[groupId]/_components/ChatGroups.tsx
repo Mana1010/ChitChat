@@ -25,7 +25,7 @@ function ChatGroups({ groupId }: { groupId: string }) {
 
   return (
     <div className="bg-[#222222] h-full rounded-md flex flex-col">
-      <header className="w-full p-2.5 space-y-2 ">
+      <header className="w-full p-2.5 space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex space-x-2 items-center">
             <span className="text-[#6486FF] text-xl">

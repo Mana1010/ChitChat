@@ -6,7 +6,8 @@ import Image from "next/image";
 import { useSession } from "next-auth/react";
 import axios, { AxiosError } from "axios";
 import { serverUrl, GROUP_SERVER_URL } from "@/utils/serverUrl";
-import { User, GroupChat } from "@/types/UserTypes";
+import { User } from "@/types/UserTypes";
+import { GroupChatList } from "@/types/GroupTypes";
 import noSearchFoundImg from "../../../../../assets/images/not-found.png";
 import LoadingChat from "@/components/LoadingChat";
 import { toast } from "sonner";
@@ -28,13 +29,13 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
   const { ref, inView } = useInView();
   const { setShowCreateGroupForm } = useModalStore();
   const [hasNextPage, setHasNextPage] = useState(true);
-  const [allGroupChatList, setAllGroupChatList] = useState<GroupChat[]>([]);
+  const [allGroupChatList, setAllGroupChatList] = useState<GroupChatList[]>([]);
   const currentPageRef = useRef(0);
   const debouncedValue = useDebounce(searchGroup);
   const { searchGroup: debouncedSearchGroup, isLoading: loadingSearchGroup } =
     useSearchGroup(debouncedValue);
   const { data, fetchNextPage, error, isLoading, isError } = useInfiniteQuery({
-    queryKey: ["group-list"],
+    queryKey: ["explore-group-list"],
     queryFn: async ({ pageParam = 0 }) => {
       const response = await axios.get(
         `${GROUP_SERVER_URL}/explore/all/group/list?page=${pageParam}&limit=${10}`
@@ -119,8 +120,8 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
 
   return (
     <ParentDiv>
-      <div className="pt-2 flex flex-col w-full overflow-y-auto h-full items-center px-1.5">
-        {groupList?.map((group: GroupChat) => (
+      <div className="pt-2 flex flex-col w-full h-[98%] items-center px-1.5 overflow-y-auto">
+        {groupList?.map((group: GroupChatList) => (
           <div
             key={group._id}
             className="flex items-center w-full p-3.5 cursor-pointer hover:bg-[#414141] rounded-lg justify-between"
@@ -156,8 +157,8 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
             </button>
           </div>
         ))}{" "}
+        {hasNextPage && <div ref={ref}></div>}
       </div>
-      {hasNextPage && <div ref={ref}></div>}
     </ParentDiv>
   );
 }

@@ -7,17 +7,7 @@ export interface User {
   status: string;
   userId?: string;
 }
-export interface GroupChat<MemberUserType = string, AdminUserType = string> {
-  _id: string;
-  admin: AdminUserType;
-  members: { memberInfo: MemberUserType; role: string; joinedAt: string }[];
-  groupName: string;
-  groupPhoto: {
-    groupId: string;
-    photoUrl: string;
-  };
-  totalMember: number;
-}
+
 export interface FullInfoUser extends User {
   provider: string;
   email: string;

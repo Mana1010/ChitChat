@@ -145,7 +145,7 @@ function ChatList({
 
   return (
     <ParentDiv>
-      <div className="pt-2 flex flex-col w-full overflow-y-auto h-full items-center px-1.5">
+      <div className="pt-2 flex flex-col w-full overflow-y-auto h-[98%] items-center px-1.5">
         {searchResult?.map((user: Conversation, index: number) => (
           <button
             onClick={() => router.push(`/chats/private/${user._id}?type=chats`)}
@@ -174,9 +174,7 @@ function ChatList({
               </div>{" "}
               <div className="flex justify-start flex-col items-start">
                 <h1 className="text-white font-bold text-sm break-all">
-                  {user.receiver_details?._id === session?.user.userId
-                    ? "You"
-                    : user.receiver_details.name}
+                  {user.receiver_details.name}
                 </h1>
                 <small
                   className={`text-[0.75rem] break-all ${

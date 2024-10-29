@@ -1,6 +1,14 @@
 "use client";
 import axios, { AxiosError } from "axios";
-import React, { useEffect, useRef, useState, useLayoutEffect } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useLayoutEffect,
+  ReactNode,
+  Dispatch,
+  SetStateAction,
+} from "react";
 import { useInfiniteQuery, useQueryClient } from "react-query";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
@@ -21,6 +29,25 @@ import { AnimatePresence, motion } from "framer-motion";
 import ProfileCard from "@/app/chats/_components/ProfileCard";
 import typingAnimation from "../../../../../assets/images/gif-animation/typing-animation-ver-2.gif";
 import SendAttachment from "@/components/SendAttachment";
+
+function ParentDiv({
+  children,
+  setOpenEmoji,
+}: {
+  children: ReactNode;
+  setOpenEmoji: Dispatch<SetStateAction<boolean>>;
+}) {
+  return (
+    <div
+      className="flex flex-grow w-full h-full flex-col relative"
+      onClick={() => {
+        setOpenEmoji(false);
+      }}
+    >
+      {children}
+    </div>
+  );
+}
 function Chatboard({ conversationId }: { conversationId: string }) {
   const { socket } = useSocketStore();
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -233,13 +260,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
     );
   }
   return (
-    <div
-      onClick={() => {
-        setOpenEmoji(false);
-        // setOpenAttachmentModal(false);
-      }}
-      className="flex flex-grow w-full h-full flex-col relative"
-    >
+    <ParentDiv setOpenEmoji={setOpenEmoji}>
       <ChatHeader
         participantInfo={participantInfo?.receiver_details}
         isLoading={participantInfoLoading}
@@ -388,7 +409,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       {openAttachmentModal && (
         <SendAttachment setOpenAttachmentModal={setOpenAttachmentModal} />
       )}
-    </div>
+    </ParentDiv>
   );
 }
 
