@@ -9,7 +9,7 @@ import axios from "axios";
 import { User, Reaction } from "@/types/UserTypes";
 import { initializePublicChatSocket } from "@/utils/socket";
 import Image from "next/image";
-import themeImg from "../../../../assets/images/theme-img.png";
+import themeImg from "../../../../../assets/images/theme-img.png";
 import { IoIosArrowRoundDown } from "react-icons/io";
 import { PublicMessages } from "@/types/UserTypes";
 import { nanoid } from "nanoid";
@@ -19,7 +19,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import PublicChatBubbles from "./ChatBubbles";
 import PublicMessageField from "./PublicMessageField";
 import PublicReactionList from "./PublicReactionList";
-import typingAnimate from "../../../../assets/images/gif-animation/typing-animation-ver-2.gif";
+import typingAnimate from "../../../../../assets/images/gif-animation/typing-animation-ver-2.gif";
 function PublicChat() {
   const [message, setMessage] = useState("");
   const { data: session, status } = useSession();

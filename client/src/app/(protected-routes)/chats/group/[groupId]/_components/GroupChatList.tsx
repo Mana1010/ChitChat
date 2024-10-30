@@ -9,7 +9,7 @@ import { Conversation } from "@/types/UserTypes";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useSocketStore } from "@/utils/store/socket.store";
-import ConversationListSkeleton from "@/app/chats/_components/ConversationListSkeleton";
+import ConversationListSkeleton from "../../../_components/ConversationListSkeleton";
 import NoItemFound from "@/components/NoItemFound";
 import EmptyConversation from "@/components/EmptyConversation";
 import { GroupChatConversationList } from "@/types/GroupTypes";

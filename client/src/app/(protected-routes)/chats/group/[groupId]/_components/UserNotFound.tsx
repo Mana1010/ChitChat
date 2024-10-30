@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import emptyChat from "../../../../../assets/images/empty-chat.png";
+import emptyChat from "../../../../../../assets/images/empty-chat.png";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 function UserNotFound({ errorMessage }: { errorMessage: string }) {

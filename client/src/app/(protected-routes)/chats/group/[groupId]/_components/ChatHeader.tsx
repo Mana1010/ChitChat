@@ -1,7 +1,7 @@
 "use client";
 import React, { Dispatch, SetStateAction } from "react";
 import { useQuery, UseQueryResult } from "react-query";
-import ChatBoardHeaderSkeleton from "@/app/chats/_components/ChatBoardHeaderSkeleton";
+import ChatBoardHeaderSkeleton from "../../../_components/ChatBoardHeaderSkeleton";
 import Image from "next/image";
 import { GetParticipantInfo, FullInfoUser } from "@/types/UserTypes";
 import { HiOutlineDotsCircleHorizontal } from "react-icons/hi";

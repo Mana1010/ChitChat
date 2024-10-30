@@ -10,7 +10,7 @@ import { User } from "@/types/UserTypes";
 import LoadingChat from "@/components/LoadingChat";
 import { toast } from "sonner";
 import { TbMessage2 } from "react-icons/tb";
-import ConversationListSkeleton from "@/app/chats/_components/ConversationListSkeleton";
+import ConversationListSkeleton from "../../../_components/ConversationListSkeleton";
 import useDebounce from "@/hooks/useDebounce.hook";
 import useSearchUser from "@/hooks/useSearchUser.hook";
 import { useInView } from "react-intersection-observer";

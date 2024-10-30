@@ -1,11 +1,11 @@
 "use client";
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import Linkify from "linkify-react";
-import PrivateReactions from "@/app/chats/private/[conversationId]/_components/PrivateReactions";
+import PrivateReactions from "./PrivateReactions";
 import { Messages } from "@/types/UserTypes";
 import { Session } from "next-auth";
 import Image from "next/image";
-import emptyChat from "../../../../../assets/images/empty-chat.png";
+import emptyChat from "../../../../../../assets/images/empty-chat.png";
 import { VscReactions } from "react-icons/vsc";
 import { useSocketStore } from "@/utils/store/socket.store";
 

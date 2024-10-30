@@ -1,11 +1,11 @@
 "use client";
 import React from "react";
-import newUser from "../../../../../assets/images/new-user.png";
+import newUser from "../../../../../../assets/images/new-user.png";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
-import noGroupYet from "../../../../../assets/images/empty-group.png";
+import noGroupYet from "../../../../../../assets/images/empty-group.png";
 import { useModalStore } from "@/utils/store/modal.store";
 function NoGroup() {
   const { data: session } = useSession();

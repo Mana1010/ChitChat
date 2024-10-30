@@ -18,7 +18,7 @@ import { useRouter } from "next/navigation";
 import { useModalStore } from "@/utils/store/modal.store";
 import { randomProfile } from "@/utils/randomProfile";
 import { useSession } from "next-auth/react";
-import loadingAnimation from "../../../../../assets/images/gif-animation/component-loading.gif";
+import loadingAnimation from "../../../../../../assets/images/gif-animation/component-loading.gif";
 import Image from "next/image";
 const groupFormValidation = z.object({
   groupName: z

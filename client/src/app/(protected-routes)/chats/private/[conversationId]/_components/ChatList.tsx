@@ -6,12 +6,12 @@ import { useEffect } from "react";
 import { useQuery, UseQueryResult, useQueryClient } from "react-query";
 import { useSession } from "next-auth/react";
 import { Conversation } from "@/types/UserTypes";
-import emptyChatImg from "../../../../../assets/images/empty-chat.png";
+import emptyChatImg from "../../../../../../assets/images/empty-chat.png";
 import EmptyConversation from "@/components/EmptyConversation";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useSocketStore } from "@/utils/store/socket.store";
-import ConversationListSkeleton from "@/app/chats/_components/ConversationListSkeleton";
+import ConversationListSkeleton from "../../../_components/ConversationListSkeleton";
 import NoItemFound from "@/components/NoItemFound";
 
 function ParentDiv({ children }: { children: ReactNode }) {

@@ -1,11 +1,19 @@
 "use client";
 import axios, { AxiosError } from "axios";
-import React, { useEffect, useRef, useState, useLayoutEffect } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useLayoutEffect,
+  ReactNode,
+  Dispatch,
+  SetStateAction,
+} from "react";
 import { useInfiniteQuery, useQueryClient } from "react-query";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
-import { serverUrl } from "@/utils/serverUrl";
-import NoGroup from "./NoGroup";
+import { PRIVATE_SERVER_URL } from "@/utils/serverUrl";
+import NewUser from "./NewUser";
 import UserNotFound from "./UserNotFound";
 import { Conversation, GetParticipantInfo, Messages } from "@/types/UserTypes";
 import { useSocketStore } from "@/utils/store/socket.store";
@@ -14,14 +22,33 @@ import LoadingChat from "@/components/LoadingChat";
 import { useInView } from "react-intersection-observer";
 import ChatHeader from "./ChatHeader";
 import useGetParticipantInfo from "@/hooks/getParticipantInfo.hook";
-import ChatBubbles from "@/app/chats/private/[conversationId]/_components/ChatBubbles";
+import ChatBubbles from "./ChatBubbles";
 import MessageField from "@/components/MessageField";
 import { IoIosArrowRoundDown } from "react-icons/io";
 import { AnimatePresence, motion } from "framer-motion";
-import ProfileCard from "@/app/chats/_components/ProfileCard";
-import typingAnimation from "../../../../../assets/images/gif-animation/typing-animation-ver-2.gif";
+import ProfileCard from "../../../_components/ProfileCard";
+import typingAnimation from "../../../../../../assets/images/gif-animation/typing-animation-ver-2.gif";
 import SendAttachment from "@/components/SendAttachment";
-function GroupChatboard({ groupId }: { groupId: string }) {
+
+function ParentDiv({
+  children,
+  setOpenEmoji,
+}: {
+  children: ReactNode;
+  setOpenEmoji: Dispatch<SetStateAction<boolean>>;
+}) {
+  return (
+    <div
+      className="flex flex-grow w-full h-full flex-col relative"
+      onClick={() => {
+        setOpenEmoji(false);
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+function Chatboard({ conversationId }: { conversationId: string }) {
   const { socket } = useSocketStore();
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const currentPageRef = useRef(0);
@@ -37,14 +64,13 @@ function GroupChatboard({ groupId }: { groupId: string }) {
   const [openAttachmentModal, setOpenAttachmentModal] = useState(false);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const { ref, inView } = useInView();
-
   const { participantInfo, isLoading: participantInfoLoading } =
-    useGetParticipantInfo(groupId, status, session);
+    useGetParticipantInfo(conversationId, status, session);
   const { data, fetchNextPage, error, isLoading, isError } = useInfiniteQuery({
-    queryKey: ["messages", groupId],
+    queryKey: ["messages", conversationId],
     queryFn: async ({ pageParam = 0 }): Promise<any> => {
       const response = await axios.get(
-        `${serverUrl}/api/messages/message-list/conversation/${groupId}?page=${pageParam}&limit=${20}`
+        `${PRIVATE_SERVER_URL}/message/list/${conversationId}?page=${pageParam}&limit=${20}`
       );
 
       return response.data.message;
@@ -71,9 +97,9 @@ function GroupChatboard({ groupId }: { groupId: string }) {
   const queryClient = useQueryClient();
   useEffect(() => {
     return () => {
-      queryClient.resetQueries(["messages", groupId]); //To reset the cached data whenever the user unmount the component
+      queryClient.resetQueries(["messages", conversationId]); //To reset the cached data whenever the user unmount the component
     };
-  }, [groupId, queryClient]);
+  }, [conversationId, queryClient]);
   useLayoutEffect(() => {
     if (!scrollRef.current) return;
     if (currentPageRef.current <= 0) {
@@ -100,21 +126,21 @@ function GroupChatboard({ groupId }: { groupId: string }) {
     )
       return;
     socket.emit("join-room", {
-      groupId,
+      conversationId,
       receiverId: participantInfo.receiver_details._id,
     });
     socket.emit("read-message", {
-      groupId,
+      conversationId,
       participantId: participantInfo.receiver_details._id,
     });
     return () => {
       socket.emit("leave-room", {
-        groupId,
+        conversationId,
         receiverId: participantInfo.receiver_details?._id,
       });
     };
   }, [
-    groupId,
+    conversationId,
     participantInfo?.receiver_details._id,
     queryClient,
     socket,
@@ -124,7 +150,7 @@ function GroupChatboard({ groupId }: { groupId: string }) {
     if (!socket) return;
     socket.on("display-seen-text", ({ user, totalUnreadMessages }) => {
       queryClient.setQueryData<GetParticipantInfo | undefined>(
-        ["participant-info", groupId],
+        ["participant-info", conversationId],
         (cachedData: GetParticipantInfo | undefined) => {
           if (cachedData) {
             return {
@@ -155,10 +181,10 @@ function GroupChatboard({ groupId }: { groupId: string }) {
       socket.off("during-typing");
       socket.off("stop-typing");
     };
-  }, [groupId, queryClient, socket]);
+  }, [conversationId, queryClient, socket]);
 
-  if (groupId.toLowerCase() === "new") {
-    return <NoGroup />;
+  if (conversationId.toLowerCase() === "new") {
+    return <NewUser />;
   }
   if (isError) {
     const errorMessage = error as AxiosError<{ message: string }>;
@@ -168,7 +194,7 @@ function GroupChatboard({ groupId }: { groupId: string }) {
   }
   function sendMessage(messageContent: string) {
     queryClient.setQueryData<GetParticipantInfo | undefined>(
-      ["participant-info", groupId],
+      ["participant-info", conversationId],
       (cachedData: GetParticipantInfo | undefined) => {
         if (cachedData) {
           return {
@@ -198,7 +224,8 @@ function GroupChatboard({ groupId }: { groupId: string }) {
         },
       ];
     });
-    socket?.emit("stop-typing", groupId);
+
+    socket?.emit("stop-typing", conversationId);
     setTimeout(() => {
       scrollRef.current?.scrollIntoView({ block: "end" }); //To bypass the closure nature of react :)
     }, 0);
@@ -210,7 +237,7 @@ function GroupChatboard({ groupId }: { groupId: string }) {
         if (cachedData) {
           return cachedData
             .map((chatlist: Conversation) => {
-              if (chatlist._id === groupId) {
+              if (chatlist._id === conversationId) {
                 return {
                   ...chatlist,
                   lastMessage: {
@@ -233,13 +260,7 @@ function GroupChatboard({ groupId }: { groupId: string }) {
     );
   }
   return (
-    <div
-      onClick={() => {
-        setOpenEmoji(false);
-        // setOpenAttachmentModal(false);
-      }}
-      className="flex flex-grow w-full h-full flex-col relative"
-    >
+    <ParentDiv setOpenEmoji={setOpenEmoji}>
       <ChatHeader
         participantInfo={participantInfo?.receiver_details}
         isLoading={participantInfoLoading}
@@ -259,7 +280,7 @@ function GroupChatboard({ groupId }: { groupId: string }) {
                   onClick={() => {
                     socket?.emit("send-message", {
                       message: "👋",
-                      groupId,
+                      conversationId,
                       receiverId: participantInfo?.receiver_details._id,
                     });
                     sendMessage("👋");
@@ -301,11 +322,11 @@ function GroupChatboard({ groupId }: { groupId: string }) {
                     }
                     messageDetails={data}
                     session={session}
-                    conversationId={groupId}
+                    conversationId={conversationId}
                     setMessage={setAllMessages}
                   />
                 ))}
-                {typingUsers.find((user) => user === groupId) ? (
+                {typingUsers.find((user) => user === conversationId) ? (
                   <div className="flex space-x-1 items-center">
                     <div className="rounded-3xl bg-[#414141] py-1 px-2 ">
                       <Image
@@ -370,7 +391,7 @@ function GroupChatboard({ groupId }: { groupId: string }) {
       <MessageField
         socket={socket}
         participantInfo={participantInfo}
-        conversationId={groupId}
+        conversationId={conversationId}
         message={message}
         openEmoji={openEmoji}
         sendMessage={sendMessage}
@@ -379,17 +400,17 @@ function GroupChatboard({ groupId }: { groupId: string }) {
         setOpenEmoji={setOpenEmoji}
         setOpenAttachmentModal={setOpenAttachmentModal}
       />
-      {/* {openProfileModal && (
+      {openProfileModal && (
         <ProfileCard
-          conversationId={groupId}
+          conversationId={conversationId}
           setOpenProfileModal={setOpenProfileModal}
         />
-      )} */}
+      )}
       {openAttachmentModal && (
         <SendAttachment setOpenAttachmentModal={setOpenAttachmentModal} />
       )}
-    </div>
+    </ParentDiv>
   );
 }
 
-export default GroupChatboard;
+export default Chatboard;

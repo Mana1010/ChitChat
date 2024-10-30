@@ -66,9 +66,9 @@ function Sidebar() {
     },
     {
       btnSticker: <PiMailboxFill />,
-      path: `/mailbox/group`,
+      path: `/mailbox`,
       styling: `text-[#6486FF] text-2xl p-3 rounded-md ${
-        pathname.startsWith("/mailbox/group") && "bg-[#3A3B3C]"
+        pathname.startsWith("/mailbox") && "bg-[#3A3B3C]"
       }`,
     },
   ];

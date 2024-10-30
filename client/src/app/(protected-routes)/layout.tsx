@@ -1,13 +1,13 @@
 import React, { ReactNode } from "react";
-import Sidebar from "./_components/Sidebar";
-import CreateGroupChat from "./group/[groupId]/_components/CreateGroupChat";
+import Sidebar from "./chats/_components/Sidebar";
+import CreateGroupChat from "./chats/group/[groupId]/_components/CreateGroupChat";
 interface Routes {
   children: ReactNode;
   chatboard: ReactNode;
   chatusers: ReactNode;
 }
 
-function ChatLayout({ children }: Routes) {
+function ProtectedRoutesLayout({ children }: Routes) {
   return (
     <div className={`flex bg-[#171717] py-5 h-screen pr-4 relative`}>
       <CreateGroupChat />
@@ -17,4 +17,4 @@ function ChatLayout({ children }: Routes) {
   );
 }
 
-export default ChatLayout;
+export default ProtectedRoutesLayout;
