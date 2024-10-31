@@ -7,7 +7,7 @@ import { useSession } from "next-auth/react";
 import axios, { AxiosError } from "axios";
 import { serverUrl, GROUP_SERVER_URL } from "@/utils/serverUrl";
 import { User } from "@/types/UserTypes";
-import { GroupChatList } from "@/types/GroupTypes";
+import { GroupChatList } from "@/types/group.types";
 import noSearchFoundImg from "../../../../../../assets/images/not-found.png";
 import LoadingChat from "@/components/LoadingChat";
 import { toast } from "sonner";
@@ -20,9 +20,16 @@ import NoItemFound from "@/components/NoItemFound";
 import EmptyConversation from "@/components/EmptyConversation";
 import { useModalStore } from "@/utils/store/modal.store";
 import { MdGroups } from "react-icons/md";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 function ParentDiv({ children }: { children: ReactNode }) {
-  return <div className="flex-grow w-full flex">{children}</div>;
+  return <div className="flex-grow w-full flex flex-col">{children}</div>;
 }
 function GroupList({ searchGroup }: { searchGroup: string }) {
   const router = useRouter();
@@ -32,30 +39,32 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
   const [allGroupChatList, setAllGroupChatList] = useState<GroupChatList[]>([]);
   const currentPageRef = useRef(0);
   const debouncedValue = useDebounce(searchGroup);
+  const [sortBy, setSortBy] = useState("popular");
   const { searchGroup: debouncedSearchGroup, isLoading: loadingSearchGroup } =
     useSearchGroup(debouncedValue);
-  const { data, fetchNextPage, error, isLoading, isError } = useInfiniteQuery({
-    queryKey: ["explore-group-list"],
-    queryFn: async ({ pageParam = 0 }) => {
-      const response = await axios.get(
-        `${GROUP_SERVER_URL}/explore/all/group/list?page=${pageParam}&limit=${10}`
-      );
-      return response.data.message;
-    },
-    getNextPageParam: (lastPage) => {
-      if (lastPage.nextPage === null && hasNextPage) {
-        setHasNextPage(false);
-      }
-      return lastPage.nextPage ?? null;
-    },
-    refetchOnWindowFocus: false,
-    onSuccess: (data) => {
-      setAllGroupChatList((prevData) => [
-        ...prevData,
-        ...data.pages[currentPageRef.current].getAllGroups,
-      ]);
-    },
-  });
+  const { data, fetchNextPage, error, isLoading, isError, refetch } =
+    useInfiniteQuery({
+      queryKey: ["explore-group-list"],
+      queryFn: async ({ pageParam = 0 }) => {
+        const response = await axios.get(
+          `${GROUP_SERVER_URL}/explore/all/group/list?page=${pageParam}&limit=${10}&sort=${sortBy}`
+        );
+        return response.data.message;
+      },
+      getNextPageParam: (lastPage) => {
+        if (lastPage.nextPage === null && hasNextPage) {
+          setHasNextPage(false);
+        }
+        return lastPage.nextPage ?? null;
+      },
+      refetchOnWindowFocus: false,
+      onSuccess: (data) => {
+        setAllGroupChatList((prevData) => [
+          ...prevData,
+          ...data.pages[currentPageRef.current].getAllGroups,
+        ]);
+      },
+    });
   const queryClient = useQueryClient();
   const joinGroup = useMutation({
     mutationFn: async (data: { senderId: string; receiverId: string }) => {
@@ -120,6 +129,24 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
 
   return (
     <ParentDiv>
+      <div className="flex justify-end p-2">
+        <Select
+          value={sortBy}
+          onValueChange={(value) => {
+            setSortBy(value);
+          }}
+        >
+          <SelectTrigger className="w-[160px] text-[#6486FF] border-none bg-[#3A3B3C]">
+            <SelectValue placeholder="Sort by" className="text-white" />
+          </SelectTrigger>
+          <SelectContent className="bg-[#414141] text-white">
+            <SelectItem value="popular">Most Popular</SelectItem>
+            <SelectItem value="unpopular">Least Popular</SelectItem>
+            <SelectItem value="latest">Latest</SelectItem>
+            <SelectItem value="oldest">Oldest</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
       <div className="pt-2 flex flex-col w-full h-[98%] items-center px-1.5 overflow-y-auto">
         {groupList?.map((group: GroupChatList) => (
           <div

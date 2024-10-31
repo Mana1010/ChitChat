@@ -12,7 +12,7 @@ import { useSocketStore } from "@/utils/store/socket.store";
 import ConversationListSkeleton from "../../../_components/ConversationListSkeleton";
 import NoItemFound from "@/components/NoItemFound";
 import EmptyConversation from "@/components/EmptyConversation";
-import { GroupChatConversationList } from "@/types/GroupTypes";
+import { GroupChatConversationList } from "@/types/group.types";
 function GroupChatList({
   searchChat,
   groupId,

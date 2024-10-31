@@ -13,6 +13,7 @@ interface SearchUserSchema {
   isLoading: boolean;
   searchUser: string;
   addedUsers: AddedUsers[];
+  userId: string;
   setAddedUsers: Dispatch<SetStateAction<CreateGroupChatSchema>>;
   setErrorMessage: Dispatch<SetStateAction<ErrorMessageSchema>>;
 }
@@ -29,6 +30,7 @@ function SearchUser({
   searchUser,
   isLoading,
   addedUsers,
+  userId,
   setAddedUsers,
   setErrorMessage,
 }: SearchUserSchema) {
@@ -109,7 +111,9 @@ function SearchUser({
                 };
               });
             }}
-            className="bg-[#6486FF] py-2 text-white text-sm px-3 rounded-sm disabled:bg-slate-600"
+            className={`bg-[#6486FF] py-2 text-white text-sm px-3 rounded-sm disabled:bg-slate-600 ${
+              userDetails._id === userId ? "hidden" : "flex"
+            }`}
           >
             {isUserAlreadyAdded(userDetails._id) ? "Added" : "Add"}
           </button>

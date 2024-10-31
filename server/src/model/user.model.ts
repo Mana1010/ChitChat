@@ -10,13 +10,27 @@ const userSchema = new mongoose.Schema(
     authId: { type: String, required: true },
     provider: { type: String, required: true },
     status: { type: String, default: "Offline" },
-    notification: [
-      {
-        from: referenceModel("User"),
-        body: referenceModel("Group"),
-        notificationCreatedAt: { type: Date, default: () => new Date() },
-      },
-    ],
+    mail: {
+      type: [
+        {
+          type: {
+            type: String,
+            enum: ["invitation", "message"],
+            required: true,
+          },
+          from: referenceModel("User"),
+          body: referenceModel("GroupConversation"),
+          isAlreadyRead: { type: Boolean, default: false },
+          status: {
+            type: String,
+            enum: ["pending", "accepted", "declined", "cancelled"],
+            default: "pending",
+          },
+          sentAt: { type: Date, default: () => new Date() },
+        },
+      ],
+      default: [],
+    },
   },
   {
     timestamps: true,

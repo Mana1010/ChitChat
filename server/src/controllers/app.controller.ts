@@ -147,3 +147,31 @@ export const searchUserResult = asyncHandler(
     res.status(200).json({ message: getUserResult });
   }
 );
+
+export const getAllMail = asyncHandler(async (req: Request, res: Response) => {
+  const { userId } = req.params;
+  const { filter } = req.query;
+  const getMail = await User.aggregate([
+    {
+      $match: { _id: new mongoose.Types.ObjectId(userId) },
+    },
+    {
+      $unwind: "$mail",
+    },
+    {
+      $project: {
+        mail: {
+          isAlreadyRead: 1,
+          status: 1,
+          sentAt: 1,
+          _id: 1,
+        },
+        _id: -1,
+      },
+    },
+    {
+      $sort: { "mail.sentAt": -1 },
+    },
+  ]);
+  res.status(200).json({ message: getMail });
+});

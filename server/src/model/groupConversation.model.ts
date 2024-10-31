@@ -13,6 +13,7 @@ const groupSchema = new mongoose.Schema({
       memberInfo: referenceModel("User"),
       role: { type: String, default: "guest" },
       joinedAt: { type: Date, default: () => new Date() },
+      status: { type: String, enum: ["active", "pending"], default: "pending" },
     },
   ],
 

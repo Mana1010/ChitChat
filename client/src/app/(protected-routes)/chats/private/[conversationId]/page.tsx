@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: Params) {
   };
 }
 
-async function GetConversation() {
+function GetConversation() {
   return null;
 }
 

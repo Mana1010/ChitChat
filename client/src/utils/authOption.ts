@@ -57,6 +57,7 @@ const authOptions: NextAuthOptions = {
         const checkUser = await axios.get(
           `${AUTH_SERVER_URL}/check/user/${profile?.sub}`
         );
+        console.log(checkUser);
         if (!checkUser.data.message) {
           const payload = {
             email: profile?.email,

@@ -16,7 +16,7 @@ import { IoMegaphone } from "react-icons/io5";
 import { PiMailboxFill } from "react-icons/pi";
 import { usePathname } from "next/navigation";
 import { useQuery, UseQueryResult } from "react-query";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import { APP_SERVER_URL } from "@/utils/serverUrl";
 import { SidebarSchema } from "@/types/UserTypes";
 function Sidebar() {
@@ -66,7 +66,7 @@ function Sidebar() {
     },
     {
       btnSticker: <PiMailboxFill />,
-      path: `/mailbox`,
+      path: `/mailbox/mail`,
       styling: `text-[#6486FF] text-2xl p-3 rounded-md ${
         pathname.startsWith("/mailbox") && "bg-[#3A3B3C]"
       }`,

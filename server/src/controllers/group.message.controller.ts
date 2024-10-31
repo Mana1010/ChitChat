@@ -34,7 +34,7 @@ export const getUserGroupChatStatus = asyncHandler(
 
 export const getAllGroups = asyncHandler(
   async (req: Request, res: Response) => {
-    const { limit, page } = req.query;
+    const { limit, page, sort } = req.query;
     if (!page || !limit) {
       res.status(403);
       throw new Error("Forbidden");
@@ -42,6 +42,16 @@ export const getAllGroups = asyncHandler(
     const LIMIT = +limit;
     const PAGE = +page;
     const getAllGroups = await GroupConversation.aggregate([
+      {
+        $addFields: {
+          totalMember: { $size: "$members" },
+        },
+      },
+      {
+        $sort: {
+          totalMember: -1,
+        },
+      },
       {
         $skip: PAGE * LIMIT,
       },
@@ -52,7 +62,7 @@ export const getAllGroups = asyncHandler(
         $project: {
           groupName: 1,
           groupPhoto: 1,
-          totalMember: { $size: "$members" },
+          totalMember: 1,
         },
       },
     ]);
@@ -101,7 +111,6 @@ export const getAllGroupChatConversation = asyncHandler(
         },
       },
     ]);
-    console.log(getAllGroupChat);
     res.status(200).json({ message: getAllGroupChat });
   }
 );
@@ -142,6 +151,7 @@ export const createGroupChat = asyncHandler(
           {
             memberInfo: creatorId,
             role: "admin",
+            status: "active",
           },
         ],
       });

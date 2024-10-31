@@ -70,10 +70,10 @@ function CreateGroupChat() {
       return response.data.message;
     },
     onSuccess: (data) => {
-      console.log(data);
       if (!groupMessageSocket) return;
       groupMessageSocket.emit("send-request", {
         requestedUsers: createGroupFormPayload.addedUsers,
+        groupId: data.groupId,
       });
       toast.success(data.content);
       queryClient.invalidateQueries("groupchat-list");
@@ -219,6 +219,7 @@ function CreateGroupChat() {
               <SearchUser
                 allUserSearch={searchUser}
                 isLoading={isLoading}
+                userId={data?.user.userId as string}
                 addedUsers={createGroupFormPayload.addedUsers}
                 searchUser={searchUserState}
                 setAddedUsers={setCreateGroupFormPayload}
