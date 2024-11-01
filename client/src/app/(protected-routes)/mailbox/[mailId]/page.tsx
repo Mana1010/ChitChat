@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import React from "react";
 
-const metadata: Metadata = {
+export const metadata: Metadata = {
   title: "Mail",
 };
 function Page() {

@@ -7,3 +7,15 @@ export interface MailListSchema {
     sentAt: string;
   };
 }
+export interface MailDetailsSchema {
+  createdAt: string;
+  group_details: {
+    groupName: string;
+    groupPhoto: {
+      publicId: string;
+      photoUrl: string;
+    };
+    total_member: number;
+    _id: string;
+  };
+}

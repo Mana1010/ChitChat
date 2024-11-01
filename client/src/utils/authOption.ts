@@ -49,7 +49,6 @@ const authOptions: NextAuthOptions = {
         session.user.provider = data.provider;
         session.user.userId = data._id;
       }
-
       return session;
     },
     async signIn({ profile, account }) {
@@ -57,7 +56,6 @@ const authOptions: NextAuthOptions = {
         const checkUser = await axios.get(
           `${AUTH_SERVER_URL}/check/user/${profile?.sub}`
         );
-        console.log(checkUser);
         if (!checkUser.data.message) {
           const payload = {
             email: profile?.email,

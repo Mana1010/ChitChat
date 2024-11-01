@@ -1,15 +1,15 @@
-"use client";
 import React, { ReactNode } from "react";
 import Image from "next/image";
 import emailIcon from "../../../../../assets/images/email.png";
+import InvitationText from "./InvitationText";
+import { getServerSession } from "next-auth";
+import authOptions from "@/utils/authOption";
+import { User } from "@/types/UserTypes";
 function ParentDiv({ children }: { children: ReactNode }) {
-  return (
-    <div className="flex w-full h-full flex-col bg-[#222222] items-center justify-center">
-      {children}
-    </div>
-  );
+  return <div className="flex w-full h-full bg-[#222222]">{children}</div>;
 }
-function MailDetails({ mailId }: { mailId: string }) {
+async function MailDetails({ mailId }: { mailId: string }) {
+  const session = await getServerSession(authOptions);
   if (mailId === "mail" || mailId === "empty") {
     return (
       <ParentDiv>
@@ -19,13 +19,17 @@ function MailDetails({ mailId }: { mailId: string }) {
           width={100}
           height={100}
           priority
+          className="self-center mx-auto"
         />
       </ParentDiv>
     );
   }
   return (
     <ParentDiv>
-      <h1>{mailId}</h1>
+      <InvitationText
+        mailId={mailId}
+        session={session?.user as User | undefined}
+      />
     </ParentDiv>
   );
 }

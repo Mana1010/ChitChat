@@ -5,7 +5,12 @@ import { IoMdArrowDropright } from "react-icons/io";
 import { TbMessage } from "react-icons/tb";
 import { HiMail } from "react-icons/hi";
 import { HiMailOpen } from "react-icons/hi";
-import { useMutation, useQuery, UseQueryResult } from "react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  UseQueryResult,
+} from "react-query";
 import axios, { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
 import {
@@ -19,6 +24,7 @@ import { APP_SERVER_URL } from "@/utils/serverUrl";
 import { useSession } from "next-auth/react";
 import { MailListSchema } from "@/types/app.types";
 import { formatDistanceToNow } from "date-fns";
+import { QueryClient } from "react-query";
 
 function MailList({ mailId }: { mailId: string }) {
   const router = useRouter();
@@ -44,13 +50,38 @@ function MailList({ mailId }: { mailId: string }) {
       );
     },
   });
-  function handleMailStatusChange() {}
+  const queryClient = useQueryClient();
+  function handleMailStatusChange(mailId: string) {
+    queryClient.setQueryData<MailListSchema[] | undefined>(
+      ["all-mail-list", filteredBy],
+      (cachedData: MailListSchema[] | undefined) => {
+        if (cachedData) {
+          return cachedData.map((data) => {
+            console.log(data);
+            if (data.mail._id === mailId) {
+              return {
+                ...data,
+                mail: {
+                  ...data.mail,
+                  isAlreadyRead: true,
+                },
+              };
+            } else {
+              return data;
+            }
+          });
+        }
+      }
+    );
+  }
   function handleOpenMail(mailId: string, isAlreadyOpenMail: boolean) {
     if (!isAlreadyOpenMail) {
       updateMailStatus.mutate(mailId); //Will trigger if the user is not open the mail yet
+      handleMailStatusChange(mailId);
     }
     router.push(`/mailbox/${mailId}`);
   }
+
   return (
     <div className="bg-[#222222] h-full rounded-md flex flex-col">
       <header className="w-full p-2.5 space-y-2 ">
@@ -88,6 +119,9 @@ function MailList({ mailId }: { mailId: string }) {
         <div className="pt-2 flex flex-col w-full overflow-y-auto h-[98%] items-center px-1.5">
           {getAllMail.data?.map((mail) => (
             <button
+              onClick={() =>
+                handleOpenMail(mail.mail._id, mail.mail.isAlreadyRead)
+              }
               key={mail.mail._id}
               className={`flex items-center w-full py-3.5 px-3 cursor-pointer hover:bg-[#414141] rounded-lg justify-between ${
                 mail.mail._id === mailId && "bg-[#414141]"
@@ -98,11 +132,15 @@ function MailList({ mailId }: { mailId: string }) {
                   {mail.mail.isAlreadyRead ? <HiMailOpen /> : <HiMail />}
                 </span>
                 <div className="flex justify-start flex-col items-start">
-                  <h1 className="text-white font-bold text-sm break-all">
+                  <h4
+                    className={`text-white ${
+                      !mail.mail.isAlreadyRead && "font-bold"
+                    } text-sm break-all`}
+                  >
                     {formatDistanceToNow(new Date(mail.mail.sentAt), {
                       addSuffix: true,
                     })}
-                  </h1>
+                  </h4>
                 </div>
               </div>
               <span

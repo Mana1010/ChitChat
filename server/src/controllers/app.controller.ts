@@ -103,7 +103,6 @@ async function handleAggregation(
 export const getSidebarNotificationAndCurrentConversation = asyncHandler(
   async (req: Request, res: Response) => {
     const { senderId } = req.params;
-    console.log("Running");
     const userChatStatusObj: UserChatStatusObjSchema = {
       privateConversationStatus: null,
       groupConversationStatus: null,
@@ -175,3 +174,70 @@ export const getAllMail = asyncHandler(async (req: Request, res: Response) => {
   ]);
   res.status(200).json({ message: getMail });
 });
+
+export const updateMailStatus = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { userId, mailId } = req.params;
+
+    if (!userId || !mailId) {
+      res.status(403);
+      throw new Error("Forbidden");
+    }
+    await User.findOneAndUpdate(
+      {
+        _id: userId,
+        "mail._id": mailId,
+      },
+      {
+        $set: { "mail.$.isAlreadyRead": true },
+      }
+    );
+    res.status(204);
+  }
+);
+
+export const getMailDetails = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { userId, mailId } = req.params;
+    if (!userId || !mailId) {
+      res.status(403);
+      throw new Error("Forbidden");
+    }
+
+    const getMail = await User.aggregate([
+      {
+        $match: { _id: new mongoose.Types.ObjectId(userId) },
+      },
+      {
+        $unwind: "$mail",
+      },
+      {
+        $match: { "mail._id": new mongoose.Types.ObjectId(mailId) },
+      },
+      {
+        $lookup: {
+          from: "groupconversations",
+          localField: "mail.body",
+          foreignField: "_id",
+          as: "group_details",
+        },
+      },
+      {
+        $addFields: {
+          group_details: { $first: "$group_details" },
+        },
+      },
+      {
+        $project: {
+          group_details: {
+            total_member: { $size: "$group_details.members" },
+            groupName: 1,
+            groupPhoto: 1,
+          },
+          createdAt: 1,
+        },
+      },
+    ]);
+    res.status(200).json({ message: getMail[0] });
+  }
+);
