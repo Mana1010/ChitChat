@@ -25,11 +25,25 @@ import { useSession } from "next-auth/react";
 import { MailListSchema } from "@/types/app.types";
 import { formatDistanceToNow } from "date-fns";
 import { QueryClient } from "react-query";
+import { AnimatePresence, motion } from "framer-motion";
+import { HiOutlineDotsVertical } from "react-icons/hi";
+import { Checkbox } from "@/components/ui/checkbox";
+import { TbTrashX } from "react-icons/tb";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 function MailList({ mailId }: { mailId: string }) {
   const router = useRouter();
   const [filteredBy, setFilteredBy] = useState("all");
   const { data: session, status } = useSession();
+  const [selectedMail, setSelectedMail] = useState<string[]>([]);
+  const [selectOptionActivated, setSelectOptionActivated] = useState(false);
+  const selectedMailSet = new Set(selectedMail);
   const getAllMail: UseQueryResult<
     MailListSchema[],
     AxiosError<{ message: string }>
@@ -81,9 +95,33 @@ function MailList({ mailId }: { mailId: string }) {
     }
     router.push(`/mailbox/${mailId}`);
   }
+  function handleSelectedMail(mailId: string, ifMailAlreadySelected: boolean) {
+    if (!ifMailAlreadySelected) {
+      setSelectedMail((allSelectedMailId) =>
+        allSelectedMailId.filter((selectedMail) => selectedMail !== mailId)
+      );
+    } else {
+      setSelectedMail((prevSelectedMailId) => [...prevSelectedMailId, mailId]);
+    }
+  }
+  function handleCheckboxValue(mailId: string) {
+    return selectedMailSet.has(mailId);
+  }
+  function selectAllMail() {
+    const newSelectedMails: string[] = [];
 
+    getAllMail.data?.forEach((mail) => {
+      if (!selectedMailSet.has(mail.mail._id)) {
+        newSelectedMails.push(mail.mail._id);
+      }
+
+      if (newSelectedMails.length > 0) {
+        setSelectedMail((prevMail) => [...prevMail, ...newSelectedMails]);
+      }
+    });
+  }
   return (
-    <div className="bg-[#222222] h-full rounded-md flex flex-col">
+    <div className="bg-[#222222] h-full rounded-md flex flex-col relative">
       <header className="w-full p-2.5 space-y-2 ">
         <div className="flex items-center space-x-2">
           <span className="text-[#6486FF] text-xl">
@@ -96,38 +134,80 @@ function MailList({ mailId }: { mailId: string }) {
       </header>
       <div className="w-full flex-grow flex flex-col">
         <div className="w-full flex justify-between px-2.5">
-          <h1 className="text-[#6486FF] font-extrabold self-end text-[0.83rem]">
-            ALL MAIL
-          </h1>
-          <Select
-            value={filteredBy}
-            onValueChange={(selectedValue) => setFilteredBy(selectedValue)}
-          >
-            <SelectTrigger className="w-[130px] text-[#6486FF] border-none bg-[#3A3B3C]">
-              <SelectValue
-                placeholder={`${filteredBy}`}
-                className="text-white"
-              />
-            </SelectTrigger>
-            <SelectContent className="bg-[#414141] text-white">
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="popular">Read</SelectItem>
-              <SelectItem value="unpopular">Unread</SelectItem>
-            </SelectContent>
-          </Select>
+          {!selectOptionActivated && (
+            <h1 className="text-[#6486FF] font-extrabold self-end text-[0.83rem]">
+              ALL MAIL
+            </h1>
+          )}
+          {selectOptionActivated && (
+            <button
+              onClick={selectAllMail}
+              className="text-[#6486FF] font-extrabold self-end text-[0.83rem] rounded-sm"
+            >
+              SELECT ALL
+            </button>
+          )}
+          <div className="flex space-x-2 items-center">
+            <Select
+              value={filteredBy}
+              onValueChange={(selectedValue) => setFilteredBy(selectedValue)}
+            >
+              <SelectTrigger className="w-[130px] text-[#6486FF] border-none bg-[#3A3B3C]">
+                <SelectValue
+                  placeholder={`${filteredBy}`}
+                  className="text-white"
+                />
+              </SelectTrigger>
+              <SelectContent className="bg-[#414141] text-white">
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="popular">Read</SelectItem>
+                <SelectItem value="unpopular">Unread</SelectItem>
+              </SelectContent>
+            </Select>
+            <DropdownMenu>
+              <DropdownMenuTrigger className="text-white text-lg">
+                <HiOutlineDotsVertical />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-[#454545] ml-2 text-white">
+                <DropdownMenuItem
+                  onClick={() => setSelectOptionActivated((prev) => !prev)}
+                >
+                  {selectOptionActivated ? "Undo" : "Select"}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
         <div className="pt-2 flex flex-col w-full overflow-y-auto h-[98%] items-center px-1.5">
           {getAllMail.data?.map((mail) => (
-            <button
-              onClick={() =>
-                handleOpenMail(mail.mail._id, mail.mail.isAlreadyRead)
-              }
+            <motion.label
+              htmlFor={`delete-mail-${mail.mail._id}`}
+              layout
+              onClick={() => {
+                if (!selectOptionActivated) {
+                  handleOpenMail(mail.mail._id, mail.mail.isAlreadyRead);
+                }
+                return;
+              }}
               key={mail.mail._id}
               className={`flex items-center w-full py-3.5 px-3 cursor-pointer hover:bg-[#414141] rounded-lg justify-between ${
                 mail.mail._id === mailId && "bg-[#414141]"
               }`}
             >
               <div className="flex items-center space-x-2">
+                {selectOptionActivated && (
+                  <Checkbox
+                    checked={handleCheckboxValue(mail.mail._id)}
+                    onCheckedChange={(ifMailAlreadySelected) =>
+                      handleSelectedMail(
+                        mail.mail._id,
+                        ifMailAlreadySelected as boolean
+                      )
+                    }
+                    id={`delete-mail-${mail.mail._id}`}
+                  />
+                )}
+
                 <span className="text-3xl text-[#6486FF]">
                   {mail.mail.isAlreadyRead ? <HiMailOpen /> : <HiMail />}
                 </span>
@@ -148,10 +228,24 @@ function MailList({ mailId }: { mailId: string }) {
                   mail.mail.isAlreadyRead ? "hidden" : "flex"
                 }`}
               ></span>
-            </button>
+            </motion.label>
           ))}
         </div>
       </div>
+      <AnimatePresence mode="wait">
+        {selectOptionActivated && (
+          <motion.button
+            initial={{ opacity: 0.5, bottom: "-10px" }}
+            animate={{ opacity: 1, bottom: "20px" }}
+            transition={{ duration: 0.2, ease: "easeIn", type: "spring" }}
+            exit={{ opacity: 0, bottom: "-10px" }}
+            onClick={(e) => e.stopPropagation()}
+            className="absolute rounded-full w-12 h-12 text-lg text-[#6486FF] bg-[#6486FF]/20 flex items-center justify-center translate-x-[-50%] left-[50%]"
+          >
+            <TbTrashX />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

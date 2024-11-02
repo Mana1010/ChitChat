@@ -96,14 +96,6 @@ function InvitationText({
           </button>
         </div>
       </div>
-      <footer className="p-3 flex justify-end">
-        <button
-          disabled
-          className="py-2 px-4 bg-[#6486FF] text-white rounded-sm flex items-center space-x-2 disabled:bg-zinc-500"
-        >
-          Delete Mail
-        </button>
-      </footer>
     </div>
   );
 }

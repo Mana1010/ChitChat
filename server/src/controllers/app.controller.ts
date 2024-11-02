@@ -172,6 +172,7 @@ export const getAllMail = asyncHandler(async (req: Request, res: Response) => {
       $sort: { "mail.sentAt": -1 },
     },
   ]);
+  console.log(getMail);
   res.status(200).json({ message: getMail });
 });
 

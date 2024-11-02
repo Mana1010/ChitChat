@@ -14,3 +14,4 @@ router.get("/search/user", searchUserResult);
 router.get("/mail/list/:userId", getAllMail);
 router.get("/mail/details/:userId/:mailId", getMailDetails);
 router.patch("/update/mail/status/:userId/:mailId", updateMailStatus);
+router.delete("/delete/mail/:senderId");
