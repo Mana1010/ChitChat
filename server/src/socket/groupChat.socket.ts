@@ -1,5 +1,6 @@
 import { Server } from "socket.io";
 import { User } from "../model/user.model";
+import { Invitation } from "../model/mail.model";
 
 type RequestedUsers = { id: string; name: string };
 export async function groupChat(io: Server) {
@@ -18,14 +19,20 @@ export async function groupChat(io: Server) {
         if (!requestedUsers || !groupId) return;
         await Promise.all(
           requestedUsers.map(async (requestedUser: RequestedUsers) => {
-            await User.findByIdAndUpdate(requestedUser.id, {
-              $push: {
-                mail: {
-                  from: userId,
-                  body: groupId,
-                  type: "invitation",
-                },
-              },
+            // await User.findByIdAndUpdate(requestedUser.id, {
+            //   $push: {
+            //     mail: {
+            //       from: userId,
+            //       body: groupId,
+            //       type: "invitation",
+            //     },
+            //   },
+            // });
+            await Invitation.create({
+              to: requestedUser.id,
+              from: userId,
+              body: groupId,
+              type: "invitation",
             });
           })
         );
