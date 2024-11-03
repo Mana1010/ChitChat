@@ -12,7 +12,7 @@ const groupSchema = new mongoose.Schema({
     {
       memberInfo: referenceModel("User"),
       role: { type: String, default: "guest" },
-      joinedAt: { type: Date, default: () => new Date() },
+      joinedAt: { type: Date, default: Date.now },
       status: { type: String, enum: ["active", "pending"], default: "pending" },
     },
   ],
@@ -35,7 +35,7 @@ const groupSchema = new mongoose.Schema({
       enum: ["text", "file"],
       default: "text",
     },
-    lastMessageCreatedAt: { type: Date, default: () => new Date() },
+    lastMessageCreatedAt: { type: Date, default: Date.now },
   },
   createdAt: { type: Date, default: Date.now },
 });

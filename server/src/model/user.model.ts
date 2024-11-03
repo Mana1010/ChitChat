@@ -26,7 +26,7 @@ const userSchema = new mongoose.Schema(
             enum: ["pending", "accepted", "declined", "cancelled"],
             default: "pending",
           },
-          sentAt: { type: Date, default: () => new Date() },
+          sentAt: { type: Date, default: Date.now },
         },
       ],
       default: [],

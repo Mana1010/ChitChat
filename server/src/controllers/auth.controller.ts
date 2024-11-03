@@ -2,9 +2,11 @@ import asyncHandler from "express-async-handler";
 import { Request, Response } from "express";
 import { User } from "../model/user.model";
 import { Conversation } from "../model/conversation.model";
+import { Message } from "../model/mail.model";
+
 export const createUser = asyncHandler(async (req: Request, res: Response) => {
   const userId = await User.create(req.body);
-  await Conversation.create({ userId: userId._id });
+  await Message.create({ to: userId, type: "message" });
   res.status(201).json({ message: "Log in successfully" });
 });
 

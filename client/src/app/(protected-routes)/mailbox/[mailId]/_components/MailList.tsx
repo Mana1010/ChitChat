@@ -72,13 +72,10 @@ function MailList({ mailId }: { mailId: string }) {
         if (cachedData) {
           return cachedData.map((data) => {
             console.log(data);
-            if (data.mail._id === mailId) {
+            if (data._id === mailId) {
               return {
                 ...data,
-                mail: {
-                  ...data.mail,
-                  isAlreadyRead: true,
-                },
+                isAlreadyRead: true,
               };
             } else {
               return data;
@@ -111,8 +108,8 @@ function MailList({ mailId }: { mailId: string }) {
     const newSelectedMails: string[] = [];
 
     getAllMail.data?.forEach((mail) => {
-      if (!selectedMailSet.has(mail.mail._id)) {
-        newSelectedMails.push(mail.mail._id);
+      if (!selectedMailSet.has(mail._id)) {
+        newSelectedMails.push(mail._id);
       }
 
       if (newSelectedMails.length > 0) {
@@ -181,43 +178,43 @@ function MailList({ mailId }: { mailId: string }) {
         <div className="pt-2 flex flex-col w-full overflow-y-auto h-[98%] items-center px-1.5">
           {getAllMail.data?.map((mail) => (
             <motion.label
-              htmlFor={`delete-mail-${mail.mail._id}`}
+              htmlFor={`delete-mail-${mail._id}`}
               layout
               onClick={() => {
                 if (!selectOptionActivated) {
-                  handleOpenMail(mail.mail._id, mail.mail.isAlreadyRead);
+                  handleOpenMail(mail._id, mail.isAlreadyRead);
                 }
                 return;
               }}
-              key={mail.mail._id}
+              key={mail._id}
               className={`flex items-center w-full py-3.5 px-3 cursor-pointer hover:bg-[#414141] rounded-lg justify-between ${
-                mail.mail._id === mailId && "bg-[#414141]"
+                mail._id === mailId && "bg-[#414141]"
               }`}
             >
               <div className="flex items-center space-x-2">
                 {selectOptionActivated && (
                   <Checkbox
-                    checked={handleCheckboxValue(mail.mail._id)}
+                    checked={handleCheckboxValue(mail._id)}
                     onCheckedChange={(ifMailAlreadySelected) =>
                       handleSelectedMail(
-                        mail.mail._id,
+                        mail._id,
                         ifMailAlreadySelected as boolean
                       )
                     }
-                    id={`delete-mail-${mail.mail._id}`}
+                    id={`delete-mail-${mail._id}`}
                   />
                 )}
 
                 <span className="text-3xl text-[#6486FF]">
-                  {mail.mail.isAlreadyRead ? <HiMailOpen /> : <HiMail />}
+                  {mail.isAlreadyRead ? <HiMailOpen /> : <HiMail />}
                 </span>
                 <div className="flex justify-start flex-col items-start">
                   <h4
                     className={`text-white ${
-                      !mail.mail.isAlreadyRead && "font-bold"
+                      !mail.isAlreadyRead && "font-bold"
                     } text-sm break-all`}
                   >
-                    {formatDistanceToNow(new Date(mail.mail.sentAt), {
+                    {formatDistanceToNow(new Date(mail.sentAt), {
                       addSuffix: true,
                     })}
                   </h4>
@@ -225,7 +222,7 @@ function MailList({ mailId }: { mailId: string }) {
               </div>
               <span
                 className={`w-2.5 h-2.5 rounded-full items-center justify-center bg-[#6486FF] ${
-                  mail.mail.isAlreadyRead ? "hidden" : "flex"
+                  mail.isAlreadyRead ? "hidden" : "flex"
                 }`}
               ></span>
             </motion.label>

@@ -12,34 +12,16 @@ import invited from "../../../../../assets/images/invited.png";
 import { CiCircleCheck } from "react-icons/ci";
 import { CiCircleRemove } from "react-icons/ci";
 function InvitationText({
-  mailId,
-  session,
+  getMailContent,
 }: {
-  mailId: string;
-  session: User | undefined;
+  getMailContent: MailDetailsSchema | undefined;
 }) {
-  const getMailContent: UseQueryResult<
-    MailDetailsSchema,
-    AxiosError<{ message: string }>
-  > = useQuery({
-    queryKey: ["mail-details", mailId],
-    queryFn: async () => {
-      const response = await axios.get(
-        `${APP_SERVER_URL}/mail/details/${session?.userId}/${mailId}`
-      );
-      return response.data.message;
-    },
-    enabled: !!session,
-  });
-  if (getMailContent.isLoading) {
-    return <h1>Loading...</h1>;
-  }
   return (
     <div className="w-full flex flex-col relative overflow-hidden">
       <header className="py-5 flex items-center justify-between px-3 ">
         <div className="flex space-x-3 items-center">
           <Image
-            src={getMailContent.data?.group_details.groupPhoto.photoUrl ?? ""}
+            src={getMailContent?.body?.groupPhoto.photoUrl ?? ""}
             alt="group-photo"
             width={80}
             height={80}
@@ -47,14 +29,14 @@ function InvitationText({
           />
           <div className="flex flex-col space-y-2">
             <h1 className="text-white text-lg font-bold">
-              {getMailContent.data?.group_details.groupName}
+              {getMailContent?.body.groupName}
             </h1>
             <div className="flex items-center space-x-2">
               <span className="text-[#6486FF] text-lg">
                 <MdGroups />
               </span>
               <span className="text-white text-[0.8rem] font-semibold">
-                {getMailContent.data?.group_details.total_member}
+                {getMailContent?.total_member}
               </span>
             </div>
           </div>

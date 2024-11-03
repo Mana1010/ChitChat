@@ -14,9 +14,9 @@ const conversationSchema = new mongoose.Schema({
       enum: ["text", "file"],
       default: "text",
     },
-    lastMessageCreatedAt: { type: Date, default: () => new Date() },
+    lastMessageCreatedAt: { type: Date, default: Date.now },
   },
-  createdAt: { type: Date, default: new Date() },
+  createdAt: { type: Date, default: Date.now },
 });
 
 type ConversationSchema = mongoose.InferSchemaType<typeof conversationSchema>;

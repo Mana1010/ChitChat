@@ -221,7 +221,6 @@ export const getParticipantName = asyncHandler(
         },
       },
     ]);
-    console.log(getChatMateName);
     if (getChatMateName.length === 0) {
       res.status(404);
       throw new Error("User Not Found");

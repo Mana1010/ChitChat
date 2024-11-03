@@ -4,6 +4,7 @@ import { Conversation } from "../model/conversation.model";
 import { GroupConversation } from "../model/groupConversation.model";
 import mongoose from "mongoose";
 import { User } from "../model/user.model";
+import { Mail } from "../model/mail.model";
 interface HandleAggregationSchema {
   handlePrivateConversation: {
     length: number;
@@ -146,36 +147,15 @@ export const searchUserResult = asyncHandler(
     res.status(200).json({ message: getUserResult });
   }
 );
-
 export const getAllMail = asyncHandler(async (req: Request, res: Response) => {
   const { userId } = req.params;
   const { filter } = req.query;
-  const getMail = await User.aggregate([
-    {
-      $match: { _id: new mongoose.Types.ObjectId(userId) },
-    },
-    {
-      $unwind: "$mail",
-    },
-    {
-      $project: {
-        mail: {
-          isAlreadyRead: 1,
-          status: 1,
-          sentAt: 1,
-          _id: 1,
-        },
-        _id: -1,
-      },
-    },
-    {
-      $sort: { "mail.sentAt": -1 },
-    },
-  ]);
-  console.log(getMail);
+  const getMail = await Mail.find({ to: userId })
+    .sort({ sentAt: -1 })
+    .select(["sentAt", "isAlreadyRead"]);
+
   res.status(200).json({ message: getMail });
 });
-
 export const updateMailStatus = asyncHandler(
   async (req: Request, res: Response) => {
     const { userId, mailId } = req.params;
@@ -200,6 +180,7 @@ export const updateMailStatus = asyncHandler(
 export const getMailDetails = asyncHandler(
   async (req: Request, res: Response) => {
     const { userId, mailId } = req.params;
+
     if (!userId || !mailId) {
       res.status(403);
       throw new Error("Forbidden");
@@ -239,6 +220,23 @@ export const getMailDetails = asyncHandler(
         },
       },
     ]);
+
+    const getMailContent = await Mail.findById(mailId).select([
+      "kind",
+      "from",
+      "body",
+      "sentAt",
+    ]);
+
+    if (!getMailContent) {
+      res.status(404);
+      throw new Error("Mail does not exist");
+    }
+    if (getMailContent.kind === "invitation") {
+      await getMailContent.populate("groupconversations");
+    }
+
+    console.log(getMailContent);
     res.status(200).json({ message: getMail[0] });
   }
 );

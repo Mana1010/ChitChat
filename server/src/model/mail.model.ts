@@ -8,7 +8,6 @@ const mailSchema = new mongoose.Schema(
       enum: ["invitation", "message"],
       required: true,
     },
-    from: referenceModel("User"),
     to: referenceModel("User"),
     isAlreadyRead: { type: Boolean, default: false },
     status: {
@@ -16,19 +15,25 @@ const mailSchema = new mongoose.Schema(
       enum: ["pending", "accepted", "declined", "cancelled"],
       default: "pending",
     },
-    sentAt: { type: Date, default: () => new Date() },
+    sentAt: { type: Date, default: Date.now },
   },
   { discriminatorKey: "kind" }
 );
 type MailSchema = mongoose.InferSchemaType<typeof mailSchema>;
-const Mail =
+export const Mail =
   mongoose.models.Mail || mongoose.model<MailSchema>("Mail", mailSchema);
 
 export const Invitation = Mail.discriminator(
   "invitation",
   new mongoose.Schema({
-    body: { type: mongoose.Types.ObjectId, ref: "GroupConversation" },
+    from: referenceModel("User"),
+    body: referenceModel("GroupConversation", false),
   })
 );
 
-export const Message = Mail.discriminator("message", new mongoose.Schema({}));
+export const Message = Mail.discriminator(
+  "message",
+  new mongoose.Schema({
+    from: { type: String, default: "ChitChat Developer" },
+  })
+);

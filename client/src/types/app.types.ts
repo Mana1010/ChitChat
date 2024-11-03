@@ -1,21 +1,22 @@
 export interface MailListSchema {
-  mail: {
-    _id: string;
-    type: string;
-    isAlreadyRead: boolean;
-    status: string;
-    sentAt: string;
-  };
+  _id: string;
+  type: string;
+  isAlreadyRead: boolean;
+  status: string;
+  sentAt: string;
 }
 export interface MailDetailsSchema {
-  createdAt: string;
-  group_details: {
+  senAt: string;
+  body: {
     groupName: string;
     groupPhoto: {
       publicId: string;
       photoUrl: string;
     };
-    total_member: number;
     _id: string;
   };
+  total_member: number;
+  kind: string;
+  from: string;
+  _id: string;
 }

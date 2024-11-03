@@ -10,7 +10,7 @@ const messageSchema = new mongoose.Schema(
       {
         reactor: referenceModel("User"),
         reactionEmoji: String,
-        reactionCreatedAt: { type: Date, default: () => new Date() },
+        reactionCreatedAt: { type: Date, default: Date.now },
       },
     ],
   },
