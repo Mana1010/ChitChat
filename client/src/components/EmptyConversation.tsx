@@ -3,7 +3,7 @@ import Image from "next/image";
 import emptyChatImg from "../assets/images/empty-box.png";
 function EmptyConversation({ children }: { children: ReactNode }) {
   return (
-    <div className="flex items-center w-full justify-center flex-col space-y-2 px-2">
+    <div className="flex items-center w-full justify-center flex-col space-y-2 px-2 h-full">
       {" "}
       <Image
         src={emptyChatImg}

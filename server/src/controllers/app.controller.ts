@@ -150,7 +150,16 @@ export const searchUserResult = asyncHandler(
 export const getAllMail = asyncHandler(async (req: Request, res: Response) => {
   const { userId } = req.params;
   const { filter } = req.query;
-  const getMail = await Mail.find({ to: userId })
+  console.log(filter);
+  const query: { to: string; isAlreadyRead?: boolean } = { to: userId };
+
+  if (filter === "read") {
+    query.isAlreadyRead = true;
+  } else if (filter === "unread") {
+    query.isAlreadyRead = false;
+  }
+
+  const getMail = await Mail.find(query)
     .sort({ sentAt: -1 })
     .select(["sentAt", "isAlreadyRead"]);
 
@@ -164,15 +173,10 @@ export const updateMailStatus = asyncHandler(
       res.status(403);
       throw new Error("Forbidden");
     }
-    await User.findOneAndUpdate(
-      {
-        _id: userId,
-        "mail._id": mailId,
-      },
-      {
-        $set: { "mail.$.isAlreadyRead": true },
-      }
-    );
+    await Mail.findByIdAndUpdate(mailId, {
+      isAlreadyRead: true,
+    });
+
     res.status(204);
   }
 );

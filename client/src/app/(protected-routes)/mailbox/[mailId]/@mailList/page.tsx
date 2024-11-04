@@ -1,5 +1,5 @@
 import React from "react";
-import MailList from "../_components/MailList";
+import MailList from "../_components/MailListComponents/MailList";
 
 type MailParams = {
   params: {
