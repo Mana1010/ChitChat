@@ -4,7 +4,7 @@ import { Conversation } from "../model/conversation.model";
 import { GroupConversation } from "../model/groupConversation.model";
 import mongoose from "mongoose";
 import { User } from "../model/user.model";
-import { Mail } from "../model/mail.model";
+import { Invitation, Mail } from "../model/mail.model";
 interface HandleAggregationSchema {
   handlePrivateConversation: {
     length: number;
@@ -167,9 +167,9 @@ export const getAllMail = asyncHandler(async (req: Request, res: Response) => {
 });
 export const updateMailStatus = asyncHandler(
   async (req: Request, res: Response) => {
-    const { userId, mailId } = req.params;
+    const { mailId } = req.params;
 
-    if (!userId || !mailId) {
+    if (!mailId) {
       res.status(403);
       throw new Error("Forbidden");
     }
@@ -181,6 +181,12 @@ export const updateMailStatus = asyncHandler(
   }
 );
 
+export const deleteMail = asyncHandler(async (req: Request, res: Response) => {
+  const selectedMails: string[] = req.body;
+  await Mail.deleteMany({ _id: { $in: [selectedMails] } });
+  res.status(201).json({ message: "Deleted Successfully" });
+});
+
 export const getMailDetails = asyncHandler(
   async (req: Request, res: Response) => {
     const { userId, mailId } = req.params;
@@ -189,41 +195,6 @@ export const getMailDetails = asyncHandler(
       res.status(403);
       throw new Error("Forbidden");
     }
-
-    const getMail = await User.aggregate([
-      {
-        $match: { _id: new mongoose.Types.ObjectId(userId) },
-      },
-      {
-        $unwind: "$mail",
-      },
-      {
-        $match: { "mail._id": new mongoose.Types.ObjectId(mailId) },
-      },
-      {
-        $lookup: {
-          from: "groupconversations",
-          localField: "mail.body",
-          foreignField: "_id",
-          as: "group_details",
-        },
-      },
-      {
-        $addFields: {
-          group_details: { $first: "$group_details" },
-        },
-      },
-      {
-        $project: {
-          group_details: {
-            total_member: { $size: "$group_details.members" },
-            groupName: 1,
-            groupPhoto: 1,
-          },
-          createdAt: 1,
-        },
-      },
-    ]);
 
     const getMailContent = await Mail.findById(mailId).select([
       "kind",
@@ -237,10 +208,11 @@ export const getMailDetails = asyncHandler(
       throw new Error("Mail does not exist");
     }
     if (getMailContent.kind === "invitation") {
-      await getMailContent.populate("groupconversations");
+      console.log("Run, augh");
+      await getMailContent.populate("body");
     }
 
     console.log(getMailContent);
-    res.status(200).json({ message: getMail[0] });
+    res.status(200).json({ message: getMailContent });
   }
 );

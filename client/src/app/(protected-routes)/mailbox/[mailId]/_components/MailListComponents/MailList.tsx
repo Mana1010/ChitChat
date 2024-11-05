@@ -1,5 +1,5 @@
 "use client";
-import React, { ReactNode, useState } from "react";
+import React, { memo, ReactNode, useState } from "react";
 import { HiMail } from "react-icons/hi";
 import { HiMailOpen } from "react-icons/hi";
 import {
@@ -8,7 +8,7 @@ import {
   useQueryClient,
   UseQueryResult,
 } from "react-query";
-import axios, { AxiosError } from "axios";
+import axios, { AxiosError, AxiosRequestConfig } from "axios";
 import { useRouter } from "next/navigation";
 import { APP_SERVER_URL } from "@/utils/serverUrl";
 import { useSession } from "next-auth/react";
@@ -21,6 +21,18 @@ import { TbTrashX } from "react-icons/tb";
 import EmptyMail from "../EmptyMail";
 import ConversationListSkeleton from "@/app/(protected-routes)/chats/_components/ConversationListSkeleton";
 import MailListHeader from "./MailListHeader";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useModalStore } from "@/utils/store/modal.store";
 function MailList({ mailId }: { mailId: string }) {
   const router = useRouter();
   const [filteredBy, setFilteredBy] = useState("all");
@@ -43,9 +55,19 @@ function MailList({ mailId }: { mailId: string }) {
   });
   const updateMailStatus = useMutation({
     mutationFn: async (mailId: string) => {
-      await axios.patch(
-        `${APP_SERVER_URL}/update/mail/status/${session?.user.userId}/${mailId}`
-      );
+      await axios.patch(`${APP_SERVER_URL}/update/mail/status/${mailId}`);
+    },
+  });
+  const deleteMail = useMutation({
+    mutationFn: async () => {
+      const response = await axios.delete(`${APP_SERVER_URL}/delete/mail`, {
+        data: selectedMail,
+      });
+      return response.data.message;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["all-mail-list"]);
+      setSelectedMail([]);
     },
   });
 
@@ -174,19 +196,45 @@ function MailList({ mailId }: { mailId: string }) {
         </div>
       )}
       <AnimatePresence mode="wait">
-        {selectOptionActivated && (
-          <motion.button
-            initial={{ opacity: 0.5, bottom: "-10px" }}
-            animate={{ opacity: 1, bottom: "20px" }}
-            transition={{ duration: 0.2, ease: "easeIn", type: "spring" }}
-            exit={{ opacity: 0, bottom: "-10px" }}
+        <AlertDialog>
+          <AlertDialogTrigger
+            disabled={!selectedMail.length}
             onClick={(e) => e.stopPropagation()}
-            className="absolute rounded-full w-12 h-12 text-lg text-[#6486FF] bg-[#6486FF]/20 flex items-center justify-center translate-x-[-50%] left-[50%]"
+            className={`absolute ${
+              !selectOptionActivated && "hidden"
+            }  bottom-[20px] flex rounded-full w-12 h-12 text-lg text-[#6486FF] bg-[#6486FF]/20 disabled:bg-slate-600 items-center justify-center translate-x-[-50%] left-[50%]`}
           >
             <TbTrashX />
-          </motion.button>
-        )}
+          </AlertDialogTrigger>
+
+          <AlertDialogContent className="bg-[#171717]">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-[#6386FE]">
+                Are you absolutely sure?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-slate-200">
+                This action cannot be undone. This will permanently delete your{" "}
+                {selectedMail.length > 1
+                  ? `${selectedMail.length} mails`
+                  : `${selectedMail.length} mail`}
+                .
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="bg-[#6386FE]/55 border-none text-white">
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => deleteMail.mutate()}
+                className="bg-[#6386FE]"
+              >
+                Continue
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </AnimatePresence>
+      s
     </div>
   );
 }

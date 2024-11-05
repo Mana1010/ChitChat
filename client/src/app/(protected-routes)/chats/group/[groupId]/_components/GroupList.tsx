@@ -147,7 +147,7 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
           </SelectContent>
         </Select>
       </div>
-      <div className="pt-2 flex flex-col w-full h-[98%] items-center px-1.5 overflow-y-auto">
+      <div className="pt-2 flex flex-col w-full h-[370px] items-center px-1.5 overflow-y-auto">
         {groupList?.map((group: GroupChatList) => (
           <div
             key={group._id}

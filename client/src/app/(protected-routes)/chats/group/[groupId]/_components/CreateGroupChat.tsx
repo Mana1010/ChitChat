@@ -79,6 +79,10 @@ function CreateGroupChat() {
       queryClient.invalidateQueries("groupchat-list");
       queryClient.invalidateQueries("sidebar");
       setShowCreateGroupForm(false);
+      setCreateGroupFormPayload({
+        groupName: "",
+        addedUsers: [],
+      });
       router.push(`/chats/group/${data.groupId}?type=chats`);
     },
   });

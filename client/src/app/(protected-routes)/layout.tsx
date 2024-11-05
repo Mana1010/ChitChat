@@ -9,7 +9,7 @@ interface Routes {
 
 function ProtectedRoutesLayout({ children }: Routes) {
   return (
-    <div className={`flex bg-[#171717] py-5 h-screen pr-4 relative`}>
+    <div className={`flex bg-[#171717] py-5 h-screen pr-4 relative w-full`}>
       <CreateGroupChat />
       <Sidebar />
       {children}

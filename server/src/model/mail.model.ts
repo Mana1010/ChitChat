@@ -1,6 +1,6 @@
 import mongoose, { mongo } from "mongoose";
 import { referenceModel } from "../utils/referenceModel";
-
+import { Schema } from "mongoose";
 const mailSchema = new mongoose.Schema(
   {
     type: {
@@ -23,11 +23,11 @@ type MailSchema = mongoose.InferSchemaType<typeof mailSchema>;
 export const Mail =
   mongoose.models.Mail || mongoose.model<MailSchema>("Mail", mailSchema);
 
-export const Invitation = Mail.discriminator(
+export const Invitation = Mail.discriminator<any>(
   "invitation",
   new mongoose.Schema({
     from: referenceModel("User"),
-    body: referenceModel("GroupConversation", false),
+    body: referenceModel("GroupConversation"),
   })
 );
 

@@ -12,6 +12,7 @@ import { UseQueryResult, useQuery } from "react-query";
 import axios, { AxiosError } from "axios";
 import { MailDetailsSchema } from "@/types/app.types";
 import MessageText from "./MessageText";
+import LoadingChat from "@/components/LoadingChat";
 function ParentDiv({ children }: { children: ReactNode }) {
   return <div className="flex w-full h-full bg-[#222222]">{children}</div>;
 }
@@ -31,6 +32,9 @@ function MailDetails({ mailId }: { mailId: string }) {
       return response.data.message;
     },
     enabled: status === "authenticated" || !checkIfParamsValid,
+    onSuccess: (data) => {
+      console.log(data);
+    },
   });
   if (checkIfParamsValid) {
     return (
@@ -47,7 +51,11 @@ function MailDetails({ mailId }: { mailId: string }) {
     );
   }
   if (getMailContent.isLoading) {
-    return <h1>Loading</h1>;
+    return (
+      <ParentDiv>
+        <LoadingChat />
+      </ParentDiv>
+    );
   }
   return (
     <ParentDiv>
