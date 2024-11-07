@@ -3,11 +3,6 @@ import { referenceModel } from "../utils/referenceModel";
 import { Schema } from "mongoose";
 const mailSchema = new mongoose.Schema(
   {
-    type: {
-      type: String,
-      enum: ["invitation", "message"],
-      required: true,
-    },
     to: referenceModel("User"),
     isAlreadyRead: { type: Boolean, default: false },
     status: {

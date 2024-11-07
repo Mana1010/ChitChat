@@ -2,25 +2,24 @@
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import Linkify from "linkify-react";
 import PrivateReactions from "./PrivateReactions";
-import { Messages } from "@/types/UserTypes";
 import { Session } from "next-auth";
 import Image from "next/image";
 import emptyChat from "../../../../../../assets/images/empty-chat.png";
 import { VscReactions } from "react-icons/vsc";
 import { useSocketStore } from "@/utils/store/socket.store";
+import { Message } from "@/types/shared.types";
+import { User } from "@/types/shared.types";
 
 function ChatBubbles({
   messageDetails,
   session,
-  participantId,
-  conversationId,
+  groupId,
   setMessage,
 }: {
-  messageDetails: Messages;
+  messageDetails: Message<string, string[]>;
   session: Session | null;
-  participantId: string;
-  conversationId: string;
-  setMessage: Dispatch<SetStateAction<Messages[]>>;
+  groupId: string;
+  setMessage: Dispatch<SetStateAction<Message<User, string[]>[]>>;
 }) {
   const { socket } = useSocketStore();
   const [hoveredMessage, setHoveredMessage] = useState<string | undefined>("");
@@ -139,7 +138,7 @@ function ChatBubbles({
                     <PrivateReactions
                       messageDetails={messageDetails}
                       messageId={messageDetails._id ?? ""}
-                      conversationId={conversationId}
+                      conversationId={groupId}
                       setMessage={setMessage}
                       setOpenReaction={setOpenReaction}
                     />

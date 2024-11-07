@@ -18,7 +18,7 @@ import { usePathname } from "next/navigation";
 import { useQuery, UseQueryResult } from "react-query";
 import axios from "axios";
 import { APP_SERVER_URL } from "@/utils/serverUrl";
-import { SidebarSchema } from "@/types/UserTypes";
+import { SidebarSchema } from "@/types/app.types";
 function Sidebar() {
   const router = useRouter();
   const { data, status } = useSession();

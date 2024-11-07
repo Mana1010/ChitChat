@@ -21,7 +21,7 @@ function InvitationText({
       <header className="py-5 flex items-center justify-between px-3 ">
         <div className="flex space-x-3 items-center">
           <Image
-            src={getMailContent?.body?.groupPhoto.photoUrl ?? ""}
+            src={getMailContent?.group_details?.groupPhoto.photoUrl ?? ""}
             alt="group-photo"
             width={80}
             height={80}
@@ -29,29 +29,19 @@ function InvitationText({
           />
           <div className="flex flex-col space-y-2">
             <h1 className="text-white text-lg font-bold">
-              {getMailContent?.body.groupName}
+              {getMailContent?.group_details.groupName}
             </h1>
             <div className="flex items-center space-x-2">
               <span className="text-[#6486FF] text-lg">
                 <MdGroups />
               </span>
               <span className="text-white text-[0.8rem] font-semibold">
-                {getMailContent?.total_member}
+                {getMailContent?.group_details?.total_members}
               </span>
             </div>
           </div>
         </div>
       </header>
-      <div className="absolute -right-2 opacity-90 top-[5px] ">
-        <Image
-          src={mailInvitation}
-          alt="mailinvitation"
-          width={150}
-          height={150}
-          priority
-          className="-rotate-12"
-        />
-      </div>
       <div className="flex-grow items-center flex justify-center flex-col">
         <Image
           src={invited}

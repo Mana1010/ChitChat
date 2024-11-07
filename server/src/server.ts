@@ -6,7 +6,6 @@ import "dotenv/config";
 import mongoose from "mongoose";
 import http from "http";
 import "dotenv/config";
-import { router as messageRoute } from "./routes/message.route";
 import { router as publicMessageRoute } from "./routes/public.message.route";
 import { router as privateMessageRoute } from "./routes/private.message.route";
 import { router as groupMessageRoute } from "./routes/group.message.route";
@@ -17,8 +16,8 @@ import { publicChat } from "./socket/publicChat.socket";
 import { privateChat } from "./socket/privateChat.socket";
 import { groupChat } from "./socket/groupChat.socket";
 import { v2 as cloudinary } from "cloudinary";
-import { GroupConversation } from "./model/groupConversation.model";
-import { Response } from "express";
+import helmet from "helmet";
+
 const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
@@ -33,6 +32,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+app.use(helmet());
 app.use(express.json());
 app.use(morgan("dev"));
 app.use(
@@ -41,7 +41,6 @@ app.use(
     credentials: true,
   })
 );
-app.use("/api", messageRoute);
 app.use("/api/auth", authRoute);
 app.use("/api/public", publicMessageRoute);
 app.use("/api/private", privateMessageRoute);

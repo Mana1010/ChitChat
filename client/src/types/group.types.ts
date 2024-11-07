@@ -1,15 +1,5 @@
-import { User } from "./UserTypes";
-interface BaseGroupChatSchema<AdminUserType = string, MemberUserType = string> {
-  _id: string;
-  creator: AdminUserType;
-  members: { memberInfo: MemberUserType; role: string; joinedAt: string }[];
-  groupName: string;
-  groupPhoto: {
-    groupId: string;
-    photoUrl: string;
-  };
-  createdAt: string;
-}
+import { User } from "./shared.types";
+import { BaseGroupChatSchema } from "./shared.types";
 export interface GroupChatList
   extends Pick<BaseGroupChatSchema, "_id" | "groupName" | "groupPhoto"> {
   totalMember: number;
@@ -23,4 +13,9 @@ export interface GroupChatConversationList<SenderType = string>
     messageType: string;
     lastMessageCreatedAt: string;
   };
+}
+
+export interface GroupChatHeaderInfo
+  extends Pick<BaseGroupChatSchema, "_id" | "groupName" | "groupPhoto"> {
+  total_member: number;
 }

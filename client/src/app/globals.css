@@ -86,3 +86,10 @@
   color: #0000ee;
   text-decoration: underline #0000ee;
 }
+
+.mail-div {
+  background: url("./../assets/images/svg/mail-background.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+}

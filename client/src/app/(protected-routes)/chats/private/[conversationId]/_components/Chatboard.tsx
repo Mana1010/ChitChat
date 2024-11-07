@@ -15,13 +15,13 @@ import { useSession } from "next-auth/react";
 import { PRIVATE_SERVER_URL } from "@/utils/serverUrl";
 import NewUser from "./NewUser";
 import UserNotFound from "./UserNotFound";
-import { Conversation, GetParticipantInfo, Messages } from "@/types/UserTypes";
+import { Conversation, GetParticipantInfo } from "@/types/UserTypes";
+import { Message } from "@/types/shared.types";
 import { useSocketStore } from "@/utils/store/socket.store";
 import { nanoid } from "nanoid";
 import LoadingChat from "@/components/LoadingChat";
 import { useInView } from "react-intersection-observer";
 import ChatHeader from "./ChatHeader";
-import useGetParticipantInfo from "@/hooks/getParticipantInfo.hook";
 import ChatBubbles from "./ChatBubbles";
 import MessageField from "@/components/MessageField";
 import { IoIosArrowRoundDown } from "react-icons/io";
@@ -29,6 +29,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import ProfileCard from "../../../_components/ProfileCard";
 import typingAnimation from "../../../../../../assets/images/gif-animation/typing-animation-ver-2.gif";
 import SendAttachment from "@/components/SendAttachment";
+import useParticipantInfo from "@/hooks/useParticipantInfo.hook";
 
 function ParentDiv({
   children,
@@ -59,13 +60,13 @@ function Chatboard({ conversationId }: { conversationId: string }) {
   const [openEmoji, setOpenEmoji] = useState(false);
   const { data: session, status } = useSession();
   const [hasNextPage, setHasNextPage] = useState(true);
-  const [allMessages, setAllMessages] = useState<Messages[]>([]);
+  const [allMessages, setAllMessages] = useState<Message[]>([]);
   const [showArrowDown, setShowArrowDown] = useState(false);
   const [openAttachmentModal, setOpenAttachmentModal] = useState(false);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const { ref, inView } = useInView();
   const { participantInfo, isLoading: participantInfoLoading } =
-    useGetParticipantInfo(conversationId, status, session);
+    useParticipantInfo(conversationId, status, session);
   const { data, fetchNextPage, error, isLoading, isError } = useInfiniteQuery({
     queryKey: ["messages", conversationId],
     queryFn: async ({ pageParam = 0 }): Promise<any> => {
@@ -208,7 +209,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
         }
       }
     );
-    setAllMessages((prevMessages: Messages[]): any => {
+    setAllMessages((prevMessages: Message[]): any => {
       return [
         ...prevMessages,
         {
@@ -314,7 +315,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                     <LoadingChat />
                   </div>
                 )}
-                {allMessages?.map((data: Messages) => (
+                {allMessages?.map((data: Message) => (
                   <ChatBubbles
                     key={data._id}
                     participantId={
@@ -390,7 +391,6 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       </div>
       <MessageField
         socket={socket}
-        participantInfo={participantInfo}
         conversationId={conversationId}
         message={message}
         openEmoji={openEmoji}

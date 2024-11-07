@@ -150,7 +150,6 @@ export const searchUserResult = asyncHandler(
 export const getAllMail = asyncHandler(async (req: Request, res: Response) => {
   const { userId } = req.params;
   const { filter } = req.query;
-  console.log(filter);
   const query: { to: string; isAlreadyRead?: boolean } = { to: userId };
 
   if (filter === "read") {
@@ -183,7 +182,9 @@ export const updateMailStatus = asyncHandler(
 
 export const deleteMail = asyncHandler(async (req: Request, res: Response) => {
   const selectedMails: string[] = req.body;
-  await Mail.deleteMany({ _id: { $in: [selectedMails] } });
+  console.log(selectedMails);
+  await Mail.deleteMany({ _id: { $in: selectedMails } });
+  console.log(selectedMails);
   res.status(201).json({ message: "Deleted Successfully" });
 });
 
@@ -196,23 +197,47 @@ export const getMailDetails = asyncHandler(
       throw new Error("Forbidden");
     }
 
-    const getMailContent = await Mail.findById(mailId).select([
-      "kind",
-      "from",
-      "body",
-      "sentAt",
+    const getMailContent = await Mail.aggregate([
+      {
+        $match: { _id: new mongoose.Types.ObjectId(mailId) },
+      },
+      {
+        $lookup: {
+          from: "groupconversations",
+          localField: "body",
+          foreignField: "_id",
+          as: "group_details",
+        },
+      },
+      {
+        $addFields: {
+          group_details: { $first: "$group_details" },
+        },
+      },
+      {
+        $project: {
+          kind: 1,
+          from: 1,
+          sentAt: 1,
+          group_details: {
+            groupName: 1,
+            groupPhoto: 1,
+            total_members: { $size: "$group_details.members" },
+          },
+        },
+      },
     ]);
-
+    // const getMailContent = await Mail.findById(mailId).select([
+    //   "kind",
+    //   "from",
+    //   "body",
+    //   "sentAt",
+    // ]);
+    console.log(JSON.stringify(getMailContent));
     if (!getMailContent) {
       res.status(404);
       throw new Error("Mail does not exist");
     }
-    if (getMailContent.kind === "invitation") {
-      console.log("Run, augh");
-      await getMailContent.populate("body");
-    }
-
-    console.log(getMailContent);
-    res.status(200).json({ message: getMailContent });
+    res.status(200).json({ message: getMailContent[0] });
   }
 );

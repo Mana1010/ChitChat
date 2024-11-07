@@ -6,7 +6,7 @@ import { Socket } from "socket.io-client";
 import { useInfiniteQuery, useQueryClient } from "react-query";
 import { PUBLIC_SERVER_URL } from "@/utils/serverUrl";
 import axios from "axios";
-import { User, Reaction } from "@/types/UserTypes";
+import { User, Reaction } from "@/types/shared.types";
 import { initializePublicChatSocket } from "@/utils/socket";
 import Image from "next/image";
 import themeImg from "../../../../../assets/images/theme-img.png";

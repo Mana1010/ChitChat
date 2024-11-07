@@ -1,7 +1,7 @@
 "use client";
 import React, { ReactNode } from "react";
 import Image from "next/image";
-import emailIcon from "../../../../../assets/images/email.png";
+import emailIcon from "../../../../../assets/images/svg/mailbox.svg";
 import InvitationText from "./InvitationText";
 import { getServerSession } from "next-auth";
 import authOptions from "@/utils/authOption";
@@ -14,7 +14,7 @@ import { MailDetailsSchema } from "@/types/app.types";
 import MessageText from "./MessageText";
 import LoadingChat from "@/components/LoadingChat";
 function ParentDiv({ children }: { children: ReactNode }) {
-  return <div className="flex w-full h-full bg-[#222222]">{children}</div>;
+  return <div className="flex w-full h-full mail-div">{children}</div>;
 }
 function MailDetails({ mailId }: { mailId: string }) {
   const checkIfParamsValid = ["mail", "empty"].includes(mailId);
@@ -42,8 +42,8 @@ function MailDetails({ mailId }: { mailId: string }) {
         <Image
           src={emailIcon}
           alt="email-icon"
-          width={100}
-          height={100}
+          width={350}
+          height={350}
           priority
           className="self-center mx-auto"
         />

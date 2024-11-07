@@ -1,10 +1,10 @@
 "use client";
 import React, { Dispatch, SetStateAction, useMemo, useState } from "react";
 import Image from "next/image";
-import { PublicMessages, User } from "@/types/UserTypes";
+import { PublicMessages } from "@/types/UserTypes";
+import { User } from "@/types/shared.types";
 import PublicReactions from "./PublicReaction";
 import { VscReactions } from "react-icons/vsc";
-import { PiDotsThreeVerticalBold } from "react-icons/pi";
 import Linkify from "linkify-react";
 import { Socket } from "socket.io-client";
 function PublicChatBubbles({

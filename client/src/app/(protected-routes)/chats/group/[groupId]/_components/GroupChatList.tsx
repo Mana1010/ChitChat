@@ -1,11 +1,10 @@
 "use client";
-import { serverUrl, GROUP_SERVER_URL } from "@/utils/serverUrl";
+import { GROUP_SERVER_URL } from "@/utils/serverUrl";
 import axios, { AxiosError } from "axios";
 import React from "react";
 import { useEffect } from "react";
 import { useQuery, UseQueryResult, useQueryClient } from "react-query";
 import { useSession } from "next-auth/react";
-import { Conversation } from "@/types/UserTypes";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useSocketStore } from "@/utils/store/socket.store";
@@ -80,28 +79,6 @@ function GroupChatList({
         );
       }
     );
-    // socket.on("seen-message", ({ conversationId, hasUnreadMessages }) => {
-    //   queryClient.setQueryData<Conversation[] | undefined>(
-    //     ["chat-list"],
-    //     (cachedData) => {
-    //       if (cachedData) {
-    //         return cachedData.map((conversation: Conversation) => {
-    //           if (conversation._id === conversationId) {
-    //             return {
-    //               ...conversation,
-    //               hasUnreadMessages: {
-    //                 user: hasUnreadMessages.user,
-    //                 totalUnreadMessages: hasUnreadMessages.totalUnreadMessages,
-    //               },
-    //             };
-    //           } else {
-    //             return conversation;
-    //           }
-    //         });
-    //       }
-    //     }
-    //   );
-    // });
     return () => {
       socket.off("display-updated-chatlist");
       socket.off("seen-message");

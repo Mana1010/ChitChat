@@ -35,6 +35,7 @@ export const getUserGroupChatStatus = asyncHandler(
 export const getAllGroups = asyncHandler(
   async (req: Request, res: Response) => {
     const { limit, page, sort } = req.query;
+    const { userId } = req.params;
     if (!page || !limit) {
       res.status(403);
       throw new Error("Forbidden");
@@ -42,6 +43,25 @@ export const getAllGroups = asyncHandler(
     const LIMIT = +limit;
     const PAGE = +page;
     const getAllGroups = await GroupConversation.aggregate([
+      {
+        $match: {
+          $or: [
+            {
+              "members.memberInfo": {
+                $ne: new mongoose.Types.ObjectId(userId),
+              },
+            },
+            {
+              members: {
+                $elemMatch: {
+                  memberInfo: new mongoose.Types.ObjectId(userId),
+                  status: "pending",
+                },
+              },
+            },
+          ],
+        },
+      },
       {
         $addFields: {
           totalMember: { $size: "$members" },
@@ -59,13 +79,25 @@ export const getAllGroups = asyncHandler(
         $limit: 10,
       },
       {
+        $addFields: {
+          is_user_pending: {
+            $filter: {
+              input: "$members",
+              cond: {},
+            },
+          },
+        },
+      },
+      {
         $project: {
           groupName: 1,
           groupPhoto: 1,
           totalMember: 1,
+          members: 1,
         },
       },
     ]);
+    console.log(getAllGroups);
     const hasNextPage = getAllGroups.length === LIMIT;
     const nextPage = hasNextPage ? PAGE + 1 : null;
     res.status(200).json({
@@ -167,5 +199,91 @@ export const createGroupChat = asyncHandler(
         .status(400)
         .json({ message: "Something went wrong, please try again" });
     }
+  }
+);
+
+export const getGroupChatInfo = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { groupId } = req.params;
+    console.log(groupId);
+    if (!mongoose.Types.ObjectId.isValid(groupId)) {
+      res.status(404);
+      throw new Error("User not found");
+    }
+
+    const getUserInfo = await GroupConversation.aggregate([
+      {
+        $match: { _id: new mongoose.Types.ObjectId(groupId) },
+      },
+      {
+        $addFields: {
+          total_member: {
+            $size: {
+              $filter: {
+                input: "$members",
+                cond: { $eq: ["$$this.status", "active"] }, //Retrieve the active member only.
+              },
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          groupName: 1,
+          groupPhoto: 1,
+          total_member: 1,
+          createdAt: 1,
+        },
+      },
+    ]);
+
+    if (!getUserInfo) {
+      res.status(404);
+      throw new Error("User not found");
+    }
+    console.log(getUserInfo);
+    res.status(200).json({
+      message: getUserInfo[0],
+    });
+  }
+);
+
+export const getGroupMessages = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { groupId } = req.params;
+    const { page, limit } = req.query;
+    if (!mongoose.Types.ObjectId.isValid(groupId)) {
+      res.status(404);
+      throw new Error("Conversation does not exist");
+    }
+    const checkConversationAvailability = await GroupConversation.findById(
+      groupId
+    );
+    if (!checkConversationAvailability) {
+      res.status(404);
+      throw new Error("Conversation does not exist");
+    }
+    if (!page || !limit) {
+      res.status(403);
+      throw new Error("Forbidden");
+    }
+    const LIMIT = +limit;
+    const CURRENTPAGE = +page;
+    const getMessages = await Group.find({ groupId })
+      .sort({ createdAt: -1 })
+      .skip(CURRENTPAGE * LIMIT)
+      .limit(LIMIT)
+      .populate([{ path: "sender", select: ["name", "profilePic", "status"] }])
+      .select(["sender", "message", "isRead", "createdAt", "reaction"]);
+    const hasMoreMessages = getMessages.length === LIMIT;
+    const messages = getMessages.reverse();
+    const nextPage = hasMoreMessages ? CURRENTPAGE + 1 : null;
+    console.log(getMessages);
+    res.status(200).json({
+      message: {
+        getMessages: messages,
+        nextPage,
+      },
+    });
   }
 );

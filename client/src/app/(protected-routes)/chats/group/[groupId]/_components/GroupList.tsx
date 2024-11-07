@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useSession } from "next-auth/react";
 import axios, { AxiosError } from "axios";
 import { serverUrl, GROUP_SERVER_URL } from "@/utils/serverUrl";
-import { User } from "@/types/UserTypes";
+import { User } from "@/types/shared.types";
 import { GroupChatList } from "@/types/group.types";
 import noSearchFoundImg from "../../../../../../assets/images/not-found.png";
 import LoadingChat from "@/components/LoadingChat";
@@ -20,6 +20,8 @@ import NoItemFound from "@/components/NoItemFound";
 import EmptyConversation from "@/components/EmptyConversation";
 import { useModalStore } from "@/utils/store/modal.store";
 import { MdGroups } from "react-icons/md";
+import { FaXmark } from "react-icons/fa6";
+import { FaCheck } from "react-icons/fa6";
 import {
   Select,
   SelectContent,
@@ -35,6 +37,7 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
   const router = useRouter();
   const { ref, inView } = useInView();
   const { setShowCreateGroupForm } = useModalStore();
+  const { data: session, status } = useSession();
   const [hasNextPage, setHasNextPage] = useState(true);
   const [allGroupChatList, setAllGroupChatList] = useState<GroupChatList[]>([]);
   const currentPageRef = useRef(0);
@@ -47,10 +50,14 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
       queryKey: ["explore-group-list"],
       queryFn: async ({ pageParam = 0 }) => {
         const response = await axios.get(
-          `${GROUP_SERVER_URL}/explore/all/group/list?page=${pageParam}&limit=${10}&sort=${sortBy}`
+          `${GROUP_SERVER_URL}/explore/all/group/list/${
+            session?.user.userId
+          }?page=${pageParam}&limit=${10}&sort=${sortBy}`
         );
+
         return response.data.message;
       },
+      enabled: status === "authenticated",
       getNextPageParam: (lastPage) => {
         if (lastPage.nextPage === null && hasNextPage) {
           setHasNextPage(false);

@@ -7,16 +7,29 @@ export interface MailListSchema {
 }
 export interface MailDetailsSchema {
   senAt: string;
-  body: {
+  group_details: {
     groupName: string;
     groupPhoto: {
       publicId: string;
       photoUrl: string;
     };
     _id: string;
+    total_members: number;
   };
-  total_member: number;
+  totalMember: number;
   kind: string;
   from: string;
   _id: string;
+}
+
+export interface SidebarSchema {
+  userChatStatusObj: {
+    privateConversationStatus: string | null;
+    groupConversationStatus: string | null;
+  };
+  userNotificationObj: {
+    privateNotificationCount: number;
+    groupNotificationCount: number;
+    mailboxNotificationCount: number;
+  };
 }

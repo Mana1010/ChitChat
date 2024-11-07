@@ -113,16 +113,17 @@ function MailList({ mailId }: { mailId: string }) {
   function selectAllMail() {
     const newSelectedMails: string[] = [];
 
-    getAllMail.data?.forEach((mail) => {
+    getAllMail.data?.forEach((mail, index) => {
       if (!selectedMailSet.has(mail._id)) {
         newSelectedMails.push(mail._id);
       }
-
-      if (newSelectedMails.length > 0) {
-        setSelectedMail((prevMail) => [...prevMail, ...newSelectedMails]);
-      }
     });
+    if (newSelectedMails.length > 0) {
+      console.log(newSelectedMails);
+      setSelectedMail((prevMail) => [...prevMail, ...newSelectedMails]);
+    }
   }
+
   return (
     <div className="bg-[#222222] h-full rounded-md flex flex-col relative">
       <MailListHeader

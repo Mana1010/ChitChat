@@ -1,13 +1,6 @@
 import React from "react";
-
-export interface User {
-  name: string;
-  profilePic: string;
-  _id: string;
-  status: string;
-  userId?: string;
-}
-
+import { User } from "./shared.types";
+import { Reaction } from "./shared.types";
 export interface FullInfoUser extends User {
   provider: string;
   email: string;
@@ -30,18 +23,6 @@ export interface Conversation {
   updatedAt: string;
 }
 
-export interface Messages {
-  _id?: string;
-  sender: User;
-  message: string;
-  isRead: boolean;
-  reaction: string;
-}
-export interface Reaction<ReactionType = string> {
-  reactor: ReactionType;
-  reactionEmoji: string;
-  reactionCreatedAt: string;
-}
 export interface PublicMessages<UserType = string> {
   _id: string;
   sender: UserType;
@@ -59,11 +40,6 @@ export interface GetParticipantInfo {
   };
 }
 
-export interface InfiniteScrollingMessageSchema {
-  pages: [{ getMessages: Messages[]; nextPage: number | null }];
-  pageParams: [undefined | number];
-}
-
 export interface ReactionSchema {
   emoji: string;
   name: string;
@@ -75,17 +51,5 @@ export interface ReactionListSchema {
   reactor_details: {
     name: string;
     profilePic: string;
-  };
-}
-
-export interface SidebarSchema {
-  userChatStatusObj: {
-    privateConversationStatus: string | null;
-    groupConversationStatus: string | null;
-  };
-  userNotificationObj: {
-    privateNotificationCount: number;
-    groupNotificationCount: number;
-    mailboxNotificationCount: number;
   };
 }

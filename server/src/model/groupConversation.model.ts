@@ -4,6 +4,7 @@ import { referenceModel } from "../utils/referenceModel";
 const groupSchema = new mongoose.Schema({
   creator: referenceModel("User"),
   groupName: { type: String, required: true },
+
   groupPhoto: {
     publicId: { type: String, required: true },
     photoUrl: { type: String, required: true },
@@ -17,13 +18,8 @@ const groupSchema = new mongoose.Schema({
     },
   ],
 
-  hasUnreadMessages: {
-    type: [
-      {
-        user: referenceModel("User"), //This field is for the user who have not unread the message.
-        totalUnreadMessages: { type: Schema.Types.Number, default: 0 },
-      },
-    ],
+  memberReadMessage: {
+    type: [referenceModel("User")],
     default: [],
   },
 

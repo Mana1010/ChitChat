@@ -2,17 +2,21 @@ import mongoose from "mongoose";
 import { referenceModel } from "../utils/referenceModel";
 const messageSchema = new mongoose.Schema(
   {
-    groupId: referenceModel("Conversation"),
+    groupId: referenceModel("GroupConversation"),
     sender: referenceModel("User"),
     message: { type: String, required: true },
+    type: { type: String, enum: ["text", "file"], default: "text" },
     isRead: { type: Boolean, default: false },
-    reaction: [
-      {
-        reactor: referenceModel("User"),
-        reactionEmoji: String,
-        reactionCreatedAt: { type: Date, default: Date.now },
-      },
-    ],
+    reactions: {
+      type: [
+        {
+          reactor: referenceModel("User"),
+          reactionEmoji: String,
+          reactionCreatedAt: { type: Date, default: Date.now },
+        },
+      ],
+      default: [],
+    },
   },
   {
     timestamps: true,

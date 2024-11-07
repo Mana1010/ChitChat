@@ -4,25 +4,27 @@ import React, { useEffect, useRef, useState, useLayoutEffect } from "react";
 import { useInfiniteQuery, useQueryClient } from "react-query";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
-import { serverUrl } from "@/utils/serverUrl";
+import { GROUP_SERVER_URL } from "@/utils/serverUrl";
 import NoGroup from "./NoGroup";
 import UserNotFound from "./UserNotFound";
-import { Conversation, GetParticipantInfo, Messages } from "@/types/UserTypes";
+import { Conversation, GetParticipantInfo } from "@/types/UserTypes";
+import { Message } from "@/types/shared.types";
 import { useSocketStore } from "@/utils/store/socket.store";
 import { nanoid } from "nanoid";
 import LoadingChat from "@/components/LoadingChat";
 import { useInView } from "react-intersection-observer";
 import ChatHeader from "./ChatHeader";
-import useGetParticipantInfo from "@/hooks/getParticipantInfo.hook";
 import ChatBubbles from "./ChatBubbles";
-import MessageField from "@/components/MessageField";
 import { IoIosArrowRoundDown } from "react-icons/io";
 import { AnimatePresence, motion } from "framer-motion";
 import ProfileCard from "../../../_components/ProfileCard";
 import typingAnimation from "../../../../../../assets/images/gif-animation/typing-animation-ver-2.gif";
 import SendAttachment from "@/components/SendAttachment";
+import useGroupInfo from "@/hooks/useGroupInfo.hook";
+import { User } from "@/types/shared.types";
+import MessageField from "./MessageField";
 function GroupChatboard({ groupId }: { groupId: string }) {
-  const { socket } = useSocketStore();
+  const { socket, groupMessageSocket } = useSocketStore();
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const currentPageRef = useRef(0);
   const scrollDivRef = useRef<HTMLDivElement | null>(null);
@@ -32,19 +34,21 @@ function GroupChatboard({ groupId }: { groupId: string }) {
   const [openEmoji, setOpenEmoji] = useState(false);
   const { data: session, status } = useSession();
   const [hasNextPage, setHasNextPage] = useState(true);
-  const [allMessages, setAllMessages] = useState<Messages[]>([]);
+  const [allMessages, setAllMessages] = useState<Message<User, string[]>[]>([]);
   const [showArrowDown, setShowArrowDown] = useState(false);
   const [openAttachmentModal, setOpenAttachmentModal] = useState(false);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const { ref, inView } = useInView();
 
-  const { participantInfo, isLoading: participantInfoLoading } =
-    useGetParticipantInfo(groupId, status, session);
+  const { groupInfo, isLoading: groupInfoLoading } = useGroupInfo(
+    groupId,
+    status
+  );
   const { data, fetchNextPage, error, isLoading, isError } = useInfiniteQuery({
     queryKey: ["messages", groupId],
     queryFn: async ({ pageParam = 0 }): Promise<any> => {
       const response = await axios.get(
-        `${serverUrl}/api/messages/message-list/conversation/${groupId}?page=${pageParam}&limit=${20}`
+        `${GROUP_SERVER_URL}/message/list/${groupId}?page=${pageParam}&limit=${20}`
       );
 
       return response.data.message;
@@ -69,6 +73,7 @@ function GroupChatboard({ groupId }: { groupId: string }) {
     enabled: status === "authenticated",
   });
   const queryClient = useQueryClient();
+
   useEffect(() => {
     return () => {
       queryClient.resetQueries(["messages", groupId]); //To reset the cached data whenever the user unmount the component
@@ -84,42 +89,34 @@ function GroupChatboard({ groupId }: { groupId: string }) {
     scrollRef.current,
     allMessages.length,
     currentPageRef.current,
-    participantInfo,
+    groupInfo,
   ]);
+
   useEffect(() => {
     if (inView && hasNextPage) {
       currentPageRef.current++;
       fetchNextPage();
     }
   }, [hasNextPage, fetchNextPage, inView]);
+
   useEffect(() => {
-    if (
-      !socket ||
-      status !== "authenticated" ||
-      !participantInfo?.receiver_details._id
-    )
-      return;
+    if (!socket || status !== "authenticated" || !groupInfo?._id) return;
     socket.emit("join-room", {
       groupId,
-      receiverId: participantInfo.receiver_details._id,
+      receiverId: groupInfo._id,
     });
     socket.emit("read-message", {
       groupId,
-      participantId: participantInfo.receiver_details._id,
+      participantId: groupInfo._id,
     });
     return () => {
       socket.emit("leave-room", {
         groupId,
-        receiverId: participantInfo.receiver_details?._id,
+        receiverId: groupInfo?._id,
       });
     };
-  }, [
-    groupId,
-    participantInfo?.receiver_details._id,
-    queryClient,
-    socket,
-    status,
-  ]);
+  }, [groupId, groupInfo?._id, queryClient, socket, status]);
+
   useEffect(() => {
     if (!socket) return;
     socket.on("display-seen-text", ({ user, totalUnreadMessages }) => {
@@ -138,9 +135,11 @@ function GroupChatboard({ groupId }: { groupId: string }) {
         }
       );
     });
+
     socket.on("display-message", ({ getProfile }) => {
       setAllMessages((prevMessages) => [...prevMessages, getProfile]);
     });
+
     socket.on("during-typing", (conversationId) => {
       setTypingUsers((prevUsers) => [...prevUsers, conversationId]);
     });
@@ -167,22 +166,7 @@ function GroupChatboard({ groupId }: { groupId: string }) {
     }
   }
   function sendMessage(messageContent: string) {
-    queryClient.setQueryData<GetParticipantInfo | undefined>(
-      ["participant-info", groupId],
-      (cachedData: GetParticipantInfo | undefined) => {
-        if (cachedData) {
-          return {
-            ...cachedData,
-            hasUnreadMessages: {
-              ...cachedData.hasUnreadMessages,
-              totalUnreadMessages:
-                cachedData.hasUnreadMessages.totalUnreadMessages + 1,
-            },
-          };
-        }
-      }
-    );
-    setAllMessages((prevMessages: Messages[]): any => {
+    setAllMessages((prevMessages: any): any => {
       return [
         ...prevMessages,
         {
@@ -241,8 +225,8 @@ function GroupChatboard({ groupId }: { groupId: string }) {
       className="flex flex-grow w-full h-full flex-col relative"
     >
       <ChatHeader
-        participantInfo={participantInfo?.receiver_details}
-        isLoading={participantInfoLoading}
+        groupInfo={groupInfo as any}
+        isLoading={groupInfoLoading}
         setOpenProfileModal={setOpenProfileModal}
       />
       <div className="flex-grow w-full p-3">
@@ -252,15 +236,13 @@ function GroupChatboard({ groupId }: { groupId: string }) {
           <div className="h-full w-full relative">
             {allMessages.length === 0 ? (
               <div className="flex items-center flex-col justify-end h-full w-full pb-5 space-y-2">
-                <h3 className="text-zinc-300 text-[0.78rem]">
-                  Wave to {participantInfo?.receiver_details.name}
-                </h3>
+                <h3 className="text-zinc-300 text-[0.78rem]">Wave them</h3>
                 <button
                   onClick={() => {
                     socket?.emit("send-message", {
                       message: "👋",
                       groupId,
-                      receiverId: participantInfo?.receiver_details._id,
+                      receiverId: groupInfo?.receiver_details._id,
                     });
                     sendMessage("👋");
                     updateChatList("👋");
@@ -293,15 +275,12 @@ function GroupChatboard({ groupId }: { groupId: string }) {
                     <LoadingChat />
                   </div>
                 )}
-                {allMessages?.map((data: Messages) => (
+                {allMessages?.map((data: any) => (
                   <ChatBubbles
                     key={data._id}
-                    participantId={
-                      participantInfo?.receiver_details._id as string
-                    }
                     messageDetails={data}
                     session={session}
-                    conversationId={groupId}
+                    groupId={groupId}
                     setMessage={setAllMessages}
                   />
                 ))}
@@ -318,25 +297,6 @@ function GroupChatboard({ groupId }: { groupId: string }) {
                     </div>
                   </div>
                 ) : null}
-                <div
-                  className={`w-full justify-end items-end relative bottom-3 pr-1 pt-1.5 ${
-                    participantInfo?.hasUnreadMessages?.user !==
-                      session?.user.userId &&
-                    participantInfo?.hasUnreadMessages?.totalUnreadMessages ===
-                      0
-                      ? "flex"
-                      : "hidden"
-                  } `}
-                >
-                  <Image
-                    src={participantInfo?.receiver_details.profilePic ?? ""}
-                    width={15}
-                    height={15}
-                    className="rounded-full"
-                    alt="Profile Image"
-                    priority
-                  />
-                </div>
                 <div ref={scrollRef} className="relative w-full"></div>
                 <AnimatePresence mode="wait">
                   {showArrowDown && (
@@ -368,9 +328,8 @@ function GroupChatboard({ groupId }: { groupId: string }) {
         )}
       </div>
       <MessageField
-        socket={socket}
-        participantInfo={participantInfo}
-        conversationId={groupId}
+        socket={groupMessageSocket}
+        groupId={groupId}
         message={message}
         openEmoji={openEmoji}
         sendMessage={sendMessage}

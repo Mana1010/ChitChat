@@ -2,10 +2,10 @@
 import React from "react";
 import { useQuery, UseQueryResult } from "react-query";
 import axios, { AxiosError } from "axios";
-import { serverUrl, PRIVATE_SERVER_URL } from "@/utils/serverUrl";
+import { PRIVATE_SERVER_URL } from "@/utils/serverUrl";
 import { GetParticipantInfo } from "@/types/UserTypes";
 import { Session } from "next-auth";
-function useGetParticipantInfo(
+function useParticipantInfo(
   conversationId: string,
   status: string,
   sessionData: Session | null
@@ -29,4 +29,4 @@ function useGetParticipantInfo(
   return { participantInfo: data, isLoading };
 }
 
-export default useGetParticipantInfo;
+export default useParticipantInfo;

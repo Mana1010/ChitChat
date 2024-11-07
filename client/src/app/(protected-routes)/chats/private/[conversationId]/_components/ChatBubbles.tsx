@@ -2,7 +2,7 @@
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import Linkify from "linkify-react";
 import PrivateReactions from "./PrivateReactions";
-import { Messages } from "@/types/UserTypes";
+import { Message } from "@/types/shared.types";
 import { Session } from "next-auth";
 import Image from "next/image";
 import emptyChat from "../../../../../../assets/images/empty-chat.png";
@@ -16,11 +16,11 @@ function ChatBubbles({
   conversationId,
   setMessage,
 }: {
-  messageDetails: Messages;
+  messageDetails: Message;
   session: Session | null;
   participantId: string;
   conversationId: string;
-  setMessage: Dispatch<SetStateAction<Messages[]>>;
+  setMessage: Dispatch<SetStateAction<Message[]>>;
 }) {
   const { socket } = useSocketStore();
   const [hoveredMessage, setHoveredMessage] = useState<string | undefined>("");
