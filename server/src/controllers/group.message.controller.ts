@@ -44,6 +44,8 @@ export const getAllGroups = asyncHandler(
     const PAGE = +page;
     const getAllGroups = await GroupConversation.aggregate([
       {
+        //this pipeline, lets first match the group that you have not a
+        // member yet or the group that you are not a member but it has a pending invitation from you
         $match: {
           $or: [
             {
@@ -63,10 +65,19 @@ export const getAllGroups = asyncHandler(
         },
       },
       {
+        //this pipeline, we are counting the total members each group to display the total member
         $addFields: {
-          totalMember: { $size: "$members" },
+          totalMember: {
+            $size: {
+              $filter: {
+                input: "$members",
+                cond: { $eq: ["$$this.status", "active"] },
+              },
+            },
+          },
         },
       },
+      //this three pipeline, is for sorting, skipping the page based on the user scroll and limit it only with 10
       {
         $sort: {
           totalMember: -1,
@@ -79,21 +90,47 @@ export const getAllGroups = asyncHandler(
         $limit: 10,
       },
       {
+        //ini nga pipeline, gumamit sang $size kag ging wrap ini ang filter, kag sa filter ipabilin lang ang
+        //group nga may ara invitation simo kay since mga 1 malang every member sa database, so possibility 1 or 0 lang ang result
+        //1 = exist, 0 = not yet exist
         $addFields: {
-          is_user_pending: {
-            $filter: {
-              input: "$members",
-              cond: {},
+          is_group_inviting_you: {
+            $size: {
+              $filter: {
+                input: "$members",
+                cond: {
+                  $and: [
+                    {
+                      $eq: [
+                        "$$this.memberInfo",
+                        new mongoose.Types.ObjectId(userId),
+                      ],
+                    },
+                    {
+                      $eq: ["$$this.status", "pending"],
+                    },
+                  ],
+                },
+              },
             },
           },
         },
       },
       {
+        //Lastly, we design our response data and in  this_group_inviting_you we are using $cond to make a conditional operator in size
+        //1 = exist, 0 = not yet exist
         $project: {
           groupName: 1,
           groupPhoto: 1,
           totalMember: 1,
           members: 1,
+          this_group_inviting_you: {
+            $cond: {
+              if: { $eq: ["$is_group_inviting_you", 1] },
+              then: true,
+              else: false,
+            },
+          },
         },
       },
     ]);
@@ -126,7 +163,12 @@ export const getAllGroupChatConversation = asyncHandler(
     const getAllGroupChat = await GroupConversation.aggregate([
       {
         $match: {
-          "members.memberInfo": new mongoose.Types.ObjectId(id),
+          members: {
+            $elemMatch: {
+              memberInfo: new mongoose.Types.ObjectId(id),
+              status: "active",
+            },
+          },
         },
       },
       {

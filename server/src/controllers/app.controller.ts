@@ -222,7 +222,14 @@ export const getMailDetails = asyncHandler(
           group_details: {
             groupName: 1,
             groupPhoto: 1,
-            total_members: { $size: "$group_details.members" },
+            total_members: {
+              $size: {
+                $filter: {
+                  input: "$group_details.members",
+                  cond: { $eq: ["$$this.status", "active"] },
+                },
+              },
+            },
           },
         },
       },
