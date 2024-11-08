@@ -13,7 +13,7 @@ export const getAllPublicMessages = asyncHandler(
     const PAGE = +page;
     const LIMIT = +limit;
     const getAllMessages = await Public.find()
-      .sort({ createdAt: -1 })
+      .sort({ createdAt: -1 }) //Descending order of message
       .skip(PAGE * LIMIT)
       .limit(LIMIT)
       .populate({
@@ -21,6 +21,7 @@ export const getAllPublicMessages = asyncHandler(
         select: ["-createdAt", "-updatedAt", "-__v"],
       })
       .select(["message", "isMessageDeleted", "createdAt", "reactions"]);
+
     const hasNextPage = getAllMessages.length === LIMIT;
     const nextPage = hasNextPage ? PAGE + 1 : null;
     res.status(200).json({

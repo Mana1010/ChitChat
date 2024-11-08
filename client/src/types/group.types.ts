@@ -3,6 +3,7 @@ import { BaseGroupChatSchema } from "./shared.types";
 export interface GroupChatList
   extends Pick<BaseGroupChatSchema, "_id" | "groupName" | "groupPhoto"> {
   totalMember: number;
+  this_group_inviting_you: boolean;
 }
 
 export interface GroupChatConversationList<SenderType = string>

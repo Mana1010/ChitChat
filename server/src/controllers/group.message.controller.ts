@@ -123,7 +123,6 @@ export const getAllGroups = asyncHandler(
           groupName: 1,
           groupPhoto: 1,
           totalMember: 1,
-          members: 1,
           this_group_inviting_you: {
             $cond: {
               if: { $eq: ["$is_group_inviting_you", 1] },
@@ -135,6 +134,7 @@ export const getAllGroups = asyncHandler(
       },
     ]);
     console.log(getAllGroups);
+
     const hasNextPage = getAllGroups.length === LIMIT;
     const nextPage = hasNextPage ? PAGE + 1 : null;
     res.status(200).json({
@@ -327,5 +327,41 @@ export const getGroupMessages = asyncHandler(
         nextPage,
       },
     });
+  }
+);
+
+export const invitationResponse = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { type } = req.body;
+    const { groupId, userId } = req.params;
+
+    if (!type || !groupId || !userId) {
+      res.status(400);
+      throw new Error("Client Payload is required");
+    }
+
+    if (type === "accept") {
+      await GroupConversation.updateOne(
+        { _id: groupId, "members.memberInfo": userId },
+        {
+          $set: { "members.$.status": "active" },
+        }
+      );
+      res.status(200).json({
+        message: "Invitation accepted successfully",
+        type: "accepted",
+        groupId,
+      });
+    } else {
+      await GroupConversation.findByIdAndUpdate(groupId, {
+        $pull: {
+          "members.memberInfo": userId,
+        },
+      });
+      res.status(200).json({
+        message: "Invitation rejected successfully",
+        type: "rejected",
+      });
+    }
   }
 );

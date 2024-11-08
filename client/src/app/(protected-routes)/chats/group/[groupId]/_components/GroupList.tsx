@@ -4,7 +4,7 @@ import { useMutation, useQueryClient, useInfiniteQuery } from "react-query";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
-import axios, { AxiosError } from "axios";
+import axios, { Axios, AxiosError } from "axios";
 import { serverUrl, GROUP_SERVER_URL } from "@/utils/serverUrl";
 import { User } from "@/types/shared.types";
 import { GroupChatList } from "@/types/group.types";
@@ -29,6 +29,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 function ParentDiv({ children }: { children: ReactNode }) {
   return <div className="flex-grow w-full flex flex-col">{children}</div>;
@@ -73,6 +79,7 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
       },
     });
   const queryClient = useQueryClient();
+
   const joinGroup = useMutation({
     mutationFn: async (data: { senderId: string; receiverId: string }) => {
       const response = await axios.post(`${GROUP_SERVER_URL}/new/chat`, data);
@@ -80,12 +87,41 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
     },
     onSuccess: (id) => {
       queryClient.invalidateQueries("chat-list");
-      router.push(`/chats/private/${id}?type=chats`);
+      router.push(`/chats/group/${id}?type=chats`);
     },
     onError: (err: AxiosError<{ message: string }>) => {
       toast.error(err.response?.data.message);
     },
   });
+
+  const invitationResponse = useMutation({
+    mutationFn: async ({
+      type,
+      groupId,
+    }: {
+      type: string;
+      groupId: string;
+    }) => {
+      const response = await axios.patch(
+        `${GROUP_SERVER_URL}/invitation/response/${groupId}/${session?.user.userId}`,
+        { type }
+      );
+      return response.data;
+    },
+    onSuccess: ({ type, message, groupId }) => {
+      if (type === "accepted") {
+        queryClient.invalidateQueries("groupchat-list");
+        toast.success(message);
+        router.push(`/chats/group/${groupId}?type=chats`);
+      } else {
+        toast.success(message);
+      }
+    },
+    onError: (err: AxiosError<{ message: string }>) => {
+      console.log(err.response?.data.message);
+    },
+  });
+
   const groupList = useMemo(() => {
     return searchGroup.length ? debouncedSearchGroup : allGroupChatList;
   }, [searchGroup, debouncedSearchGroup, allGroupChatList]);
@@ -183,12 +219,62 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
                 </div>
               </div>
             </div>
-            <button
-              aria-label="Start chatting"
-              className={`bg-[#6486FF] p-2.5 rounded-full text-white text-lg`}
-            >
-              <MdOutlineGroupAdd />
-            </button>
+            {group.this_group_inviting_you ? (
+              <div className="flex items-center space-x-2">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger
+                      aria-label="Accept Request"
+                      className={`bg-[#6486FF] p-2 rounded-full text-white text-lg`}
+                      onClick={() =>
+                        invitationResponse.mutate({
+                          type: "accept",
+                          groupId: group._id,
+                        })
+                      }
+                    >
+                      <FaCheck />
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-[#6486FF]">
+                      Accept Request
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger
+                      aria-label="Reject Request"
+                      className={`bg-[#6486FF] p-2 rounded-full text-white text-lg`}
+                      onClick={() =>
+                        invitationResponse.mutate({
+                          type: "reject",
+                          groupId: group._id,
+                        })
+                      }
+                    >
+                      <FaXmark />
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-[#6486FF]">
+                      Reject Request
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            ) : (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger
+                    aria-label="Start chatting"
+                    className={`bg-[#6486FF] p-2 rounded-full text-white text-lg`}
+                  >
+                    <MdOutlineGroupAdd />
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-[#6486FF]">
+                    Join Group
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </div>
         ))}{" "}
         {hasNextPage && <div ref={ref}></div>}

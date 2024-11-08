@@ -19,6 +19,8 @@ const messageSchema = new mongoose.Schema(
   }
 );
 
+messageSchema.index({ createdAt: -1 }); //Descend the order of all the messages
+
 type MessageSchema = mongoose.InferSchemaType<typeof messageSchema>;
 export const Public =
   mongoose.models.Public ||
