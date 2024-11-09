@@ -16,7 +16,7 @@ function ChatBubbles({
   groupId,
   setMessage,
 }: {
-  messageDetails: Message<string, string[]>;
+  messageDetails: Message<User, string[]>;
   session: Session | null;
   groupId: string;
   setMessage: Dispatch<SetStateAction<Message<User, string[]>[]>>;

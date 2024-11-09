@@ -3,9 +3,11 @@ import React, { ReactNode, useEffect } from "react";
 import { initializePrivateChatSocket } from "@/utils/socket";
 import { useSocketStore } from "@/utils/store/socket.store";
 import { useSession } from "next-auth/react";
+import { useParams } from "next/navigation";
 function PrivateChatProvider({ children }: { children: ReactNode }) {
   const { status, data: session } = useSession();
   const { setPrivateSocket, socket } = useSocketStore();
+  const { conversationId } = useParams();
   useEffect(() => {
     if (!socket && status === "authenticated") {
       const socket = initializePrivateChatSocket(session.user.userId);

@@ -12,9 +12,11 @@ import { router as groupMessageRoute } from "./routes/group.message.route";
 import { router as authRoute } from "./routes/auth.route";
 import { router as appRoute } from "./routes/app.route";
 import { errorHandle } from "./middleware/error.handling";
-import { publicChat } from "./socket/publicChat.socket";
-import { privateChat } from "./socket/privateChat.socket";
-import { groupChat } from "./socket/groupChat.socket";
+import { handlePublicSocket } from "./socket/public.socket";
+import { handlePrivateSocket } from "./socket/private.socket";
+import { handleGroupSocket } from "./socket/group.socket";
+import { handleMailSocket } from "./socket/mail.socket";
+import { handleNotificationSocket } from "./socket/notification.socket";
 import { v2 as cloudinary } from "cloudinary";
 import helmet from "helmet";
 
@@ -49,9 +51,10 @@ app.use("/api/group", groupMessageRoute);
 app.use("/api/app", appRoute);
 app.use(errorHandle);
 
-publicChat(io as any);
-privateChat(io as any);
-groupChat(io as any);
+handlePublicSocket(io as any);
+handlePrivateSocket(io as any);
+handleGroupSocket(io as any);
+handleMailSocket(io as any);
 
 async function connectDb() {
   try {

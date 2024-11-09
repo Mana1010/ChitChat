@@ -1,12 +1,11 @@
 export interface MailListSchema {
   _id: string;
-  type: string;
   isAlreadyRead: boolean;
-  status: string;
+  kind: string;
   sentAt: string;
 }
 export interface MailDetailsSchema {
-  senAt: string;
+  sentAt: string;
   group_details: {
     groupName: string;
     groupPhoto: {

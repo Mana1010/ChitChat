@@ -30,3 +30,11 @@ export const initializeGroupChatSocket = (userId: string): Socket => {
     },
   });
 };
+
+export const initializeMailSocket = (userId: string): Socket => {
+  return io(`${URL}/mail`, {
+    auth: {
+      userId,
+    },
+  });
+};

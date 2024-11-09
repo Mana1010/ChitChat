@@ -2,7 +2,7 @@ import { Server } from "socket.io";
 import { Private } from "../model/private.model";
 import { Conversation } from "../model/conversation.model";
 import mongoose from "mongoose";
-import { checkServerIdentity } from "tls";
+import { PRIVATE_NAMESPACE } from "../utils/namespaces.utils";
 
 interface Payload {
   conversationId: string;
@@ -35,9 +35,8 @@ async function updateConversation(payload: Payload, addUnreadMessage: number) {
   );
   return updatedConversation;
 }
-export function privateChat(io: Server) {
-  const privateSocket = io.of("/private");
-  privateSocket.on("connection", (socket) => {
+export function handlePrivateSocket(io: Server) {
+  PRIVATE_NAMESPACE(io).on("connection", (socket) => {
     const { userId } = socket.handshake.auth;
     socket.on(
       "send-message",

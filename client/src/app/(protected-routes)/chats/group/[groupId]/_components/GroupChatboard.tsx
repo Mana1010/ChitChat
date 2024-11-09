@@ -45,7 +45,7 @@ function GroupChatboard({ groupId }: { groupId: string }) {
     status
   );
   const { data, fetchNextPage, error, isLoading, isError } = useInfiniteQuery({
-    queryKey: ["messages", groupId],
+    queryKey: ["group-messages", groupId],
     queryFn: async ({ pageParam = 0 }): Promise<any> => {
       const response = await axios.get(
         `${GROUP_SERVER_URL}/message/list/${groupId}?page=${pageParam}&limit=${20}`
@@ -76,7 +76,7 @@ function GroupChatboard({ groupId }: { groupId: string }) {
 
   useEffect(() => {
     return () => {
-      queryClient.resetQueries(["messages", groupId]); //To reset the cached data whenever the user unmount the component
+      queryClient.resetQueries(["group-messages", groupId]); //To reset the cached data whenever the user unmount the component
     };
   }, [groupId, queryClient]);
   useLayoutEffect(() => {
@@ -101,19 +101,13 @@ function GroupChatboard({ groupId }: { groupId: string }) {
 
   useEffect(() => {
     if (!socket || status !== "authenticated" || !groupInfo?._id) return;
-    socket.emit("join-room", {
-      groupId,
-      receiverId: groupInfo._id,
-    });
+    socket.emit("join-room", groupId);
     socket.emit("read-message", {
       groupId,
       participantId: groupInfo._id,
     });
     return () => {
-      socket.emit("leave-room", {
-        groupId,
-        receiverId: groupInfo?._id,
-      });
+      socket.emit("leave-room", groupId);
     };
   }, [groupId, groupInfo?._id, queryClient, socket, status]);
 
@@ -166,7 +160,7 @@ function GroupChatboard({ groupId }: { groupId: string }) {
     }
   }
   function sendMessage(messageContent: string) {
-    setAllMessages((prevMessages: any): any => {
+    setAllMessages((prevMessages: any) => {
       return [
         ...prevMessages,
         {
@@ -177,6 +171,7 @@ function GroupChatboard({ groupId }: { groupId: string }) {
             profilePic: session?.user.image,
             _id: session?.user.userId,
           },
+          type: "text",
           isRead: false,
           _id: nanoid(), //As temporary data
         },
@@ -275,15 +270,26 @@ function GroupChatboard({ groupId }: { groupId: string }) {
                     <LoadingChat />
                   </div>
                 )}
-                {allMessages?.map((data: any) => (
-                  <ChatBubbles
-                    key={data._id}
-                    messageDetails={data}
-                    session={session}
-                    groupId={groupId}
-                    setMessage={setAllMessages}
-                  />
-                ))}
+                {allMessages?.map((data: Message<User, string[]>) =>
+                  data.type === "text" ? (
+                    <ChatBubbles
+                      key={data._id}
+                      messageDetails={data}
+                      session={session}
+                      groupId={groupId}
+                      setMessage={setAllMessages}
+                    />
+                  ) : (
+                    <div
+                      key={data._id}
+                      className="w-full flex items-center justify-center"
+                    >
+                      <h1 className="text-zinc-500 text-sm">
+                        {`${data.sender.name} ${data.message}`}
+                      </h1>
+                    </div>
+                  )
+                )}
                 {typingUsers.find((user) => user === groupId) ? (
                   <div className="flex space-x-1 items-center">
                     <div className="rounded-3xl bg-[#414141] py-1 px-2 ">

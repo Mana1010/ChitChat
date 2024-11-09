@@ -105,7 +105,7 @@ function GroupChatList({
           &quot; group found
         </NoItemFound>
       ) : (
-        <div className="pt-2 flex flex-col w-full overflow-y-auto h-[98%] items-center px-1.5">
+        <div className="pt-2 flex flex-col w-full overflow-y-auto  h-[420px] items-center px-1.5">
           {searchResult?.map(
             (groupchat: GroupChatConversationList, index: number) => (
               <button

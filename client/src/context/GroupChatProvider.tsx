@@ -3,9 +3,12 @@ import React, { ReactNode, useEffect } from "react";
 import { initializeGroupChatSocket } from "@/utils/socket";
 import { useSocketStore } from "@/utils/store/socket.store";
 import { useSession } from "next-auth/react";
+import { useParams } from "next/navigation";
 function GroupChatProvider({ children }: { children: ReactNode }) {
   const { status, data: session } = useSession();
+  const params = useParams();
   const { setGroupSocket, groupMessageSocket } = useSocketStore();
+
   useEffect(() => {
     if (!groupMessageSocket && status === "authenticated") {
       const socket = initializeGroupChatSocket(session.user.userId);
@@ -14,6 +17,9 @@ function GroupChatProvider({ children }: { children: ReactNode }) {
         console.log("Connected Group Socket Successfully")
       );
     }
+    return () => {
+      groupMessageSocket?.off("connect");
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
   return (

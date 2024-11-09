@@ -68,7 +68,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
   const { participantInfo, isLoading: participantInfoLoading } =
     useParticipantInfo(conversationId, status, session);
   const { data, fetchNextPage, error, isLoading, isError } = useInfiniteQuery({
-    queryKey: ["messages", conversationId],
+    queryKey: ["private-messages", conversationId],
     queryFn: async ({ pageParam = 0 }): Promise<any> => {
       const response = await axios.get(
         `${PRIVATE_SERVER_URL}/message/list/${conversationId}?page=${pageParam}&limit=${20}`
@@ -98,7 +98,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
   const queryClient = useQueryClient();
   useEffect(() => {
     return () => {
-      queryClient.resetQueries(["messages", conversationId]); //To reset the cached data whenever the user unmount the component
+      queryClient.resetQueries(["private-messages", conversationId]); //To reset the cached data whenever the user unmount the component
     };
   }, [conversationId, queryClient]);
   useLayoutEffect(() => {

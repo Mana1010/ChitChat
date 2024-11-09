@@ -1,5 +1,5 @@
 import { Server } from "socket.io";
 
-export function notificationSocket(io: Server) {
+export function handleNotificationSocket(io: Server) {
   const notificationSocket = io.of("/notification");
 }

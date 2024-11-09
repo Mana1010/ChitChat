@@ -1,5 +1,5 @@
 "use client";
-import React, { memo, ReactNode, useState } from "react";
+import React, { memo, ReactNode, useEffect, useState } from "react";
 import { HiMail } from "react-icons/hi";
 import { HiMailOpen } from "react-icons/hi";
 import {
@@ -33,10 +33,13 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useModalStore } from "@/utils/store/modal.store";
+import { useSocketStore } from "@/utils/store/socket.store";
+import { nanoid } from "nanoid";
 function MailList({ mailId }: { mailId: string }) {
   const router = useRouter();
   const [filteredBy, setFilteredBy] = useState("all");
   const { data: session, status } = useSession();
+  const { mailSocket } = useSocketStore();
   const [selectedMail, setSelectedMail] = useState<string[]>([]);
   const [selectOptionActivated, setSelectOptionActivated] = useState(false);
   const selectedMailSet = new Set(selectedMail);
@@ -72,6 +75,37 @@ function MailList({ mailId }: { mailId: string }) {
   });
 
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!mailSocket || status === "unauthenticated") return;
+    mailSocket.emit("join-room", { userId: session?.user.userId });
+
+    return () => {
+      mailSocket.emit("leave-room", { userId: session?.user.userId });
+    };
+  }, [mailSocket, session?.user.userId, status]);
+
+  useEffect(() => {
+    if (!mailSocket) return;
+    mailSocket.on("update-mail", ({ sentAt, isAlreadyRead }) => {
+      queryClient.setQueryData<MailListSchema[] | undefined>(
+        ["all-mail-list"],
+        (prevData) => {
+          if (prevData) {
+            return [
+              {
+                _id: nanoid(), //As temporary id
+                isAlreadyRead,
+                kind: "invitation",
+                sentAt,
+              },
+              ...prevData,
+            ];
+          }
+        }
+      );
+    });
+  }, [mailSocket, queryClient]);
   function handleMailStatusChange(mailId: string) {
     queryClient.setQueryData<MailListSchema[] | undefined>(
       ["all-mail-list", filteredBy],
@@ -119,7 +153,6 @@ function MailList({ mailId }: { mailId: string }) {
       }
     });
     if (newSelectedMails.length > 0) {
-      console.log(newSelectedMails);
       setSelectedMail((prevMail) => [...prevMail, ...newSelectedMails]);
     }
   }
@@ -138,7 +171,7 @@ function MailList({ mailId }: { mailId: string }) {
       ) : (
         <div className="w-full flex-grow flex flex-col">
           {(getAllMail.data?.length as number) > 0 ? (
-            <div className="pt-2 flex flex-col w-full overflow-y-auto h-[98%] items-center px-1.5">
+            <div className="pt-2 flex flex-col w-full overflow-y-auto h-[410px] items-center px-1.5">
               {getAllMail.data?.map((mail) => (
                 <motion.label
                   htmlFor={`delete-mail-${mail._id}`}
@@ -235,7 +268,6 @@ function MailList({ mailId }: { mailId: string }) {
           </AlertDialogContent>
         </AlertDialog>
       </AnimatePresence>
-      s
     </div>
   );
 }

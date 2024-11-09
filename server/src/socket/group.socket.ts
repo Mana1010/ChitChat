@@ -1,13 +1,13 @@
 import { Server } from "socket.io";
-import { User } from "../model/user.model";
 import { Invitation } from "../model/mail.model";
 import { GroupConversation } from "../model/groupConversation.model";
 import { Group } from "../model/group.model";
+import { GROUP_NAMESPACE, MAIL_NAMESPACE } from "../utils/namespaces.utils";
+import { group } from "console";
 
 type RequestedUsers = { id: string; name: string };
-export async function groupChat(io: Server) {
-  const groupSocket = io.of("/group");
-  groupSocket.on("connection", (socket) => {
+export async function handleGroupSocket(io: Server) {
+  GROUP_NAMESPACE(io).on("connection", (socket) => {
     const { userId } = socket.handshake.auth;
     socket.on(
       "send-request",
@@ -37,12 +37,32 @@ export async function groupChat(io: Server) {
             });
           })
         );
-        await GroupConversation.findByIdAndUpdate(groupId, {
-          $push: { members: { $each: requestedMembers } },
+        await GroupConversation.updateOne(
+          { _id: groupId },
+          {
+            $push: { members: { $each: requestedMembers } },
+          }
+        );
+        requestedUsers.forEach((user) => {
+          MAIL_NAMESPACE(io)
+            .to(user.id)
+            .emit("update-mail", { sentAt: new Date(), isAlreadyRead: false });
         });
       }
     );
-
+    socket.on("invitation-accepted", async (groupId) => {
+      const result = await Group.create({
+        sender: userId,
+        groupId,
+        type: "system",
+        message: "joined the group",
+      });
+      socket.broadcast.to(groupId).emit("display-joined-user", {
+        sender: result.sender,
+        type: result.type,
+        message: result.message,
+      });
+    });
     socket.on("send-message", async ({ message, groupId }) => {
       try {
         const sendMessage = await Group.create({

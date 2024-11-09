@@ -68,7 +68,12 @@ async function handleAggregation(
         getLatestGroupConversationId: [
           {
             $match: {
-              "members.memberInfo": new mongoose.Types.ObjectId(senderId),
+              members: {
+                $elemMatch: {
+                  memberInfo: new mongoose.Types.ObjectId(senderId),
+                  status: "active",
+                },
+              },
             },
           },
           {
@@ -81,6 +86,7 @@ async function handleAggregation(
       },
     },
   ]);
+  console.log(handleGroupAggregation);
   const doesHavePrivateConversation =
     handlePrivateAggregation[0].checkIfNewUserPrivate.length;
   const doesHaveGroupConversation =
@@ -161,7 +167,7 @@ export const getAllMail = asyncHandler(async (req: Request, res: Response) => {
   const getMail = await Mail.find(query)
     .sort({ sentAt: -1 })
     .select(["sentAt", "isAlreadyRead"]);
-
+  console.log(getMail);
   res.status(200).json({ message: getMail });
 });
 export const updateMailStatus = asyncHandler(
@@ -234,12 +240,6 @@ export const getMailDetails = asyncHandler(
         },
       },
     ]);
-    // const getMailContent = await Mail.findById(mailId).select([
-    //   "kind",
-    //   "from",
-    //   "body",
-    //   "sentAt",
-    // ]);
     console.log(JSON.stringify(getMailContent));
     if (!getMailContent) {
       res.status(404);

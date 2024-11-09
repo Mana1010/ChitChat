@@ -229,6 +229,13 @@ export const createGroupChat = asyncHandler(
           },
         ],
       });
+      await Group.create({
+        groupId: newGroupDetails._id,
+        sender: creatorId,
+        type: "system",
+        message: "created this group",
+      });
+
       res.status(200).json({
         message: {
           content: "Successfully created your group",
@@ -316,7 +323,7 @@ export const getGroupMessages = asyncHandler(
       .skip(CURRENTPAGE * LIMIT)
       .limit(LIMIT)
       .populate([{ path: "sender", select: ["name", "profilePic", "status"] }])
-      .select(["sender", "message", "isRead", "createdAt", "reaction"]);
+      .select(["sender", "message", "isRead", "createdAt", "reaction", "type"]);
     const hasMoreMessages = getMessages.length === LIMIT;
     const messages = getMessages.reverse();
     const nextPage = hasMoreMessages ? CURRENTPAGE + 1 : null;
@@ -337,7 +344,7 @@ export const invitationResponse = asyncHandler(
 
     if (!type || !groupId || !userId) {
       res.status(400);
-      throw new Error("Client Payload is required");
+      throw new Error("Client payload is required");
     }
 
     if (type === "accept") {

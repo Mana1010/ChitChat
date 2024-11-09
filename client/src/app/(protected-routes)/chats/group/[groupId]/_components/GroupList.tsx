@@ -35,6 +35,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useSocketStore } from "@/utils/store/socket.store";
 
 function ParentDiv({ children }: { children: ReactNode }) {
   return <div className="flex-grow w-full flex flex-col">{children}</div>;
@@ -48,6 +49,7 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
   const [allGroupChatList, setAllGroupChatList] = useState<GroupChatList[]>([]);
   const currentPageRef = useRef(0);
   const debouncedValue = useDebounce(searchGroup);
+  const { groupMessageSocket } = useSocketStore();
   const [sortBy, setSortBy] = useState("popular");
   const { searchGroup: debouncedSearchGroup, isLoading: loadingSearchGroup } =
     useSearchGroup(debouncedValue);
@@ -109,7 +111,8 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
       return response.data;
     },
     onSuccess: ({ type, message, groupId }) => {
-      if (type === "accepted") {
+      if (type === "accepted" && groupMessageSocket) {
+        groupMessageSocket.emit("invitation-accepted", groupId);
         queryClient.invalidateQueries("groupchat-list");
         toast.success(message);
         router.push(`/chats/group/${groupId}?type=chats`);
@@ -118,7 +121,7 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
       }
     },
     onError: (err: AxiosError<{ message: string }>) => {
-      console.log(err.response?.data.message);
+      toast.error(err.response?.data.message);
     },
   });
 

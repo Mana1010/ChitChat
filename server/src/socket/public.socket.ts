@@ -1,8 +1,8 @@
-import { Socket } from "socket.io";
+import { Server, Socket } from "socket.io";
 import { Public } from "../model/public.model";
 import { User } from "../model/user.model";
 import mongoose from "mongoose";
-
+import { PUBLIC_NAMESPACE } from "../utils/namespaces.utils";
 function stopTyping(
   socket: Socket,
   typingUsers: { userId: string; userImg: string }[],
@@ -43,9 +43,10 @@ async function userReactionAggregate(userId: string, messageId: string) {
   ]);
   return findMessageAndCheckUserReaction;
 }
-export function publicChat(io: Socket) {
+export function handlePublicSocket(io: Server) {
   const typingUsers: { userId: string; userImg: string }[] = [];
-  io.on("connection", async (socket: Socket) => {
+
+  PUBLIC_NAMESPACE(io).on("connection", async (socket: Socket) => {
     const { userId } = socket.handshake.auth;
     const getInfo = await User.findById(userId).select(["name", "status"]);
     if (getInfo.status === "Offline") {

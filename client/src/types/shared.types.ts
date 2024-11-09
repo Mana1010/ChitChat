@@ -6,9 +6,10 @@ export interface User {
   userId?: string;
 }
 export interface Message<UserType = string, ReactionType = string> {
-  _id: UserType;
-  sender: User;
+  _id: string;
+  sender: UserType;
   message: string;
+  type: string;
   isRead: boolean;
   reaction: ReactionType;
   createdAt: string;
