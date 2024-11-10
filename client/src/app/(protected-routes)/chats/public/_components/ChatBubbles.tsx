@@ -2,7 +2,7 @@
 import React, { Dispatch, SetStateAction, useMemo, useState } from "react";
 import Image from "next/image";
 import { PublicMessages } from "@/types/UserTypes";
-import { User } from "@/types/shared.types";
+import { Message, Reaction, User } from "@/types/shared.types";
 import PublicReactions from "./PublicReaction";
 import { VscReactions } from "react-icons/vsc";
 import Linkify from "linkify-react";
@@ -14,16 +14,16 @@ function PublicChatBubbles({
   setMessage,
   setOpenMessageIdReactionList,
 }: {
-  messageDetails: PublicMessages<User>;
+  messageDetails: Message<User, Reaction[]>;
   socket: Socket | null;
   userData: User | undefined;
-  setMessage: Dispatch<SetStateAction<PublicMessages<User>[]>>;
+  setMessage: Dispatch<SetStateAction<Message<User, Reaction[]>[]>>;
   setOpenMessageIdReactionList: Dispatch<SetStateAction<string | null>>;
 }) {
   const [hoveredMessage, setHoveredMessage] = useState<string | undefined>("");
   const [openReaction, setOpenReaction] = useState<string | undefined>("");
   const reactionOnly = useMemo(() => {
-    return messageDetails.reactions.map(({ reactionEmoji }) => reactionEmoji);
+    return messageDetails.reactions?.map(({ reactionEmoji }) => reactionEmoji);
   }, [messageDetails]);
   const reactionList = new Set(reactionOnly); //To remove duplicate reaction
   if (!userData) return;
@@ -85,7 +85,7 @@ function PublicChatBubbles({
                 >
                   <span className="text-white">{messageDetails?.message}</span>
                   {/* Display Reactions */}
-                  {messageDetails.reactions.length ? (
+                  {messageDetails.reactions?.length ? (
                     <button
                       onClick={() =>
                         setOpenMessageIdReactionList(messageDetails._id)

@@ -5,19 +5,18 @@ export interface User {
   status: string;
   userId?: string;
 }
+export interface Reaction<ReactionType = string> {
+  reactor: ReactionType;
+  reactionEmoji: string;
+  reactionCreatedAt: string;
+}
 export interface Message<UserType = string, ReactionType = string> {
   _id: string;
   sender: UserType;
   message: string;
   type: string;
-  isRead: boolean;
-  reaction: ReactionType;
+  reactions: ReactionType;
   createdAt: string;
-}
-export interface Reaction<ReactionType = string> {
-  reactor: ReactionType;
-  reactionEmoji: string;
-  reactionCreatedAt: string;
 }
 
 export interface InfiniteScrollingMessageSchema {

@@ -32,6 +32,7 @@ function Sidebar() {
       return response.data.message;
     },
     enabled: status === "authenticated",
+    refetchOnMount: false,
     onError: (err) => {
       console.log(err);
     },

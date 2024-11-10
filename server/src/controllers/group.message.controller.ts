@@ -254,7 +254,6 @@ export const createGroupChat = asyncHandler(
 export const getGroupChatInfo = asyncHandler(
   async (req: Request, res: Response) => {
     const { groupId } = req.params;
-    console.log(groupId);
     if (!mongoose.Types.ObjectId.isValid(groupId)) {
       res.status(404);
       throw new Error("User not found");
@@ -290,7 +289,6 @@ export const getGroupChatInfo = asyncHandler(
       res.status(404);
       throw new Error("User not found");
     }
-    console.log(getUserInfo);
     res.status(200).json({
       message: getUserInfo[0],
     });
@@ -323,11 +321,10 @@ export const getGroupMessages = asyncHandler(
       .skip(CURRENTPAGE * LIMIT)
       .limit(LIMIT)
       .populate([{ path: "sender", select: ["name", "profilePic", "status"] }])
-      .select(["sender", "message", "isRead", "createdAt", "reaction", "type"]);
+      .select(["sender", "message", "createdAt", "reaction", "type"]);
     const hasMoreMessages = getMessages.length === LIMIT;
     const messages = getMessages.reverse();
     const nextPage = hasMoreMessages ? CURRENTPAGE + 1 : null;
-    console.log(getMessages);
     res.status(200).json({
       message: {
         getMessages: messages,

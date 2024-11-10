@@ -16,7 +16,7 @@ import { PRIVATE_SERVER_URL } from "@/utils/serverUrl";
 import NewUser from "./NewUser";
 import UserNotFound from "./UserNotFound";
 import { Conversation, GetParticipantInfo } from "@/types/UserTypes";
-import { Message } from "@/types/shared.types";
+import { Message, User } from "@/types/shared.types";
 import { useSocketStore } from "@/utils/store/socket.store";
 import { nanoid } from "nanoid";
 import LoadingChat from "@/components/LoadingChat";
@@ -30,7 +30,6 @@ import ProfileCard from "../../../_components/ProfileCard";
 import typingAnimation from "../../../../../../assets/images/gif-animation/typing-animation-ver-2.gif";
 import SendAttachment from "@/components/SendAttachment";
 import useParticipantInfo from "@/hooks/useParticipantInfo.hook";
-
 function ParentDiv({
   children,
   setOpenEmoji,
@@ -60,7 +59,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
   const [openEmoji, setOpenEmoji] = useState(false);
   const { data: session, status } = useSession();
   const [hasNextPage, setHasNextPage] = useState(true);
-  const [allMessages, setAllMessages] = useState<Message[]>([]);
+  const [allMessages, setAllMessages] = useState<Message<User>[]>([]);
   const [showArrowDown, setShowArrowDown] = useState(false);
   const [openAttachmentModal, setOpenAttachmentModal] = useState(false);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
@@ -209,18 +208,20 @@ function Chatboard({ conversationId }: { conversationId: string }) {
         }
       }
     );
-    setAllMessages((prevMessages: Message[]): any => {
+    setAllMessages((prevMessages: Message<User>[]): Message<User>[] => {
       return [
         ...prevMessages,
         {
           message: messageContent,
+          type: "text",
+          reactions: "",
+          createdAt: new Date().toString(),
           sender: {
-            name: session?.user.name.split(" ")[0],
+            name: session?.user.name.split(" ")[0] as string,
             status: "Online",
-            profilePic: session?.user.image,
-            _id: session?.user.userId,
+            profilePic: session?.user.image as string,
+            _id: session?.user.userId as string,
           },
-          isRead: false,
           _id: nanoid(), //As temporary data
         },
       ];
@@ -315,12 +316,9 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                     <LoadingChat />
                   </div>
                 )}
-                {allMessages?.map((data: Message) => (
+                {allMessages?.map((data: Message<User>) => (
                   <ChatBubbles
                     key={data._id}
-                    participantId={
-                      participantInfo?.receiver_details._id as string
-                    }
                     messageDetails={data}
                     session={session}
                     conversationId={conversationId}

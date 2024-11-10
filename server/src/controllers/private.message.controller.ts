@@ -109,7 +109,7 @@ export const getPrivateMessages = asyncHandler(
       .skip(CURRENTPAGE * LIMIT)
       .limit(LIMIT)
       .populate([{ path: "sender", select: ["name", "profilePic", "status"] }])
-      .select(["sender", "message", "isRead", "createdAt", "reaction"]);
+      .select(["sender", "message", "createdAt", "reaction"]);
     const hasMoreMessages = getMessages.length === LIMIT;
     const messages = getMessages.reverse();
     const nextPage = hasMoreMessages ? CURRENTPAGE + 1 : null;

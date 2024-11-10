@@ -86,7 +86,6 @@ async function handleAggregation(
       },
     },
   ]);
-  console.log(handleGroupAggregation);
   const doesHavePrivateConversation =
     handlePrivateAggregation[0].checkIfNewUserPrivate.length;
   const doesHaveGroupConversation =
@@ -167,7 +166,6 @@ export const getAllMail = asyncHandler(async (req: Request, res: Response) => {
   const getMail = await Mail.find(query)
     .sort({ sentAt: -1 })
     .select(["sentAt", "isAlreadyRead"]);
-  console.log(getMail);
   res.status(200).json({ message: getMail });
 });
 export const updateMailStatus = asyncHandler(
@@ -188,9 +186,7 @@ export const updateMailStatus = asyncHandler(
 
 export const deleteMail = asyncHandler(async (req: Request, res: Response) => {
   const selectedMails: string[] = req.body;
-  console.log(selectedMails);
   await Mail.deleteMany({ _id: { $in: selectedMails } });
-  console.log(selectedMails);
   res.status(201).json({ message: "Deleted Successfully" });
 });
 
@@ -240,7 +236,6 @@ export const getMailDetails = asyncHandler(
         },
       },
     ]);
-    console.log(JSON.stringify(getMailContent));
     if (!getMailContent) {
       res.status(404);
       throw new Error("Mail does not exist");

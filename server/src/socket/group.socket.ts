@@ -56,28 +56,34 @@ export async function handleGroupSocket(io: Server) {
         groupId,
         type: "system",
         message: "joined the group",
-      });
-      socket.broadcast.to(groupId).emit("display-joined-user", {
-        sender: result.sender,
-        type: result.type,
-        message: result.message,
+      }).then((doc) =>
+        doc.populate({
+          path: "sender",
+          select: ["name", "profilePic", "status", "_id"],
+        })
+      );
+
+      socket.broadcast.to(groupId).emit("display-message", {
+        messageDetails: result,
       });
     });
     socket.on("send-message", async ({ message, groupId }) => {
       try {
-        const sendMessage = await Group.create({
+        const result = await Group.create({
           groupId,
           message,
           sender: userId,
-        });
+        }).then((doc) =>
+          doc.populate({
+            path: "sender",
+            select: ["name", "profilePic", "status", "_id"],
+          })
+        );
         await GroupConversation.findByIdAndUpdate(groupId, {
           $push: { memberReadMessage: userId },
         });
         socket.broadcast.to(groupId).emit("display-message", {
-          message: sendMessage.message,
-          groupId,
-          createdAt: sendMessage.createdAt,
-          memberReadMessage: [userId],
+          messageDetails: result,
         });
       } catch (err) {
         console.log("Error asf");
@@ -85,6 +91,7 @@ export async function handleGroupSocket(io: Server) {
     });
 
     socket.on("join-room", (groupId) => {
+      console.log("SUCCESSFULLY JOINED THE ROOM FOR GROUP");
       socket.join(groupId);
     });
     socket.on("leave-room", (groupId) => {

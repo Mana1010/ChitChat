@@ -1,6 +1,6 @@
 import React, { Dispatch, ReactNode, SetStateAction } from "react";
 import Image from "next/image";
-import { User } from "@/types/UserTypes";
+import { User } from "@/types/shared.types";
 import LoadingChat from "@/components/LoadingChat";
 import { CreateGroupChatSchema } from "./CreateGroupChat";
 import { ErrorMessageSchema } from "./CreateGroupChat";

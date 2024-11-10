@@ -12,6 +12,7 @@ import Image from "next/image";
 import themeImg from "../../../../../assets/images/theme-img.png";
 import { IoIosArrowRoundDown } from "react-icons/io";
 import { PublicMessages } from "@/types/UserTypes";
+import { Message } from "@/types/shared.types";
 import { nanoid } from "nanoid";
 import LoadingChat from "@/components/LoadingChat";
 import { useInView } from "react-intersection-observer";
@@ -32,7 +33,9 @@ function PublicChat() {
   const scrollPositionRef = useRef(0);
   const currentPageRef = useRef(0);
   const [showArrowDown, setShowArrowDown] = useState(false);
-  const [allMessages, setAllMessages] = useState<PublicMessages<User>[]>([]);
+  const [allMessages, setAllMessages] = useState<Message<User, Reaction[]>[]>(
+    []
+  );
   const [openMessageIdReactionList, setOpenMessageIdReactionList] = useState<
     string | null
   >(null);
@@ -56,7 +59,7 @@ function PublicChat() {
       return lastPage.nextPage ?? false;
     },
     onSuccess: (data) => {
-      const nextPage: PublicMessages<User>[] =
+      const nextPage: Message<User, Reaction[]>[] =
         data.pages[currentPageRef.current].getAllMessages;
       setAllMessages((prevMessages) => [...nextPage, ...prevMessages]);
       if (currentPageRef.current > 0 && scrollDivRef.current) {
@@ -125,7 +128,7 @@ function PublicChat() {
             if (messageDetails._id === data.messageId) {
               return {
                 ...messageDetails,
-                reactions: messageDetails.reactions.map((reaction) => {
+                reactions: messageDetails.reactions?.map((reaction) => {
                   if (reaction.reactor === data.reactor) {
                     return {
                       ...reaction,
@@ -148,7 +151,7 @@ function PublicChat() {
             if (messageDetails._id === data.messageId) {
               return {
                 ...messageDetails,
-                reactions: messageDetails.reactions.filter((reaction) => {
+                reactions: messageDetails.reactions?.filter((reaction) => {
                   return reaction.reactor !== data.reactor;
                 }),
               };
@@ -183,12 +186,13 @@ function PublicChat() {
       status: "Online",
       _id: session?.user.userId,
     };
-    setAllMessages((prevMessages: PublicMessages<User>[]) => {
+    setAllMessages((prevMessages: Message<User, Reaction[]>[]) => {
       return [
         ...prevMessages,
         {
           message,
           sender: userData,
+          type: "text",
           createdAt: new Date().toString(),
           isMessageDeleted: false,
           _id: nanoid(),
@@ -226,7 +230,7 @@ function PublicChat() {
                 <LoadingChat />
               </div>
             )}
-            {allMessages?.map((data: PublicMessages<User>) => (
+            {allMessages?.map((data: Message<User, Reaction[]>) => (
               <PublicChatBubbles
                 key={data?._id}
                 socket={socketRef.current as Socket}

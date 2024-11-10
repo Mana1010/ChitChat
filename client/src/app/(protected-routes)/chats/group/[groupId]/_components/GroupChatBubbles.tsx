@@ -1,7 +1,7 @@
 "use client";
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import Linkify from "linkify-react";
-import PrivateReactions from "./PrivateReactions";
+import GroupReactions from "./GroupReactions";
 import { Session } from "next-auth";
 import Image from "next/image";
 import emptyChat from "../../../../../../assets/images/empty-chat.png";
@@ -9,17 +9,17 @@ import { VscReactions } from "react-icons/vsc";
 import { useSocketStore } from "@/utils/store/socket.store";
 import { Message } from "@/types/shared.types";
 import { User } from "@/types/shared.types";
-
-function ChatBubbles({
+import { Reaction } from "@/types/shared.types";
+function GroupChatBubbles({
   messageDetails,
   session,
   groupId,
   setMessage,
 }: {
-  messageDetails: Message<User, string[]>;
+  messageDetails: Message<User, Reaction[]>;
   session: Session | null;
   groupId: string;
-  setMessage: Dispatch<SetStateAction<Message<User, string[]>[]>>;
+  setMessage: Dispatch<SetStateAction<Message<User, Reaction[]>[]>>;
 }) {
   const { socket } = useSocketStore();
   const [hoveredMessage, setHoveredMessage] = useState<string | undefined>("");
@@ -99,7 +99,7 @@ function ChatBubbles({
                   }`}
                 >
                   <span className="text-white">{messageDetails?.message}</span>
-                  {messageDetails.reaction && (
+                  {messageDetails.reactions && (
                     <button
                       className={`absolute bottom-[-10px] text-[0.8rem] ${
                         messageDetails.sender._id === session?.user.userId
@@ -107,7 +107,7 @@ function ChatBubbles({
                           : "right-0"
                       }`}
                     >
-                      {messageDetails.reaction}
+                      {messageDetails.reactions.length}
                     </button>
                   )}
                 </div>
@@ -135,7 +135,7 @@ function ChatBubbles({
                   )}
 
                   {openReaction === messageDetails._id && (
-                    <PrivateReactions
+                    <GroupReactions
                       messageDetails={messageDetails}
                       messageId={messageDetails._id ?? ""}
                       conversationId={groupId}
@@ -174,4 +174,4 @@ function ChatBubbles({
   );
 }
 
-export default ChatBubbles;
+export default GroupChatBubbles;

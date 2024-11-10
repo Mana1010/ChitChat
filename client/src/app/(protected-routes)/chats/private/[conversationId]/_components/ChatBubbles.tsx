@@ -8,19 +8,17 @@ import Image from "next/image";
 import emptyChat from "../../../../../../assets/images/empty-chat.png";
 import { VscReactions } from "react-icons/vsc";
 import { useSocketStore } from "@/utils/store/socket.store";
-
+import { User } from "@/types/shared.types";
 function ChatBubbles({
   messageDetails,
   session,
-  participantId,
   conversationId,
   setMessage,
 }: {
-  messageDetails: Message;
+  messageDetails: Message<User>;
   session: Session | null;
-  participantId: string;
   conversationId: string;
-  setMessage: Dispatch<SetStateAction<Message[]>>;
+  setMessage: Dispatch<SetStateAction<Message<User>[]>>;
 }) {
   const { socket } = useSocketStore();
   const [hoveredMessage, setHoveredMessage] = useState<string | undefined>("");
@@ -100,7 +98,7 @@ function ChatBubbles({
                   }`}
                 >
                   <span className="text-white">{messageDetails?.message}</span>
-                  {messageDetails.reaction && (
+                  {messageDetails.reactions && (
                     <button
                       className={`absolute bottom-[-10px] text-[0.8rem] ${
                         messageDetails.sender._id === session?.user.userId
@@ -108,7 +106,7 @@ function ChatBubbles({
                           : "right-0"
                       }`}
                     >
-                      {messageDetails.reaction}
+                      {messageDetails.reactions}
                     </button>
                   )}
                 </div>

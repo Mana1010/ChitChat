@@ -1,10 +1,12 @@
 "use client";
 import React, { Dispatch, SetStateAction, useState } from "react";
 import { nanoid } from "nanoid";
-import { Messages, PublicMessages, ReactionSchema } from "@/types/UserTypes";
+import { ReactionSchema } from "@/types/UserTypes";
+import { Message } from "@/types/shared.types";
 import { User } from "next-auth";
 import { Socket } from "socket.io-client";
 import { reactions } from "@/utils/reactions";
+import { Reaction } from "@/types/shared.types";
 function PublicReactions({
   messageDetails,
   userId,
@@ -12,23 +14,23 @@ function PublicReactions({
   setMessage,
   setOpenReaction,
 }: {
-  messageDetails: PublicMessages<User>;
+  messageDetails: Message<User, Reaction[]>;
   userId: string;
   socket: Socket | null;
-  setMessage: Dispatch<SetStateAction<PublicMessages<User>[]>>;
+  setMessage: Dispatch<SetStateAction<Message<User, Reaction[]>[]>>;
   setOpenReaction: Dispatch<SetStateAction<string | undefined>>;
 }) {
-  function removeReaction(message: PublicMessages<User>) {
-    const removeReaction = message.reactions.filter(
+  function removeReaction(message: Message<User, Reaction[]>) {
+    const removeReaction = message.reactions?.filter(
       ({ reactor }) => reactor !== userId //Filtered out or delete the reaction of a reactor when they click the same reaction again
     );
     return { ...message, reactions: removeReaction }; //Return the filtered out reaction;
   }
   function updateReaction(
-    message: PublicMessages<User>,
+    message: Message<User, Reaction[]>,
     reaction: ReactionSchema
   ) {
-    const updateReaction = message.reactions.map((messageReaction) => {
+    const updateReaction = message.reactions?.map((messageReaction) => {
       if (messageReaction.reactor === userId) {
         return {
           ...messageReaction,
@@ -42,13 +44,13 @@ function PublicReactions({
   }
 
   function addReaction(
-    message: PublicMessages<User>,
+    message: Message<User, Reaction[]>,
     reaction: ReactionSchema
   ) {
     return {
       ...message,
       reactions: [
-        ...message.reactions,
+        ...message?.reactions,
         {
           reactor: userId,
           reactionEmoji: reaction.emoji,
@@ -72,7 +74,7 @@ function PublicReactions({
               userId,
             });
             setMessage((prev): any => {
-              return prev.map((message: PublicMessages<User>) => {
+              return prev.map((message: Message<User, Reaction[]>) => {
                 if (messageDetails._id === message._id) {
                   if (findReaction?.reactionEmoji === reaction.emoji) {
                     return removeReaction(message);

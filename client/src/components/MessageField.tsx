@@ -5,6 +5,7 @@ import { LuSend } from "react-icons/lu";
 import { Socket } from "socket.io-client";
 import { GetParticipantInfo } from "@/types/UserTypes";
 import { GrAttachment } from "react-icons/gr";
+import { useQueryClient } from "react-query";
 interface MessageFieldProps {
   socket: Socket | null;
   participantInfo?: GetParticipantInfo;
@@ -29,6 +30,7 @@ function MessageField({
   setOpenEmoji,
   setOpenAttachmentModal,
 }: MessageFieldProps) {
+  const queryClient = useQueryClient();
   return (
     <form
       onSubmit={(e) => {
@@ -51,6 +53,7 @@ function MessageField({
         sendMessage(message);
         updateChatList(message);
         setMessage("");
+        queryClient.invalidateQueries(["sidebar"]);
       }}
       className="px-3 py-2.5 flex items-center space-x-2 bg-[#171717]"
     >

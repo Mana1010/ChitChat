@@ -14,15 +14,15 @@ import { nanoid } from "nanoid";
 import LoadingChat from "@/components/LoadingChat";
 import { useInView } from "react-intersection-observer";
 import ChatHeader from "./ChatHeader";
-import ChatBubbles from "./ChatBubbles";
 import { IoIosArrowRoundDown } from "react-icons/io";
 import { AnimatePresence, motion } from "framer-motion";
 import ProfileCard from "../../../_components/ProfileCard";
 import typingAnimation from "../../../../../../assets/images/gif-animation/typing-animation-ver-2.gif";
 import SendAttachment from "@/components/SendAttachment";
 import useGroupInfo from "@/hooks/useGroupInfo.hook";
-import { User } from "@/types/shared.types";
+import { User, Reaction } from "@/types/shared.types";
 import MessageField from "./MessageField";
+import GroupChatBubbles from "./GroupChatBubbles";
 function GroupChatboard({ groupId }: { groupId: string }) {
   const { socket, groupMessageSocket } = useSocketStore();
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -34,7 +34,9 @@ function GroupChatboard({ groupId }: { groupId: string }) {
   const [openEmoji, setOpenEmoji] = useState(false);
   const { data: session, status } = useSession();
   const [hasNextPage, setHasNextPage] = useState(true);
-  const [allMessages, setAllMessages] = useState<Message<User, string[]>[]>([]);
+  const [allMessages, setAllMessages] = useState<Message<User, Reaction[]>[]>(
+    []
+  );
   const [showArrowDown, setShowArrowDown] = useState(false);
   const [openAttachmentModal, setOpenAttachmentModal] = useState(false);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
@@ -79,6 +81,8 @@ function GroupChatboard({ groupId }: { groupId: string }) {
       queryClient.resetQueries(["group-messages", groupId]); //To reset the cached data whenever the user unmount the component
     };
   }, [groupId, queryClient]);
+
+  //We use useLayoutEffect to run this before the content is display in the browser which is to not visible the scroll to down.
   useLayoutEffect(() => {
     if (!scrollRef.current) return;
     if (currentPageRef.current <= 0) {
@@ -100,55 +104,58 @@ function GroupChatboard({ groupId }: { groupId: string }) {
   }, [hasNextPage, fetchNextPage, inView]);
 
   useEffect(() => {
-    if (!socket || status !== "authenticated" || !groupInfo?._id) return;
-    socket.emit("join-room", groupId);
-    socket.emit("read-message", {
+    if (!groupMessageSocket || status !== "authenticated" || !groupInfo?._id)
+      return;
+    groupMessageSocket.emit("join-room", groupId);
+    groupMessageSocket.emit("read-message", {
       groupId,
       participantId: groupInfo._id,
     });
     return () => {
-      socket.emit("leave-room", groupId);
+      groupMessageSocket.emit("leave-room", groupId);
     };
-  }, [groupId, groupInfo?._id, queryClient, socket, status]);
+  }, [groupId, groupInfo?._id, queryClient, groupMessageSocket, status]);
 
   useEffect(() => {
-    if (!socket) return;
-    socket.on("display-seen-text", ({ user, totalUnreadMessages }) => {
-      queryClient.setQueryData<GetParticipantInfo | undefined>(
-        ["participant-info", groupId],
-        (cachedData: GetParticipantInfo | undefined) => {
-          if (cachedData) {
-            return {
-              ...cachedData,
-              hasUnreadMessages: {
-                user,
-                totalUnreadMessages,
-              },
-            };
+    if (!groupMessageSocket) return;
+    groupMessageSocket.on(
+      "display-seen-text",
+      ({ user, totalUnreadMessages }) => {
+        queryClient.setQueryData<GetParticipantInfo | undefined>(
+          ["participant-info", groupId],
+          (cachedData: GetParticipantInfo | undefined) => {
+            if (cachedData) {
+              return {
+                ...cachedData,
+                hasUnreadMessages: {
+                  user,
+                  totalUnreadMessages,
+                },
+              };
+            }
           }
-        }
-      );
+        );
+      }
+    );
+    groupMessageSocket.on("display-message", ({ messageDetails }) => {
+      setAllMessages((prevMessages) => [...prevMessages, messageDetails]);
     });
 
-    socket.on("display-message", ({ getProfile }) => {
-      setAllMessages((prevMessages) => [...prevMessages, getProfile]);
-    });
-
-    socket.on("during-typing", (conversationId) => {
+    groupMessageSocket.on("during-typing", (conversationId) => {
       setTypingUsers((prevUsers) => [...prevUsers, conversationId]);
     });
-    socket.on("stop-typing", (conversationId) => {
+    groupMessageSocket.on("stop-typing", (conversationId) => {
       setTypingUsers((prevUsers) =>
         prevUsers.filter((user) => user !== conversationId)
       );
     });
     return () => {
-      socket.off("display-seen-text");
-      socket.off("display-message");
-      socket.off("during-typing");
-      socket.off("stop-typing");
+      groupMessageSocket.off("display-seen-text");
+      groupMessageSocket.off("display-message");
+      groupMessageSocket.off("during-typing");
+      groupMessageSocket.off("stop-typing");
     };
-  }, [groupId, queryClient, socket]);
+  }, [groupId, queryClient, groupMessageSocket]);
 
   if (groupId.toLowerCase() === "new") {
     return <NoGroup />;
@@ -172,7 +179,6 @@ function GroupChatboard({ groupId }: { groupId: string }) {
             _id: session?.user.userId,
           },
           type: "text",
-          isRead: false,
           _id: nanoid(), //As temporary data
         },
       ];
@@ -270,9 +276,9 @@ function GroupChatboard({ groupId }: { groupId: string }) {
                     <LoadingChat />
                   </div>
                 )}
-                {allMessages?.map((data: Message<User, string[]>) =>
+                {allMessages?.map((data: Message<User, Reaction[]>) =>
                   data.type === "text" ? (
-                    <ChatBubbles
+                    <GroupChatBubbles
                       key={data._id}
                       messageDetails={data}
                       session={session}
@@ -284,8 +290,12 @@ function GroupChatboard({ groupId }: { groupId: string }) {
                       key={data._id}
                       className="w-full flex items-center justify-center"
                     >
-                      <h1 className="text-zinc-500 text-sm">
-                        {`${data.sender.name} ${data.message}`}
+                      <h1 className="text-zinc-300 text-[0.8rem]">
+                        {`${
+                          data.sender._id === session?.user.userId
+                            ? "You"
+                            : data.sender.name
+                        } ${data.message}`}
                       </h1>
                     </div>
                   )

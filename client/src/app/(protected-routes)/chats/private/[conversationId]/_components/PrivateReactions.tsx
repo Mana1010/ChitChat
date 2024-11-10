@@ -2,8 +2,9 @@
 import React, { Dispatch, SetStateAction, useState } from "react";
 import { nanoid } from "nanoid";
 import { useSocketStore } from "@/utils/store/socket.store";
-import { Messages } from "@/types/UserTypes";
+import { Message } from "@/types/shared.types";
 import { reactions } from "@/utils/reactions";
+import { User } from "@/types/shared.types";
 function PrivateReactions({
   messageId,
   conversationId,
@@ -13,8 +14,8 @@ function PrivateReactions({
 }: {
   messageId: string;
   conversationId?: string;
-  messageDetails: Messages;
-  setMessage: Dispatch<SetStateAction<Messages[]>>;
+  messageDetails: Message<User>;
+  setMessage: Dispatch<SetStateAction<Message<User>[]>>;
   setOpenReaction: Dispatch<SetStateAction<string | undefined>>;
 }) {
   const { socket } = useSocketStore();
@@ -35,7 +36,7 @@ function PrivateReactions({
               return prev.map((message) => {
                 if (messageId === message._id) {
                   const newReaction =
-                    reaction.emoji === message.reaction ? "" : reaction.emoji;
+                    reaction.emoji === message.reactions ? "" : reaction.emoji;
                   sendReaction(newReaction);
                   return { ...message, reaction: newReaction };
                 } else {
@@ -47,7 +48,7 @@ function PrivateReactions({
           }}
           key={reaction.id}
           className={`text-2xl h-full p-1 ${
-            messageDetails.reaction === reaction.emoji
+            messageDetails.reactions === reaction.emoji
               ? "bg-[#171717]"
               : "hover:bg-[#171717]"
           }`}

@@ -52,7 +52,7 @@ export function handlePrivateSocket(io: Server) {
               .populate([
                 { path: "sender", select: ["profilePic", "name", "status"] },
               ])
-              .select(["isRead", "message", "sender"]);
+              .select(["message", "sender"]);
 
             socket.broadcast.to(conversationId).emit("display-message", {
               // To send a message and display to specific user only.
@@ -122,9 +122,12 @@ export function handlePrivateSocket(io: Server) {
     socket.on(
       "send-reaction",
       async ({ reaction, messageId, conversationId }) => {
-        await Private.findByIdAndUpdate(messageId, {
-          reaction,
-        });
+        await Private.findOne(
+          { _id: messageId },
+          {
+            reactions: reaction,
+          }
+        );
         socket.broadcast
           .to(conversationId)
           .emit("display-reaction", { reaction, messageId });
