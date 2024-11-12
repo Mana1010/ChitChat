@@ -38,7 +38,9 @@ import {
 import { useSocketStore } from "@/utils/store/socket.store";
 
 function ParentDiv({ children }: { children: ReactNode }) {
-  return <div className="flex-grow w-full flex flex-col">{children}</div>;
+  return (
+    <div className="flex-grow w-full flex flex-col h-[200px]">{children}</div>
+  );
 }
 function GroupList({ searchGroup }: { searchGroup: string }) {
   const router = useRouter();
@@ -117,6 +119,15 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
         toast.success(message);
         router.push(`/chats/group/${groupId}?type=chats`);
       } else {
+        setAllGroupChatList((groupChatList) =>
+          groupChatList.map((groupchat) => {
+            if (groupchat._id === groupId) {
+              return { ...groupchat, this_group_inviting_you: false };
+            } else {
+              return groupchat;
+            }
+          })
+        );
         toast.success(message);
       }
     },
@@ -193,7 +204,7 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
           </SelectContent>
         </Select>
       </div>
-      <div className="pt-2 flex flex-col w-full h-[370px] items-center px-1.5 overflow-y-auto">
+      <div className="pt-2 flex flex-col w-full h-full items-center px-1.5 overflow-y-auto">
         {groupList?.map((group: GroupChatList) => (
           <div
             key={group._id}

@@ -19,7 +19,9 @@ function PrivateChatProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
   return (
-    <div className="space-x-3 grid grid-cols-3 h-full w-full">{children}</div>
+    <div className="space-x-3 grid grid-cols-3 h-full w-full pr-5 overflow-y-auto">
+      {children}
+    </div>
   );
 }
 

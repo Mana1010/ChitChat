@@ -10,7 +10,7 @@ function MailLayout({ mailDetails, mailList, children }: MailRoutes) {
     <MailProvider>
       {mailList}
       {mailDetails}
-      {children}
+      {/* {children} */}
     </MailProvider>
   );
 }

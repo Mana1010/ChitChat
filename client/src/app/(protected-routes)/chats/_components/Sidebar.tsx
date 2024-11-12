@@ -37,7 +37,7 @@ function Sidebar() {
       console.log(err);
     },
   });
-  console.log(getUserStatus?.data);
+
   const navigationBtn = [
     {
       btnSticker: <IoMegaphone />,
@@ -75,7 +75,7 @@ function Sidebar() {
   ];
 
   return (
-    <div className=" flex justify-between items-center flex-col pt-4 h-full px-2">
+    <div className=" flex justify-between items-center flex-col pt-4 h-full px-2 ">
       <div className="flex flex-col items-center w-full justify-center">
         {navigationBtn.map((btn, index) => (
           <button

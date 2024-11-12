@@ -5,7 +5,6 @@ import emailIcon from "../../../../../assets/images/svg/mailbox.svg";
 import InvitationText from "./InvitationText";
 import { getServerSession } from "next-auth";
 import authOptions from "@/utils/authOption";
-import { User } from "@/types/UserTypes";
 import { useSession } from "next-auth/react";
 import { APP_SERVER_URL } from "@/utils/serverUrl";
 import { UseQueryResult, useQuery } from "react-query";

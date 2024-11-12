@@ -169,9 +169,9 @@ function MailList({ mailId }: { mailId: string }) {
       {getAllMail.isLoading || !getAllMail.data ? (
         <ConversationListSkeleton />
       ) : (
-        <div className="w-full flex-grow flex flex-col">
+        <div className="flex-grow w-full h-[200px]">
           {(getAllMail.data?.length as number) > 0 ? (
-            <div className="pt-2 flex flex-col w-full overflow-y-auto h-[410px] items-center px-1.5">
+            <div className="pt-2 flex flex-col w-full h-full overflow-y-auto items-center px-1.5">
               {getAllMail.data?.map((mail) => (
                 <motion.label
                   htmlFor={`delete-mail-${mail._id}`}

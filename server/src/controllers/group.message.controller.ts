@@ -359,7 +359,7 @@ export const invitationResponse = asyncHandler(
     } else {
       await GroupConversation.findByIdAndUpdate(groupId, {
         $pull: {
-          "members.memberInfo": userId,
+          members: { memberInfo: userId },
         },
       });
       res.status(200).json({

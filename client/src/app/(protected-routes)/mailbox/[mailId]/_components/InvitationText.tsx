@@ -7,7 +7,6 @@ import { APP_SERVER_URL } from "@/utils/serverUrl";
 import { MailDetailsSchema } from "@/types/app.types";
 import { MdGroups } from "react-icons/md";
 import mailInvitation from "../../../../../assets/images/mail-invitation.png";
-import { User } from "@/types/UserTypes";
 import invited from "../../../../../assets/images/invited.png";
 import { CiCircleCheck } from "react-icons/ci";
 import { CiCircleRemove } from "react-icons/ci";

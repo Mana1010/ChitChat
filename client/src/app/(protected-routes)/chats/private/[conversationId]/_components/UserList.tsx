@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useSession } from "next-auth/react";
 import axios, { AxiosError } from "axios";
 import { PRIVATE_SERVER_URL } from "@/utils/serverUrl";
-import { User } from "@/types/UserTypes";
+import { User } from "@/types/shared.types";
 import LoadingChat from "@/components/LoadingChat";
 import { toast } from "sonner";
 import { TbMessage2 } from "react-icons/tb";
@@ -80,7 +80,7 @@ function UserList({ searchUser }: { searchUser: string }) {
   }
 
   return (
-    <div className="flex-grow w-full flex">
+    <div className="flex-grow w-full flex h-[200px]">
       {debouncedSearchUser?.length === 0 ? (
         <NoItemFound>
           No &quot;
@@ -88,7 +88,7 @@ function UserList({ searchUser }: { searchUser: string }) {
           &quot; user found
         </NoItemFound>
       ) : (
-        <div className="pt-2 flex flex-col w-full overflow-y-auto h-[98%] items-center px-1.5">
+        <div className="pt-2 flex flex-col w-full overflow-y-auto h-full flex-grow items-center px-1.5">
           {userList?.map((user: User) => (
             <div
               key={user._id}

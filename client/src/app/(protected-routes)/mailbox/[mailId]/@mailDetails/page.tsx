@@ -7,7 +7,7 @@ type MailParams = {
 };
 function Page({ params }: MailParams) {
   return (
-    <div className="col-span-2 text-white">
+    <div className="col-span-2">
       <MailDetails mailId={params.mailId} />
     </div>
   );

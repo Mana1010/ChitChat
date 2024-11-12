@@ -15,7 +15,7 @@ import ConversationListSkeleton from "../../../_components/ConversationListSkele
 import NoItemFound from "@/components/NoItemFound";
 
 function ParentDiv({ children }: { children: ReactNode }) {
-  return <div className="w-full flex-grow flex">{children}</div>;
+  return <div className="w-full flex-grow flex h-[200px]">{children}</div>;
 }
 function ChatList({
   searchChat,
@@ -145,7 +145,7 @@ function ChatList({
 
   return (
     <ParentDiv>
-      <div className="pt-2 flex flex-col w-full overflow-y-auto h-[98%] items-center px-1.5">
+      <div className="pt-2 flex flex-col w-full overflow-y-auto h-full items-center px-1.5">
         {searchResult?.map((user: Conversation, index: number) => (
           <button
             onClick={() => router.push(`/chats/private/${user._id}?type=chats`)}

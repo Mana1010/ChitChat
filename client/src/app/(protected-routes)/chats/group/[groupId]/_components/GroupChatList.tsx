@@ -91,7 +91,7 @@ function GroupChatList({
     new RegExp(searchChat, "i").test(groupchat.groupName as string)
   );
   return (
-    <div className="w-full flex-grow flex">
+    <div className="flex-grow flex h-[200px]">
       {displayAllGroupChat.data?.length === 0 && searchChat === "" ? (
         <EmptyConversation>
           <h2 className="text-zinc-300 text-[1.1rem] break-all text-center">
@@ -105,7 +105,7 @@ function GroupChatList({
           &quot; group found
         </NoItemFound>
       ) : (
-        <div className="pt-2 flex flex-col w-full overflow-y-auto  h-[420px] items-center px-1.5">
+        <div className="pt-2 flex flex-col w-full overflow-y-auto flex-grow h-[200px] items-center px-1.5">
           {searchResult?.map(
             (groupchat: GroupChatConversationList, index: number) => (
               <button

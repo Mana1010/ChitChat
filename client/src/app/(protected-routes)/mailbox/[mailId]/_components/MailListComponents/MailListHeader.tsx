@@ -30,7 +30,7 @@ function MailListHeader({
   setFilteredBy,
 }: MailListHeaderSchemaProps) {
   return (
-    <header className="w-full p-2.5 space-y-2 ">
+    <header className="w-full p-2.5 space-y-2">
       <div className="flex items-center space-x-2">
         <span className="text-[#6486FF] text-xl">
           <TbMessage />
