@@ -34,6 +34,7 @@ function GroupChatList({
       );
       return response.data.message;
     },
+    refetchOnMount: false,
     enabled: status === "authenticated",
   });
   const queryClient = useQueryClient();
