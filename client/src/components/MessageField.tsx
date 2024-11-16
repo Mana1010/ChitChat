@@ -6,14 +6,15 @@ import { Socket } from "socket.io-client";
 import { GetParticipantInfo } from "@/types/UserTypes";
 import { GrAttachment } from "react-icons/gr";
 import { useQueryClient } from "react-query";
+import { updateConversationList } from "@/utils/updater.conversation.utils";
 interface MessageFieldProps {
   socket: Socket | null;
   participantInfo?: GetParticipantInfo;
   conversationId: string;
+  senderId: string | undefined;
   message: string;
   openEmoji: boolean;
   sendMessage: (messageContent: string) => void;
-  updateChatList: (userMessage: string) => void;
   setMessage: Dispatch<SetStateAction<string>>;
   setOpenEmoji: Dispatch<SetStateAction<boolean>>;
   setOpenAttachmentModal: Dispatch<SetStateAction<boolean>>;
@@ -24,7 +25,7 @@ function MessageField({
   conversationId,
   message,
   openEmoji,
-  updateChatList,
+  senderId,
   sendMessage,
   setMessage,
   setOpenEmoji,
@@ -51,7 +52,14 @@ function MessageField({
           }
         );
         sendMessage(message);
-        updateChatList(message);
+        updateConversationList(
+          queryClient,
+          message,
+          conversationId,
+          senderId,
+          "text",
+          "chat-list"
+        );
         setMessage("");
         queryClient.invalidateQueries(["sidebar"]);
       }}

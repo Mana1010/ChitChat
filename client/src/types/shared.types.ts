@@ -10,6 +10,7 @@ export interface Reaction<ReactionType = string> {
   reactionEmoji: string;
   reactionCreatedAt: string;
 }
+
 export interface Message<UserType = string, ReactionType = string> {
   _id: string;
   sender: UserType;
@@ -24,6 +25,15 @@ export interface InfiniteScrollingMessageSchema {
   pageParams: [undefined | number];
 }
 
+export interface ConversationSchema {
+  _id: string;
+  lastMessage: {
+    sender: User | string;
+    text: string;
+    messageType: string;
+    lastMessageCreatedAt: Date;
+  };
+}
 export interface BasePrivateChatSchema<> {}
 export interface BasePublicChatSchema<> {}
 

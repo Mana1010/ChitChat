@@ -12,6 +12,7 @@ import ConversationListSkeleton from "../../../_components/ConversationListSkele
 import NoItemFound from "@/components/NoItemFound";
 import EmptyConversation from "@/components/EmptyConversation";
 import { GroupChatConversationList } from "@/types/group.types";
+import { updateConversationList } from "@/utils/updater.conversation.utils";
 function GroupChatList({
   searchChat,
   groupId,
@@ -19,7 +20,7 @@ function GroupChatList({
   searchChat: string;
   groupId: string;
 }) {
-  const { socket } = useSocketStore();
+  const { groupMessageSocket } = useSocketStore();
   const { data: session, status } = useSession();
   const router = useRouter();
   const displayAllGroupChat: UseQueryResult<
@@ -37,53 +38,23 @@ function GroupChatList({
   });
   const queryClient = useQueryClient();
   useEffect(() => {
-    if (!socket || status === "unauthenticated") return;
-    socket.on(
-      "display-updated-chatlist",
-      ({
-        newMessage,
-        messageType,
-        conversationId,
-        participantId,
-        lastMessageCreatedAt,
-      }) => {
-        queryClient.setQueryData<GroupChatConversationList[] | undefined>(
-          ["groupchat-list"],
-          (prevData) => {
-            if (prevData) {
-              return prevData
-                .map((conversation: GroupChatConversationList) => {
-                  if (conversation._id === conversationId) {
-                    return {
-                      ...conversation,
-                      lastMessage: {
-                        sender: participantId,
-                        text: newMessage,
-                        messageType,
-                        lastMessageCreatedAt,
-                      },
-                    };
-                  } else {
-                    return conversation;
-                  }
-                })
-                .sort(
-                  (a, b) =>
-                    new Date(b.lastMessage.lastMessageCreatedAt).getTime() -
-                    new Date(a.lastMessage.lastMessageCreatedAt).getTime()
-                );
-            } else {
-              return [];
-            }
-          }
+    if (!groupMessageSocket) return;
+
+    groupMessageSocket.on(
+      "update-chatlist",
+      ({ groupId, lastMessage, lastMessageCreatedAt, type, senderId }) => {
+        updateConversationList(
+          queryClient,
+          lastMessage,
+          groupId,
+          senderId,
+          type,
+          "groupchat-list",
+          lastMessageCreatedAt
         );
       }
     );
-    return () => {
-      socket.off("display-updated-chatlist");
-      socket.off("seen-message");
-    };
-  }, [queryClient, socket, status]);
+  }, [groupMessageSocket, queryClient]);
   if (displayAllGroupChat.isLoading) {
     return <ConversationListSkeleton />;
   }
@@ -105,7 +76,7 @@ function GroupChatList({
           &quot; group found
         </NoItemFound>
       ) : (
-        <div className="pt-2 flex flex-col w-full overflow-y-auto flex-grow h-[200px] items-center px-1.5">
+        <div className="pt-2 flex flex-col w-full overflow-y-auto h-full flex-grow items-center px-1.5">
           {searchResult?.map(
             (groupchat: GroupChatConversationList, index: number) => (
               <button
@@ -139,7 +110,7 @@ function GroupChatList({
                     <h1 className="text-white font-bold text-sm break-all">
                       {groupchat.groupName}
                     </h1>
-                    <small className={`text-[0.75rem] break-all `}>
+                    <small className={`text-[0.75rem] break-all text-white`}>
                       {`${
                         groupchat.lastMessage.sender === session?.user.userId
                           ? "You:"

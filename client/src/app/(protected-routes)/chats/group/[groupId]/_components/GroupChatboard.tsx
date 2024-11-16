@@ -23,8 +23,9 @@ import useGroupInfo from "@/hooks/useGroupInfo.hook";
 import { User, Reaction } from "@/types/shared.types";
 import MessageField from "./MessageField";
 import GroupChatBubbles from "./GroupChatBubbles";
+import { updateConversationList } from "@/utils/updater.conversation.utils";
 function GroupChatboard({ groupId }: { groupId: string }) {
-  const { socket, groupMessageSocket } = useSocketStore();
+  const { groupMessageSocket } = useSocketStore();
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const currentPageRef = useRef(0);
   const scrollDivRef = useRef<HTMLDivElement | null>(null);
@@ -106,18 +107,16 @@ function GroupChatboard({ groupId }: { groupId: string }) {
   useEffect(() => {
     if (!groupMessageSocket || status !== "authenticated" || !groupInfo?._id)
       return;
-    groupMessageSocket.emit("join-room", groupId);
+
     groupMessageSocket.emit("read-message", {
       groupId,
       participantId: groupInfo._id,
     });
-    return () => {
-      groupMessageSocket.emit("leave-room", groupId);
-    };
   }, [groupId, groupInfo?._id, queryClient, groupMessageSocket, status]);
 
   useEffect(() => {
     if (!groupMessageSocket) return;
+
     groupMessageSocket.on(
       "display-seen-text",
       ({ user, totalUnreadMessages }) => {
@@ -183,39 +182,10 @@ function GroupChatboard({ groupId }: { groupId: string }) {
         },
       ];
     });
-    socket?.emit("stop-typing", groupId);
+    groupMessageSocket?.emit("stop-typing", groupId);
     setTimeout(() => {
       scrollRef.current?.scrollIntoView({ block: "end" }); //To bypass the closure nature of react :)
     }, 0);
-  }
-  function updateChatList(userMessage: string) {
-    queryClient.setQueryData<Conversation[] | undefined>(
-      ["chat-list"],
-      (cachedData: any) => {
-        if (cachedData) {
-          return cachedData
-            .map((chatlist: Conversation) => {
-              if (chatlist._id === groupId) {
-                return {
-                  ...chatlist,
-                  lastMessage: {
-                    sender: session?.user.userId,
-                    text: userMessage,
-                    lastMessageCreatedAt: new Date(),
-                  },
-                };
-              } else {
-                return chatlist;
-              }
-            })
-            .sort(
-              (a: Conversation, b: Conversation) =>
-                new Date(b.lastMessage.lastMessageCreatedAt).getTime() -
-                new Date(a.lastMessage.lastMessageCreatedAt).getTime()
-            );
-        }
-      }
-    );
   }
   return (
     <div
@@ -240,13 +210,20 @@ function GroupChatboard({ groupId }: { groupId: string }) {
                 <h3 className="text-zinc-300 text-[0.78rem]">Wave them</h3>
                 <button
                   onClick={() => {
-                    socket?.emit("send-message", {
+                    groupMessageSocket?.emit("send-message", {
                       message: "👋",
                       groupId,
                       receiverId: groupInfo?.receiver_details._id,
                     });
                     sendMessage("👋");
-                    updateChatList("👋");
+                    updateConversationList(
+                      queryClient,
+                      "👋",
+                      groupId,
+                      session?.user.userId,
+                      "text",
+                      "groupchat-list"
+                    );
                   }}
                   className="bg-[#414141] text-lg px-3 py-1.5 rounded-md overflow-hidden"
                 >
@@ -349,7 +326,7 @@ function GroupChatboard({ groupId }: { groupId: string }) {
         message={message}
         openEmoji={openEmoji}
         sendMessage={sendMessage}
-        updateChatList={updateChatList}
+        senderId={session?.user.userId}
         setMessage={setMessage}
         setOpenEmoji={setOpenEmoji}
         setOpenAttachmentModal={setOpenAttachmentModal}

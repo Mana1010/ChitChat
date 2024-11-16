@@ -3,7 +3,7 @@ import { Invitation } from "../model/mail.model";
 import { GroupConversation } from "../model/groupConversation.model";
 import { Group } from "../model/group.model";
 import { GROUP_NAMESPACE, MAIL_NAMESPACE } from "../utils/namespaces.utils";
-import { group } from "console";
+import { groupLogger } from "../utils/loggers.utils";
 
 type RequestedUsers = { id: string; name: string };
 export async function handleGroupSocket(io: Server) {
@@ -79,23 +79,43 @@ export async function handleGroupSocket(io: Server) {
             select: ["name", "profilePic", "status", "_id"],
           })
         );
-        await GroupConversation.findByIdAndUpdate(groupId, {
-          $push: { memberReadMessage: userId },
-        });
+
+        const groupConversationResult =
+          await GroupConversation.findByIdAndUpdate(
+            groupId,
+            {
+              $push: { memberReadMessage: userId },
+              $set: { "lastMessage.text": message },
+            },
+            {
+              new: true,
+            }
+          ).select("lastMessage");
         socket.broadcast.to(groupId).emit("display-message", {
           messageDetails: result,
         });
+
+        socket.broadcast.to(groupId).emit("update-chatlist", {
+          groupId,
+          lastMessage: groupConversationResult.lastMessage.text,
+          lastMessageCreatedAt:
+            groupConversationResult.lastMessage.lastMessageCreatedAt,
+          type: "text",
+          senderId: userId,
+        });
       } catch (err) {
-        console.log("Error asf");
+        groupLogger.error(err);
       }
     });
 
-    socket.on("join-room", (groupId) => {
+    socket.on("join-room", ({ groupId, memberId }) => {
       console.log("SUCCESSFULLY JOINED THE ROOM FOR GROUP");
       socket.join(groupId);
+      socket.join(memberId);
     });
-    socket.on("leave-room", (groupId) => {
+    socket.on("leave-room", ({ groupId, memberId }) => {
       socket.leave(groupId);
+      socket.leave(memberId);
     });
   });
 }

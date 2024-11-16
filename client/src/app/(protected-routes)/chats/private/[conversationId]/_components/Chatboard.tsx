@@ -30,6 +30,7 @@ import ProfileCard from "../../../_components/ProfileCard";
 import typingAnimation from "../../../../../../assets/images/gif-animation/typing-animation-ver-2.gif";
 import SendAttachment from "@/components/SendAttachment";
 import useParticipantInfo from "@/hooks/useParticipantInfo.hook";
+import { updateConversationList } from "@/utils/updater.conversation.utils";
 function ParentDiv({
   children,
   setOpenEmoji,
@@ -232,35 +233,6 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       scrollRef.current?.scrollIntoView({ block: "end" }); //To bypass the closure nature of react :)
     }, 0);
   }
-  function updateChatList(userMessage: string) {
-    queryClient.setQueryData<Conversation[] | undefined>(
-      ["chat-list"],
-      (cachedData: any) => {
-        if (cachedData) {
-          return cachedData
-            .map((chatlist: Conversation) => {
-              if (chatlist._id === conversationId) {
-                return {
-                  ...chatlist,
-                  lastMessage: {
-                    sender: session?.user.userId,
-                    text: userMessage,
-                    lastMessageCreatedAt: new Date(),
-                  },
-                };
-              } else {
-                return chatlist;
-              }
-            })
-            .sort(
-              (a: Conversation, b: Conversation) =>
-                new Date(b.lastMessage.lastMessageCreatedAt).getTime() -
-                new Date(a.lastMessage.lastMessageCreatedAt).getTime()
-            );
-        }
-      }
-    );
-  }
   return (
     <ParentDiv setOpenEmoji={setOpenEmoji}>
       <ChatHeader
@@ -286,7 +258,14 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                       receiverId: participantInfo?.receiver_details._id,
                     });
                     sendMessage("👋");
-                    updateChatList("👋");
+                    updateConversationList(
+                      queryClient,
+                      "👋",
+                      conversationId,
+                      session?.user.userId,
+                      "text",
+                      "chat-list"
+                    );
                   }}
                   className="bg-[#414141] text-lg px-3 py-1.5 rounded-md overflow-hidden"
                 >
@@ -392,8 +371,8 @@ function Chatboard({ conversationId }: { conversationId: string }) {
         conversationId={conversationId}
         message={message}
         openEmoji={openEmoji}
+        senderId={session?.user.userId}
         sendMessage={sendMessage}
-        updateChatList={updateChatList}
         setMessage={setMessage}
         setOpenEmoji={setOpenEmoji}
         setOpenAttachmentModal={setOpenAttachmentModal}

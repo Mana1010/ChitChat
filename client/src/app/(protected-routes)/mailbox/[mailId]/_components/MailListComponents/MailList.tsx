@@ -1,5 +1,5 @@
 "use client";
-import React, { memo, ReactNode, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { HiMail } from "react-icons/hi";
 import { HiMailOpen } from "react-icons/hi";
 import {
@@ -8,13 +8,12 @@ import {
   useQueryClient,
   UseQueryResult,
 } from "react-query";
-import axios, { AxiosError, AxiosRequestConfig } from "axios";
+import axios, { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
 import { APP_SERVER_URL } from "@/utils/serverUrl";
 import { useSession } from "next-auth/react";
 import { MailListSchema } from "@/types/app.types";
 import { formatDistanceToNow } from "date-fns";
-import { QueryClient } from "react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TbTrashX } from "react-icons/tb";
@@ -32,7 +31,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useModalStore } from "@/utils/store/modal.store";
 import { useSocketStore } from "@/utils/store/socket.store";
 import { nanoid } from "nanoid";
 function MailList({ mailId }: { mailId: string }) {

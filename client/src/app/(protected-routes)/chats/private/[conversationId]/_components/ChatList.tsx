@@ -1,18 +1,18 @@
 "use client";
 import { PRIVATE_SERVER_URL } from "@/utils/serverUrl";
 import axios, { AxiosError } from "axios";
-import React, { ReactNode, useLayoutEffect } from "react";
+import React, { ReactNode } from "react";
 import { useEffect } from "react";
 import { useQuery, UseQueryResult, useQueryClient } from "react-query";
 import { useSession } from "next-auth/react";
 import { Conversation } from "@/types/UserTypes";
-import emptyChatImg from "../../../../../../assets/images/empty-chat.png";
 import EmptyConversation from "@/components/EmptyConversation";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useSocketStore } from "@/utils/store/socket.store";
 import ConversationListSkeleton from "../../../_components/ConversationListSkeleton";
 import NoItemFound from "@/components/NoItemFound";
+import { updateConversationList } from "@/utils/updater.conversation.utils";
 
 function ParentDiv({ children }: { children: ReactNode }) {
   return <div className="w-full flex-grow flex h-[200px]">{children}</div>;
@@ -52,35 +52,14 @@ function ChatList({
         participantId,
         lastMessageCreatedAt,
       }) => {
-        queryClient.setQueryData<Conversation[] | undefined>(
-          ["chat-list"],
-          (prevData) => {
-            if (prevData) {
-              return prevData
-                .map((conversation: Conversation) => {
-                  if (conversation._id === conversationId) {
-                    return {
-                      ...conversation,
-                      lastMessage: {
-                        sender: participantId,
-                        text: newMessage,
-                        messageType,
-                        lastMessageCreatedAt,
-                      },
-                    };
-                  } else {
-                    return conversation;
-                  }
-                })
-                .sort(
-                  (a, b) =>
-                    new Date(b.lastMessage.lastMessageCreatedAt).getTime() -
-                    new Date(a.lastMessage.lastMessageCreatedAt).getTime()
-                );
-            } else {
-              return [];
-            }
-          }
+        updateConversationList(
+          queryClient,
+          newMessage,
+          conversationId,
+          participantId,
+          messageType,
+          "chat-list",
+          lastMessageCreatedAt
         );
       }
     );

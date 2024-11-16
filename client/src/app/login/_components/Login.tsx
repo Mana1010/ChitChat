@@ -3,7 +3,6 @@ import React from "react";
 import { TbMessages } from "react-icons/tb";
 import { motion } from "framer-motion";
 import { FcGoogle } from "react-icons/fc";
-import { FaGithub } from "react-icons/fa";
 import { signIn } from "next-auth/react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -28,9 +27,9 @@ function Login() {
       variants={loginVariant}
       initial="initial"
       animate="visible"
-      className="bg-[#1D1F2B] h-screen absolute inset-0 flex flex-col"
+      className="bg-[#1D1F2B] absolute inset-0 flex flex-col h-screen"
     >
-      <header className="w-full py-4 px-4">
+      <header className="w-full p-4">
         <div className="flex items-center space-x-2">
           <span className="text-[#6486FF] text-xl">
             <TbMessages />
@@ -40,7 +39,8 @@ function Login() {
           </h3>
         </div>
       </header>
-      <div className="w-1/2 flex-col px-10 flex-grow justify-center flex">
+
+      <div className="w-1/2 flex-col flex-grow justify-center flex px-10">
         <h1 className="font-semibold text-[#6486FF] text-[3rem] text-center">
           WELCOME TO <span className="text-white">ChitChat</span>
         </h1>
@@ -69,6 +69,7 @@ function Login() {
           </div>
         )}
       </div>
+      <footer className="absolute bottom-0 left-0 right-0 items-center justify-center flex flex-col space-y-2"></footer>
     </motion.div>
   );
 }

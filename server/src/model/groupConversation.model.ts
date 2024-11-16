@@ -26,15 +26,17 @@ const groupSchema = new mongoose.Schema({
   lastMessage: {
     sender: referenceModel("User", false),
     text: { type: String, default: "👋" },
-    messageType: {
+    type: {
       type: String,
-      enum: ["text", "file"],
+      enum: ["text", "file", "system"],
       default: "text",
     },
     lastMessageCreatedAt: { type: Date, default: Date.now },
   },
   createdAt: { type: Date, default: Date.now },
 });
+
+groupSchema.index({ "members.memberInfo": 1 });
 
 type GroupConversationSchema = mongoose.InferSchemaType<typeof groupSchema>;
 export const GroupConversation =

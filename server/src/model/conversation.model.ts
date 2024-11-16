@@ -9,9 +9,9 @@ const conversationSchema = new mongoose.Schema({
   lastMessage: {
     sender: referenceModel("User", false),
     text: { type: String, default: `Wave "👋" to them` },
-    messageType: {
+    type: {
       type: String,
-      enum: ["text", "file"],
+      enum: ["text", "file", "system"],
       default: "text",
     },
     lastMessageCreatedAt: { type: Date, default: Date.now },

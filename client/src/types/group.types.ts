@@ -11,7 +11,7 @@ export interface GroupChatConversationList<SenderType = string>
   lastMessage: {
     sender: SenderType;
     text: string;
-    messageType: string;
+    type: string;
     lastMessageCreatedAt: string;
   };
 }

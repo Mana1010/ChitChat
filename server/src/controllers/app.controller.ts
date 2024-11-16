@@ -5,106 +5,10 @@ import { GroupConversation } from "../model/groupConversation.model";
 import mongoose from "mongoose";
 import { User } from "../model/user.model";
 import { Invitation, Mail } from "../model/mail.model";
-interface HandleAggregationSchema {
-  handlePrivateConversation: {
-    length: number;
-    _id: string | null;
-  };
-  handleGroupConversation: {
-    length: number;
-    _id: string | null;
-  };
-}
+
 interface UserChatStatusObjSchema {
   privateConversationStatus: string | null;
   groupConversationStatus: string | null;
-}
-async function handleAggregation(
-  senderId: string
-): Promise<HandleAggregationSchema> {
-  const handlePrivateAggregation = await Conversation.aggregate([
-    {
-      $facet: {
-        checkIfNewUserPrivate: [
-          {
-            $match: {
-              participants: { $in: [new mongoose.Types.ObjectId(senderId)] },
-            },
-          },
-          {
-            $limit: 1,
-          },
-        ],
-        getLatestPrivateConversationId: [
-          {
-            $match: {
-              participants: { $in: [new mongoose.Types.ObjectId(senderId)] },
-            },
-          },
-          {
-            $sort: { "lastMessage.lastMessageCreatedAt": -1 }, //Will sort descending by updatedAt and get the very first index using limit
-          },
-          {
-            $limit: 1,
-          },
-        ],
-      },
-    },
-  ]);
-
-  const handleGroupAggregation = await GroupConversation.aggregate([
-    {
-      $facet: {
-        checkIfNewUserGroup: [
-          {
-            $match: {
-              "members.memberInfo": new mongoose.Types.ObjectId(senderId),
-            },
-          },
-          {
-            $limit: 1,
-          },
-        ],
-        getLatestGroupConversationId: [
-          {
-            $match: {
-              members: {
-                $elemMatch: {
-                  memberInfo: new mongoose.Types.ObjectId(senderId),
-                  status: "active",
-                },
-              },
-            },
-          },
-          {
-            $sort: { "lastMessage.lastMessageCreatedAt": -1 }, //Will sort descending by updatedAt and get the very first index using limit
-          },
-          {
-            $limit: 1,
-          },
-        ],
-      },
-    },
-  ]);
-  const doesHavePrivateConversation =
-    handlePrivateAggregation[0].checkIfNewUserPrivate.length;
-  const doesHaveGroupConversation =
-    handleGroupAggregation[0].checkIfNewUserGroup.length;
-
-  return {
-    handlePrivateConversation: {
-      length: handlePrivateAggregation[0].checkIfNewUserPrivate.length,
-      _id: doesHavePrivateConversation
-        ? handlePrivateAggregation[0].getLatestPrivateConversationId[0]._id.toString() //Converting from mongoose Type ObjectId to string
-        : null,
-    },
-    handleGroupConversation: {
-      length: handleGroupAggregation[0].checkIfNewUserGroup.length,
-      _id: doesHaveGroupConversation
-        ? handleGroupAggregation[0].getLatestGroupConversationId[0]._id.toString() //Converting from mongoose Type ObjectId to string
-        : null,
-    },
-  };
 }
 export const getSidebarNotificationAndCurrentConversation = asyncHandler(
   async (req: Request, res: Response) => {
@@ -113,23 +17,45 @@ export const getSidebarNotificationAndCurrentConversation = asyncHandler(
       privateConversationStatus: null,
       groupConversationStatus: null,
     };
+
     const userNotificationObj = {
       privateNotificationCount: 0,
       groupNotificationCount: 0,
       mailboxNotificationCount: 0,
     };
-    try {
-      const { handlePrivateConversation, handleGroupConversation } =
-        await handleAggregation(senderId);
 
-      //User conversation status in private.
-      //Checking if the user has already a conversation or chatmate
-      if (handlePrivateConversation.length) {
+    try {
+      const checkIfNewUserPrivate = await Conversation.exists({
+        participants: { $in: [senderId] },
+      });
+
+      if (checkIfNewUserPrivate?._id) {
+        const getFirstPrivateConversationId = (await Conversation.find({
+          participants: { $in: [senderId] },
+        })
+          .sort({ "lastMessage.lastMessageCreatedAt": -1 })
+          .limit(1)
+          .select("_id")
+          .lean()) as { _id: string }[];
+
         userChatStatusObj.privateConversationStatus =
-          handlePrivateConversation._id;
+          getFirstPrivateConversationId[0]._id;
       }
-      if (handleGroupConversation.length) {
-        userChatStatusObj.groupConversationStatus = handleGroupConversation._id;
+      const checkIfNewUserGroup = await GroupConversation.exists({
+        members: { $elemMatch: { memberInfo: senderId, status: "active" } },
+      });
+
+      if (checkIfNewUserGroup?._id) {
+        const getFirstGroupConversationId = (await GroupConversation.find({
+          members: { $elemMatch: { memberInfo: senderId, status: "active" } },
+        })
+          .sort({ "lastMessage.lastMessageCreatedAt": -1 })
+          .limit(1)
+          .select("_id")
+          .lean()) as { _id: string }[];
+
+        userChatStatusObj.groupConversationStatus =
+          getFirstGroupConversationId[0]._id;
       }
       res.status(200).json({
         message: {

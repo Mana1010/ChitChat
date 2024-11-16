@@ -2,7 +2,6 @@ import React from "react";
 import Image from "next/image";
 import conversationImg from "../../assets/images/conversation-icon.png";
 import Login from "./_components/Login";
-
 export const metadata = {
   title: "Login Page",
 };

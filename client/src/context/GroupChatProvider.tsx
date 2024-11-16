@@ -17,11 +17,29 @@ function GroupChatProvider({ children }: { children: ReactNode }) {
         console.log("Connected Group Socket Successfully")
       );
     }
+
+    if (groupMessageSocket && status === "authenticated") {
+      groupMessageSocket.emit("join-room", {
+        groupId: params.groupId,
+        memberId: session.user.userId,
+      });
+    }
     return () => {
-      groupMessageSocket?.off("connect");
+      if (groupMessageSocket && status === "authenticated") {
+        groupMessageSocket.off("connect");
+        groupMessageSocket.emit("leave-room", {
+          groupId: params.groupId,
+          memberId: session.user.userId,
+        });
+      }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status]);
+  }, [
+    status,
+    groupMessageSocket,
+    session?.user.userId,
+    setGroupSocket,
+    params.groupId,
+  ]);
   return (
     <div className="space-x-3 grid grid-cols-3 h-full w-full pr-5 overflow-y-auto">
       {children}
