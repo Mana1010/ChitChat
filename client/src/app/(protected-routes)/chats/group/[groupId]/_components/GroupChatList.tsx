@@ -20,7 +20,7 @@ function GroupChatList({
   searchChat: string;
   groupId: string;
 }) {
-  const { groupMessageSocket } = useSocketStore();
+  const { groupSocket } = useSocketStore();
   const { data: session, status } = useSession();
   const router = useRouter();
   const displayAllGroupChat: UseQueryResult<
@@ -39,9 +39,9 @@ function GroupChatList({
   });
   const queryClient = useQueryClient();
   useEffect(() => {
-    if (!groupMessageSocket) return;
+    if (!groupSocket) return;
 
-    groupMessageSocket.on(
+    groupSocket.on(
       "update-chatlist",
       ({ groupId, lastMessage, lastMessageCreatedAt, type, senderId }) => {
         updateConversationList(
@@ -55,7 +55,7 @@ function GroupChatList({
         );
       }
     );
-  }, [groupMessageSocket, queryClient]);
+  }, [groupSocket, queryClient]);
   if (displayAllGroupChat.isLoading) {
     return <ConversationListSkeleton />;
   }

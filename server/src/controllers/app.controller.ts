@@ -1,6 +1,6 @@
 import asyncHandler from "express-async-handler";
 import { Request, Response } from "express";
-import { Conversation } from "../model/conversation.model";
+import { PrivateConversation } from "../model/privateConversation.model";
 import { GroupConversation } from "../model/groupConversation.model";
 import mongoose from "mongoose";
 import { User } from "../model/user.model";
@@ -25,12 +25,12 @@ export const getSidebarNotificationAndCurrentConversation = asyncHandler(
     };
 
     try {
-      const checkIfNewUserPrivate = await Conversation.exists({
+      const checkIfNewUserPrivate = await PrivateConversation.exists({
         participants: { $in: [senderId] },
       });
 
       if (checkIfNewUserPrivate?._id) {
-        const getFirstPrivateConversationId = (await Conversation.find({
+        const getFirstPrivateConversationId = (await PrivateConversation.find({
           participants: { $in: [senderId] },
         })
           .sort({ "lastMessage.lastMessageCreatedAt": -1 })

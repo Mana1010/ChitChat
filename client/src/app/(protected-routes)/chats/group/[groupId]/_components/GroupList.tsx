@@ -51,7 +51,7 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
   const [allGroupChatList, setAllGroupChatList] = useState<GroupChatList[]>([]);
   const currentPageRef = useRef(0);
   const debouncedValue = useDebounce(searchGroup);
-  const { groupMessageSocket } = useSocketStore();
+  const { groupSocket } = useSocketStore();
   const [sortBy, setSortBy] = useState("popular");
   const { searchGroup: debouncedSearchGroup, isLoading: loadingSearchGroup } =
     useSearchGroup(debouncedValue);
@@ -113,8 +113,8 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
       return response.data;
     },
     onSuccess: ({ type, message, groupId }) => {
-      if (type === "accepted" && groupMessageSocket) {
-        groupMessageSocket.emit("invitation-accepted", groupId);
+      if (type === "accepted" && groupSocket) {
+        groupSocket.emit("invitation-accepted", groupId);
         queryClient.invalidateQueries("groupchat-list");
         toast.success(message);
         router.push(`/chats/group/${groupId}?type=chats`);

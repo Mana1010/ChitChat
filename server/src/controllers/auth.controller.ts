@@ -1,7 +1,7 @@
 import asyncHandler from "express-async-handler";
 import { Request, Response } from "express";
 import { User } from "../model/user.model";
-import { Conversation } from "../model/conversation.model";
+import { Conversation } from "../model/privateConversation.model";
 import { Message } from "../model/mail.model";
 
 export const createUser = asyncHandler(async (req: Request, res: Response) => {

@@ -25,7 +25,7 @@ import MessageField from "./MessageField";
 import GroupChatBubbles from "./GroupChatBubbles";
 import { updateConversationList } from "@/utils/updater.conversation.utils";
 function GroupChatboard({ groupId }: { groupId: string }) {
-  const { groupMessageSocket } = useSocketStore();
+  const { groupSocket } = useSocketStore();
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const currentPageRef = useRef(0);
   const scrollDivRef = useRef<HTMLDivElement | null>(null);
@@ -105,56 +105,52 @@ function GroupChatboard({ groupId }: { groupId: string }) {
   }, [hasNextPage, fetchNextPage, inView]);
 
   useEffect(() => {
-    if (!groupMessageSocket || status !== "authenticated" || !groupInfo?._id)
-      return;
+    if (!groupSocket || status !== "authenticated" || !groupInfo?._id) return;
 
-    groupMessageSocket.emit("read-message", {
+    groupSocket.emit("read-message", {
       groupId,
       participantId: groupInfo._id,
     });
-  }, [groupId, groupInfo?._id, queryClient, groupMessageSocket, status]);
+  }, [groupId, groupInfo?._id, queryClient, groupSocket, status]);
 
   useEffect(() => {
-    if (!groupMessageSocket) return;
+    if (!groupSocket) return;
 
-    groupMessageSocket.on(
-      "display-seen-text",
-      ({ user, totalUnreadMessages }) => {
-        queryClient.setQueryData<GetParticipantInfo | undefined>(
-          ["participant-info", groupId],
-          (cachedData: GetParticipantInfo | undefined) => {
-            if (cachedData) {
-              return {
-                ...cachedData,
-                hasUnreadMessages: {
-                  user,
-                  totalUnreadMessages,
-                },
-              };
-            }
+    groupSocket.on("display-seen-text", ({ user, totalUnreadMessages }) => {
+      queryClient.setQueryData<GetParticipantInfo | undefined>(
+        ["participant-info", groupId],
+        (cachedData: GetParticipantInfo | undefined) => {
+          if (cachedData) {
+            return {
+              ...cachedData,
+              hasUnreadMessages: {
+                user,
+                totalUnreadMessages,
+              },
+            };
           }
-        );
-      }
-    );
-    groupMessageSocket.on("display-message", ({ messageDetails }) => {
+        }
+      );
+    });
+    groupSocket.on("display-message", ({ messageDetails }) => {
       setAllMessages((prevMessages) => [...prevMessages, messageDetails]);
     });
 
-    groupMessageSocket.on("during-typing", (conversationId) => {
+    groupSocket.on("during-typing", (conversationId) => {
       setTypingUsers((prevUsers) => [...prevUsers, conversationId]);
     });
-    groupMessageSocket.on("stop-typing", (conversationId) => {
+    groupSocket.on("stop-typing", (conversationId) => {
       setTypingUsers((prevUsers) =>
         prevUsers.filter((user) => user !== conversationId)
       );
     });
     return () => {
-      groupMessageSocket.off("display-seen-text");
-      groupMessageSocket.off("display-message");
-      groupMessageSocket.off("during-typing");
-      groupMessageSocket.off("stop-typing");
+      groupSocket.off("display-seen-text");
+      groupSocket.off("display-message");
+      groupSocket.off("during-typing");
+      groupSocket.off("stop-typing");
     };
-  }, [groupId, queryClient, groupMessageSocket]);
+  }, [groupId, queryClient, groupSocket]);
 
   if (groupId.toLowerCase() === "new") {
     return <NoGroup />;
@@ -182,11 +178,12 @@ function GroupChatboard({ groupId }: { groupId: string }) {
         },
       ];
     });
-    groupMessageSocket?.emit("stop-typing", groupId);
+    groupSocket?.emit("stop-typing", groupId);
     setTimeout(() => {
       scrollRef.current?.scrollIntoView({ block: "end" }); //To bypass the closure nature of react :)
     }, 0);
   }
+
   return (
     <div
       onClick={() => {
@@ -205,123 +202,97 @@ function GroupChatboard({ groupId }: { groupId: string }) {
           <LoadingChat />
         ) : (
           <div className="h-full w-full relative">
-            {allMessages.length === 0 ? (
-              <div className="flex items-center flex-col justify-end h-full w-full pb-5 space-y-2">
-                <h3 className="text-zinc-300 text-[0.78rem]">Wave them</h3>
-                <button
-                  onClick={() => {
-                    groupMessageSocket?.emit("send-message", {
-                      message: "👋",
-                      groupId,
-                      receiverId: groupInfo?.receiver_details._id,
-                    });
-                    sendMessage("👋");
-                    updateConversationList(
-                      queryClient,
-                      "👋",
-                      groupId,
-                      session?.user.userId,
-                      "text",
-                      "groupchat-list"
-                    );
-                  }}
-                  className="bg-[#414141] text-lg px-3 py-1.5 rounded-md overflow-hidden"
-                >
-                  <span className="mr-1">👋</span>
-                </button>
-              </div>
-            ) : (
-              <div
-                onScroll={() => {
-                  if (scrollDivRef.current) {
-                    scrollPositionRef.current = scrollDivRef.current.scrollTop;
-                    const scrollHeight =
-                      scrollDivRef.current.scrollHeight -
-                      scrollDivRef.current.clientHeight;
-                    if (scrollHeight - scrollPositionRef.current > 300) {
-                      setShowArrowDown(true);
-                    } else {
-                      setShowArrowDown(false);
-                    }
+            {" "}
+            <div
+              onScroll={() => {
+                if (scrollDivRef.current) {
+                  scrollPositionRef.current = scrollDivRef.current.scrollTop;
+                  const scrollHeight =
+                    scrollDivRef.current.scrollHeight -
+                    scrollDivRef.current.clientHeight;
+                  if (scrollHeight - scrollPositionRef.current > 300) {
+                    setShowArrowDown(true);
+                  } else {
+                    setShowArrowDown(false);
                   }
-                }}
-                ref={scrollDivRef}
-                className="w-full max-h-[430px] overflow-y-auto flex flex-col space-y-3 relative pr-2"
-              >
-                {hasNextPage && (
-                  <div ref={ref} className="w-full z-50">
-                    <LoadingChat />
+                }
+              }}
+              ref={scrollDivRef}
+              className="w-full max-h-[430px] overflow-y-auto flex flex-col space-y-3 relative pr-2"
+            >
+              {hasNextPage && (
+                <div ref={ref} className="w-full z-50">
+                  <LoadingChat />
+                </div>
+              )}
+              {allMessages?.map((data: Message<User, Reaction[]>) =>
+                data.type === "text" ? (
+                  <GroupChatBubbles
+                    key={data._id}
+                    messageDetails={data}
+                    session={session}
+                    groupId={groupId}
+                    setMessage={setAllMessages}
+                  />
+                ) : (
+                  <div
+                    key={data._id}
+                    className="w-full flex items-center justify-center"
+                  >
+                    <h1 className="text-zinc-300 text-[0.8rem]">
+                      {`${
+                        data.sender._id === session?.user.userId
+                          ? "You"
+                          : data.sender.name
+                      } ${data.message}`}
+                    </h1>
                   </div>
-                )}
-                {allMessages?.map((data: Message<User, Reaction[]>) =>
-                  data.type === "text" ? (
-                    <GroupChatBubbles
-                      key={data._id}
-                      messageDetails={data}
-                      session={session}
-                      groupId={groupId}
-                      setMessage={setAllMessages}
+                )
+              )}
+              {typingUsers.find((user) => user === groupId) ? (
+                <div className="flex space-x-1 items-center">
+                  <div className="rounded-3xl bg-[#414141] py-1 px-2 ">
+                    <Image
+                      src={typingAnimation}
+                      alt="typing-animation"
+                      width={35}
+                      height={35}
+                      priority
                     />
-                  ) : (
-                    <div
-                      key={data._id}
-                      className="w-full flex items-center justify-center"
-                    >
-                      <h1 className="text-zinc-300 text-[0.8rem]">
-                        {`${
-                          data.sender._id === session?.user.userId
-                            ? "You"
-                            : data.sender.name
-                        } ${data.message}`}
-                      </h1>
-                    </div>
-                  )
-                )}
-                {typingUsers.find((user) => user === groupId) ? (
-                  <div className="flex space-x-1 items-center">
-                    <div className="rounded-3xl bg-[#414141] py-1 px-2 ">
-                      <Image
-                        src={typingAnimation}
-                        alt="typing-animation"
-                        width={35}
-                        height={35}
-                        priority
-                      />
-                    </div>
                   </div>
-                ) : null}
-                <div ref={scrollRef} className="relative w-full"></div>
-                <AnimatePresence mode="wait">
-                  {showArrowDown && (
-                    <motion.div
-                      initial={{ opacity: 0, bottom: "10px" }}
-                      animate={{ opacity: 1, bottom: "15px" }}
-                      transition={{ duration: 0.25, ease: "easeIn" }}
-                      exit={{ opacity: 0, bottom: "10px" }}
-                      className=" flex items-center justify-center z-[999] sticky bg-transparent w-12 h-12 left-[50%] right-[50%]"
+                </div>
+              ) : null}
+              <div ref={scrollRef} className="relative w-full"></div>
+              <AnimatePresence mode="wait">
+                {showArrowDown && (
+                  <motion.div
+                    initial={{ opacity: 0, bottom: "10px" }}
+                    animate={{ opacity: 1, bottom: "15px" }}
+                    transition={{ duration: 0.25, ease: "easeIn" }}
+                    exit={{ opacity: 0, bottom: "10px" }}
+                    className=" flex items-center justify-center z-[999] sticky bg-transparent w-12 h-12 left-[50%] right-[50%]"
+                  >
+                    <button
+                      onClick={() => {
+                        setShowArrowDown(false);
+                        scrollRef.current?.scrollIntoView({
+                          block: "end",
+                          behavior: "smooth",
+                        });
+                      }}
+                      className="w-10 h-10 rounded-full flex items-center justify-center p-1 bg-[#414141] text-[#6486FF]  text-2xl"
                     >
-                      <button
-                        onClick={() => {
-                          setShowArrowDown(false);
-                          scrollRef.current?.scrollIntoView({
-                            block: "end",
-                            behavior: "smooth",
-                          });
-                        }}
-                        className="w-10 h-10 rounded-full flex items-center justify-center p-1 bg-[#414141] text-[#6486FF]  text-2xl"
-                      >
-                        <IoIosArrowRoundDown />
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            )}
+                      <IoIosArrowRoundDown />
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         )}
       </div>
       <MessageField
-        socket={groupMessageSocket}
+        socket={groupSocket}
         groupId={groupId}
         message={message}
         openEmoji={openEmoji}

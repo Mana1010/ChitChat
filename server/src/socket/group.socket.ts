@@ -7,9 +7,11 @@ import { groupLogger } from "../utils/loggers.utils";
 import mongoose from "mongoose";
 
 type RequestedUsers = { id: string; name: string };
+const membersWhoReadMessage = new Map<string, string[]>();
 export async function handleGroupSocket(io: Server) {
   GROUP_NAMESPACE(io).on("connection", (socket) => {
     const { userId } = socket.handshake.auth;
+
     socket.on(
       "send-request",
       async ({
@@ -44,6 +46,7 @@ export async function handleGroupSocket(io: Server) {
             $push: { members: { $each: requestedMembers } },
           }
         );
+        membersWhoReadMessage.set(groupId, []); //add the group in map
         requestedUsers.forEach((user) => {
           MAIL_NAMESPACE(io)
             .to(user.id)
@@ -89,6 +92,7 @@ export async function handleGroupSocket(io: Server) {
               {
                 $set: {
                   "lastMessage.text": message,
+                  "lastMessage.sender": userId,
                   memberReadMessage: [userId],
                 },
                 $currentDate: { "lastMessage.lastMessageCreatedAt": true },
@@ -100,11 +104,8 @@ export async function handleGroupSocket(io: Server) {
           socket.broadcast.to(groupId).emit("display-message", {
             messageDetails: result,
           });
-          // const getAllMembers = await GroupConversation.findOne({_id: groupId, }).select([
-          //   "members.memberInfo",
-          //   "-_id",
-          // ])
-          const memberId = [];
+
+          const memberIdList = [];
           const getAllMembers: { member_details: { _id: string } }[] =
             await GroupConversation.aggregate([
               {
@@ -147,12 +148,11 @@ export async function handleGroupSocket(io: Server) {
                 },
               },
             ]);
-
+          membersWhoReadMessage.set(groupId, [userId]);
           for (let i = 0; i < getAllMembers.length; i++) {
-            memberId.push(getAllMembers[i].member_details._id.toString());
+            memberIdList.push(getAllMembers[i].member_details._id.toString());
           }
-          console.log(memberId);
-          socket.broadcast.to(memberId).emit("update-chatlist", {
+          socket.broadcast.to(memberIdList).emit("update-chatlist", {
             groupId,
             lastMessage: groupConversationResult.lastMessage.text,
             lastMessageCreatedAt:
@@ -165,7 +165,24 @@ export async function handleGroupSocket(io: Server) {
         }
       }
     );
-
+    socket.on("read-message", async ({ groupId }) => {
+      let getUserId = membersWhoReadMessage.get(groupId);
+      if (!membersWhoReadMessage.has(groupId)) {
+        console.log("No Group Yet");
+        membersWhoReadMessage.set(groupId, []);
+        getUserId = membersWhoReadMessage.get(groupId);
+      }
+      console.log(getUserId);
+      if (
+        membersWhoReadMessage.has(groupId) &&
+        !getUserId?.some((memberId) => userId === memberId)
+      ) {
+        await GroupConversation.findByIdAndUpdate(groupId, {
+          $push: { memberReadMessage: userId },
+        });
+        getUserId?.push(userId);
+      }
+    });
     socket.on("join-room", ({ groupId, memberId }) => {
       console.log("SUCCESSFULLY JOINED THE ROOM FOR GROUP");
       socket.join(groupId);

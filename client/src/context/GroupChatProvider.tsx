@@ -7,10 +7,10 @@ import { useParams } from "next/navigation";
 function GroupChatProvider({ children }: { children: ReactNode }) {
   const { status, data: session } = useSession();
   const params = useParams();
-  const { setGroupSocket, groupMessageSocket } = useSocketStore();
+  const { setGroupSocket, groupSocket } = useSocketStore();
 
   useEffect(() => {
-    if (!groupMessageSocket && status === "authenticated") {
+    if (!groupSocket && status === "authenticated") {
       const socket = initializeGroupChatSocket(session.user.userId);
       setGroupSocket(socket);
       socket.on("connect", () =>
@@ -18,16 +18,16 @@ function GroupChatProvider({ children }: { children: ReactNode }) {
       );
     }
 
-    if (groupMessageSocket && status === "authenticated") {
-      groupMessageSocket.emit("join-room", {
+    if (groupSocket && status === "authenticated") {
+      groupSocket.emit("join-room", {
         groupId: params.groupId,
         memberId: session.user.userId,
       });
     }
     return () => {
-      if (groupMessageSocket && status === "authenticated") {
-        groupMessageSocket.off("connect");
-        groupMessageSocket.emit("leave-room", {
+      if (groupSocket && status === "authenticated") {
+        groupSocket.off("connect");
+        groupSocket.emit("leave-room", {
           groupId: params.groupId,
           memberId: session.user.userId,
         });
@@ -35,7 +35,7 @@ function GroupChatProvider({ children }: { children: ReactNode }) {
     };
   }, [
     status,
-    groupMessageSocket,
+    groupSocket,
     session?.user.userId,
     setGroupSocket,
     params.groupId,

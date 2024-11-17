@@ -61,13 +61,10 @@ function MessageField({
       className="px-3 py-2.5 flex items-center space-x-2 bg-[#171717]"
     >
       <input
-        // onFocus={() => {
-        //   socket?.emit("read-message", {
-        //     groupId,
-        //     participantId: participantInfo?.receiver_details._id,
-        //   });
-        //   socket?.emit("during-typing", groupId);
-        // }}
+        onFocus={() => {
+          socket?.emit("read-message", { groupId });
+          socket?.emit("during-typing", { groupId });
+        }}
         onBlur={() => socket?.emit("stop-typing", groupId)}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
@@ -121,12 +118,12 @@ function MessageField({
       <button
         type="submit"
         disabled={!message.trim()}
-        className="px-5 flex space-x-2 bg-[#6486FF] py-2.5 rounded-md items-center text-zinc-200 disabled:bg-slate-700 disabled:text-zinc-400"
+        className="px-5 flex space-x-2 bg-[#6486FF] py-3.5 md:py-2.5 rounded-md items-center text-zinc-200 disabled:bg-slate-700 disabled:text-zinc-400"
       >
         <span>
           <LuSend />
         </span>
-        <span className="font-bold">Send</span>
+        <span className="font-bold hidden md:block">Send</span>
       </button>
     </form>
   );

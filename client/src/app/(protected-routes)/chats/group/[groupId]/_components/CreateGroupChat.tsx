@@ -46,7 +46,7 @@ type GroupPayloadSchema = Pick<CreateGroupChatSchema, "groupName"> & {
 function CreateGroupChat() {
   const { data, status } = useSession();
   const router = useRouter();
-  const { groupMessageSocket } = useSocketStore();
+  const { groupSocket } = useSocketStore();
   const [createGroupFormPayload, setCreateGroupFormPayload] =
     useState<CreateGroupChatSchema>({
       groupName: "",
@@ -70,8 +70,8 @@ function CreateGroupChat() {
       return response.data.message;
     },
     onSuccess: (data) => {
-      if (!groupMessageSocket) return;
-      groupMessageSocket.emit("send-request", {
+      if (!groupSocket) return;
+      groupSocket.emit("send-request", {
         requestedUsers: createGroupFormPayload.addedUsers,
         groupId: data.groupId,
       });

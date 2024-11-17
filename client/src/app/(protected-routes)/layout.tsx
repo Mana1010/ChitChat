@@ -1,6 +1,7 @@
 import React, { ReactNode } from "react";
 import Sidebar from "./chats/_components/Sidebar";
 import CreateGroupChat from "./chats/group/[groupId]/_components/CreateGroupChat";
+
 interface Routes {
   children: ReactNode;
   chatboard: ReactNode;

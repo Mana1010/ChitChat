@@ -1,7 +1,6 @@
 import { Server } from "socket.io";
 import { Private } from "../model/private.model";
-import { Conversation } from "../model/conversation.model";
-import mongoose from "mongoose";
+import { PrivateConversation } from "../model/privateConversation.model";
 import { PRIVATE_NAMESPACE } from "../utils/namespaces.utils";
 
 interface Payload {
@@ -11,24 +10,19 @@ interface Payload {
   messageType: string;
   participantId?: string;
 }
-async function updateConversation(payload: Payload, addUnreadMessage: number) {
-  const getTotalUnreadMessages = await Conversation.findById(
-    payload.conversationId
-  ).select("hasUnreadMessages");
-  const updatedConversation = await Conversation.findByIdAndUpdate(
+async function updateConversation(payload: Payload) {
+  const updatedConversation = await PrivateConversation.findByIdAndUpdate(
     payload.conversationId,
     {
       $set: {
         "lastMessage.sender": payload.userId,
         "lastMessage.text": payload.message,
         "lastMessage.lastMessageCreatedAt": new Date(),
-        "lastMessage.messageType": payload.messageType,
-        "hasUnreadMessages.user": payload.participantId,
-        "hasUnreadMessages.totalUnreadMessages":
-          getTotalUnreadMessages.hasUnreadMessages.totalUnreadMessages +
-          addUnreadMessage,
+        "lastMessage.type": payload.messageType,
+        userReadMessage: [payload.userId],
       },
     },
+
     {
       new: true,
     }
@@ -41,6 +35,7 @@ export function handlePrivateSocket(io: Server) {
     socket.on(
       "send-message",
       async ({ message, messageType, conversationId, receiverId }) => {
+        console.log(`SEND MESSAGE ${receiverId}`);
         try {
           if (conversationId) {
             const createMessage = await Private.create({
@@ -59,16 +54,13 @@ export function handlePrivateSocket(io: Server) {
               getProfile,
               conversation: conversationId,
             });
-            const updatedConversation = await updateConversation(
-              {
-                conversationId,
-                userId,
-                message,
-                messageType,
-                participantId: receiverId,
-              },
-              1
-            );
+            const updatedConversation = await updateConversation({
+              conversationId,
+              userId,
+              message,
+              messageType,
+              participantId: receiverId,
+            });
             socket.broadcast
               .to(receiverId)
               .emit("display-unread-message", conversationId);
@@ -90,30 +82,29 @@ export function handlePrivateSocket(io: Server) {
     socket.on("read-message", async ({ conversationId, participantId }) => {
       try {
         if (conversationId && participantId) {
-          const getUnreadMessages = await Conversation.findById(
+          const getUnreadMessages = await PrivateConversation.findById(
             conversationId
           ).select("hasUnreadMessages");
-          const getUnread = getUnreadMessages.hasUnreadMessages;
+          // const getUnread = getUnreadMessages.hasUnreadMessages;
           //This nested if will be checking and update only the hasUnreadMessages if there is no
           //unread messages yet and also to match the user that has not read the messages;
-          if (getUnreadMessages) {
-            if (
-              getUnread.totalUnreadMessages !== 0 &&
-              getUnread.user.toString() === userId
-            ) {
-              getUnread.totalUnreadMessages = 0;
-              await getUnreadMessages.save();
-            }
-          }
+          // if (getUnreadMessages) {
+          //   if (
+          //     getUnread.totalUnreadMessages !== 0 &&
+          //     getUnread.user.toString() === userId
+          //   ) {
+          //     getUnread.totalUnreadMessages = 0;
+          //     await getUnreadMessages.save();
+          //   }
+          // }
 
           socket.emit("seen-message", {
             conversationId,
-            hasUnreadMessages: getUnread,
+            // hasUnreadMessages: getUnread,
           });
-          socket.broadcast.to(conversationId).emit("display-seen-text", {
-            user: getUnread.user,
-            totalUnreadMessages: getUnread.totalUnreadMessages,
-          });
+          // socket.broadcast.to(conversationId).emit("display-seen-text", {
+          //   // totalUnreadMessages: getUnread.totalUnreadMessages,
+          // });
         }
       } catch (err) {
         console.log(err);
@@ -134,11 +125,9 @@ export function handlePrivateSocket(io: Server) {
       }
     );
     socket.on("during-typing", (conversationId) => {
-      console.log(`During typing ${conversationId}`);
       socket.broadcast.to(conversationId).emit("during-typing", conversationId);
     });
     socket.on("stop-typing", (conversationId) => {
-      console.log(`Stop typing ${conversationId}`);
       socket.broadcast.to(conversationId).emit("stop-typing", conversationId);
     });
     socket.on("join-room", ({ conversationId, receiverId }) => {

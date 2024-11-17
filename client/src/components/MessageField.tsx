@@ -7,9 +7,9 @@ import { GetParticipantInfo } from "@/types/UserTypes";
 import { GrAttachment } from "react-icons/gr";
 import { useQueryClient } from "react-query";
 import { updateConversationList } from "@/utils/updater.conversation.utils";
-interface MessageFieldProps {
+interface MessageFieldProps<ParticipantType = string | null> {
   socket: Socket | null;
-  participantInfo?: GetParticipantInfo;
+  participant?: ParticipantType;
   conversationId: string;
   senderId: string | undefined;
   message: string;
@@ -21,7 +21,7 @@ interface MessageFieldProps {
 }
 function MessageField({
   socket,
-  participantInfo,
+  participant,
   conversationId,
   message,
   openEmoji,
@@ -31,6 +31,7 @@ function MessageField({
   setOpenEmoji,
   setOpenAttachmentModal,
 }: MessageFieldProps) {
+  console.log(participant);
   const queryClient = useQueryClient();
   return (
     <form
@@ -43,7 +44,7 @@ function MessageField({
             message,
             messageType: "text",
             conversationId,
-            receiverId: participantInfo?.receiver_details._id,
+            receiverId: participant,
           },
           (cb: { success: boolean }) => {
             if (cb.success) {
@@ -69,7 +70,7 @@ function MessageField({
         onFocus={() => {
           socket?.emit("read-message", {
             conversationId,
-            participantId: participantInfo?.receiver_details._id,
+            participantId: participant,
           });
           socket?.emit("during-typing", conversationId);
         }}
@@ -131,7 +132,7 @@ function MessageField({
         <span>
           <LuSend />
         </span>
-        <span className="font-bold">Send</span>
+        <span className="font-bold hidden md:block">Send</span>
       </button>
     </form>
   );

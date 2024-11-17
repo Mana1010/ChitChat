@@ -1,10 +1,10 @@
 import mongoose, { Schema } from "mongoose";
 import { referenceModel } from "../utils/referenceModel";
-const conversationSchema = new mongoose.Schema({
+const privateConversationSchema = new mongoose.Schema({
   participants: [referenceModel("User")],
-  hasUnreadMessages: {
-    user: referenceModel("User", false), //This field is for the user who have not unread the message.
-    totalUnreadMessages: { type: Schema.Types.Number, default: 0 },
+  userReadMessage: {
+    type: [referenceModel("User")],
+    default: [],
   },
   lastMessage: {
     sender: referenceModel("User", false),
@@ -19,7 +19,12 @@ const conversationSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-type ConversationSchema = mongoose.InferSchemaType<typeof conversationSchema>;
-export const Conversation =
+type PrivateConversationSchema = mongoose.InferSchemaType<
+  typeof privateConversationSchema
+>;
+export const PrivateConversation =
   mongoose.models.Conversation ||
-  mongoose.model<ConversationSchema>("Conversation", conversationSchema);
+  mongoose.model<PrivateConversationSchema>(
+    "PrivateConversation",
+    privateConversationSchema
+  );

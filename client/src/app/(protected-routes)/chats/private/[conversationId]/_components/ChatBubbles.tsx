@@ -20,12 +20,12 @@ function ChatBubbles({
   conversationId: string;
   setMessage: Dispatch<SetStateAction<Message<User>[]>>;
 }) {
-  const { socket } = useSocketStore();
+  const { privateSocket } = useSocketStore();
   const [hoveredMessage, setHoveredMessage] = useState<string | undefined>("");
   const [openReaction, setOpenReaction] = useState<string | undefined>("");
   useEffect(() => {
-    if (!socket) return;
-    socket.on("display-reaction", ({ reaction, messageId }) => {
+    if (!privateSocket) return;
+    privateSocket.on("display-reaction", ({ reaction, messageId }) => {
       setMessage((prev) => {
         return prev.map((message) => {
           if (message._id === messageId) {
@@ -36,10 +36,10 @@ function ChatBubbles({
         });
       });
       return () => {
-        socket.off("display-reaction");
+        privateSocket.off("display-reaction");
       };
     });
-  }, [setMessage, socket]);
+  }, [setMessage, privateSocket]);
   return (
     <Linkify
       options={{

@@ -21,12 +21,13 @@ import PublicChatBubbles from "./ChatBubbles";
 import PublicMessageField from "./PublicMessageField";
 import PublicReactionList from "./PublicReactionList";
 import typingAnimate from "../../../../../assets/images/gif-animation/typing-animation-ver-2.gif";
+import { useSocketStore } from "@/utils/store/socket.store";
 function PublicChat() {
   const [message, setMessage] = useState("");
+  const { publicSocket, setPublicSocket } = useSocketStore();
   const { data: session, status } = useSession();
   const { ref, inView } = useInView();
   const [openEmoji, setOpenEmoji] = useState(false);
-  const socketRef = useRef<Socket | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const scrollDivRef = useRef<HTMLDivElement | null>(null);
@@ -36,6 +37,7 @@ function PublicChat() {
   const [allMessages, setAllMessages] = useState<Message<User, Reaction[]>[]>(
     []
   );
+
   const [openMessageIdReactionList, setOpenMessageIdReactionList] = useState<
     string | null
   >(null);
@@ -85,27 +87,17 @@ function PublicChat() {
     }
   }, [fetchNextPage, hasNextPage, inView]);
   useEffect(() => {
-    function onDisconnect() {
-      socketRef.current?.emit("user-disconnect", { status: "Offline" });
-    }
-
-    if (!socketRef.current && session?.user) {
+    if (!publicSocket && session?.user) {
       const socket = initializePublicChatSocket(session.user.userId as string);
-      socketRef.current = socket;
+      setPublicSocket(socket);
       socket.on("connect", () => console.log("Connected Successfully"));
       socket.emit("stop-typing"); //To ensure that the typing animation will be remove or cancel once the user refresh the page
-      socket.on("disconnect", onDisconnect);
     }
-  }, [session?.user]);
+  }, [publicSocket, session?.user, setPublicSocket]);
   useEffect(() => {
-    if (!socketRef.current) return;
+    if (!publicSocket) return;
     const handleGetMessages = (data: User) => {
       setAllMessages((prevMessages: any) => [...prevMessages, data]);
-    };
-    const handleDisplayStatus = (data: { name: string; status: string }) => {
-      toast.message(`${data.name} is ${data.status}`, {
-        position: "top-right",
-      });
     };
     const handleDisplayDuringTyping = (
       data: {
@@ -162,24 +154,19 @@ function PublicChat() {
         });
       }
     };
-    socketRef.current.on("get-message", handleGetMessages);
-    socketRef.current.on("display-reaction", handleDisplayReaction);
-    socketRef.current.once("display-status", handleDisplayStatus);
-    socketRef.current.on("display-during-typing", handleDisplayDuringTyping);
+    publicSocket.on("get-message", handleGetMessages);
+    publicSocket.on("display-reaction", handleDisplayReaction);
+    publicSocket.on("display-during-typing", handleDisplayDuringTyping);
     return () => {
-      socketRef.current?.off("get-message", handleGetMessages);
-      socketRef.current?.off("display-reaction", handleDisplayReaction);
-      socketRef.current?.off("display-status", handleDisplayStatus);
-      socketRef.current?.off(
-        "display-during-typing",
-        handleDisplayDuringTyping
-      );
+      publicSocket?.off("get-message", handleGetMessages);
+      publicSocket?.off("display-reaction", handleDisplayReaction);
+      publicSocket?.off("display-during-typing", handleDisplayDuringTyping);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [socketRef.current]);
+  }, [publicSocket]);
   function sendMessage() {
-    if (status !== "authenticated") return;
-    socketRef.current?.emit("send-message", message);
+    if (status !== "authenticated" || !publicSocket) return;
+    publicSocket.emit("send-message", message);
     const userData = {
       name: session?.user?.name,
       profilePic: session?.user.image,
@@ -200,7 +187,7 @@ function PublicChat() {
         },
       ];
     });
-    socketRef.current?.emit("stop-typing");
+    publicSocket?.emit("stop-typing");
   }
   return (
     <div className="h-full relative" onClick={() => setOpenEmoji(false)}>
@@ -233,7 +220,7 @@ function PublicChat() {
             {allMessages?.map((data: Message<User, Reaction[]>) => (
               <PublicChatBubbles
                 key={data?._id}
-                socket={socketRef.current as Socket}
+                socket={publicSocket as Socket}
                 setMessage={setAllMessages}
                 messageDetails={data}
                 userData={session?.user as User | undefined}
@@ -320,7 +307,7 @@ function PublicChat() {
         sendMessage={sendMessage}
         sessionData={session?.user}
         scrollRef={scrollRef.current}
-        socketRef={socketRef?.current}
+        socketRef={publicSocket}
         inputRef={inputRef}
         setMessage={setMessage}
         setOpenEmoji={setOpenEmoji}

@@ -2,7 +2,7 @@ import asyncHandler from "express-async-handler";
 import { Request, Response } from "express";
 import { User } from "../model/user.model";
 import { Private } from "../model/private.model";
-import { Conversation } from "../model/conversation.model";
+import { PrivateConversation } from "../model/privateConversation.model";
 import mongoose from "mongoose";
 
 export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
@@ -32,7 +32,7 @@ export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
 export const getAllUsersConversation = asyncHandler(
   async (req: Request, res: Response) => {
     const { id } = req.params;
-    const getAllConversation = await Conversation.aggregate([
+    const getAllConversation = await PrivateConversation.aggregate([
       { $match: { participants: { $in: [new mongoose.Types.ObjectId(id)] } } },
       { $unwind: "$participants" },
       {
@@ -54,7 +54,6 @@ export const getAllUsersConversation = asyncHandler(
           receiver_details: { $first: "$receiver_details" },
           _id: 1,
           lastMessage: 1,
-          hasUnreadMessages: 1,
           updatedAt: 1,
         },
       },
@@ -69,12 +68,12 @@ export const chatUser = asyncHandler(async (req: Request, res: Response) => {
     res.status(401).json({ message: "Please provide senderId and receiverId" });
     return;
   }
-  const checkExistingConversation = await Conversation.findOne({
+  const checkExistingConversation = await PrivateConversation.findOne({
     participants: { $all: [senderId, receiverId] },
   });
   //Check first if the conversation already exist
   if (!checkExistingConversation) {
-    const addConversation = await Conversation.create({
+    const addConversation = await PrivateConversation.create({
       participants: [senderId, receiverId],
     });
     res.status(201).json({ message: addConversation._id });
@@ -91,7 +90,7 @@ export const getPrivateMessages = asyncHandler(
       res.status(404);
       throw new Error("Conversation does not exist");
     }
-    const checkConversationAvailability = await Conversation.findById(
+    const checkConversationAvailability = await PrivateConversation.findById(
       conversationId
     );
     if (!checkConversationAvailability) {
@@ -126,13 +125,11 @@ export const getPrivateMessages = asyncHandler(
 export const getParticipantInfo = asyncHandler(
   async (req: Request, res: Response) => {
     const { userId, conversationId } = req.params;
-    console.log(userId, conversationId);
     if (!mongoose.Types.ObjectId.isValid(conversationId)) {
       res.status(404);
       throw new Error("User not found");
     }
-
-    const getUserInfo = await Conversation.aggregate([
+    const getUserInfo = await PrivateConversation.aggregate([
       {
         $match: { _id: new mongoose.Types.ObjectId(conversationId) },
       },
@@ -144,7 +141,6 @@ export const getParticipantInfo = asyncHandler(
           participants: { $ne: new mongoose.Types.ObjectId(userId) },
         },
       },
-
       {
         $lookup: {
           from: "users",
@@ -155,9 +151,31 @@ export const getParticipantInfo = asyncHandler(
       },
       {
         $addFields: {
-          receiver_details: { $first: "$receiver_details" }, //Retrieve the chatmate's details from the array.
+          check_user_read: {
+            $size: {
+              $filter: {
+                input: "$userReadMessage",
+                cond: { $ne: ["$$this", new mongoose.Types.ObjectId(userId)] },
+              },
+            },
+          },
         },
       },
+      {
+        $addFields: {
+          receiver_details: { $first: "$receiver_details" }, //Retrieve the chatmate's details from the array.
+          is_user_already_seen_message: {
+            $cond: {
+              if: {
+                $gt: ["$check_user_read", 0], //To check if the check_user_read contains a receiver id who already read the message
+              },
+              then: true,
+              else: false,
+            },
+          },
+        },
+      },
+
       {
         $project: {
           receiver_details: {
@@ -168,10 +186,11 @@ export const getParticipantInfo = asyncHandler(
             provider: "$receiver_details.provider",
             email: "$receiver_details.email",
           },
-          hasUnreadMessages: 1,
+          is_user_already_seen_message: 1,
         },
       },
     ]);
+    console.log("Hello world");
     if (!getUserInfo) {
       res.status(404);
       throw new Error("User not found");
@@ -193,7 +212,7 @@ export const getParticipantName = asyncHandler(
       res.status(400);
       throw new Error("User Not Found");
     }
-    const getChatMateName = await Conversation.aggregate([
+    const getChatMateName = await PrivateConversation.aggregate([
       {
         $match: { _id: new mongoose.Types.ObjectId(conversationId) },
       },

@@ -49,8 +49,9 @@ function ParentDiv({
     </div>
   );
 }
+
 function Chatboard({ conversationId }: { conversationId: string }) {
-  const { socket } = useSocketStore();
+  const { privateSocket } = useSocketStore();
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const currentPageRef = useRef(0);
   const scrollDivRef = useRef<HTMLDivElement | null>(null);
@@ -121,21 +122,21 @@ function Chatboard({ conversationId }: { conversationId: string }) {
   }, [hasNextPage, fetchNextPage, inView]);
   useEffect(() => {
     if (
-      !socket ||
+      !privateSocket ||
       status !== "authenticated" ||
       !participantInfo?.receiver_details._id
     )
       return;
-    socket.emit("join-room", {
+    privateSocket.emit("join-room", {
       conversationId,
       receiverId: participantInfo.receiver_details._id,
     });
-    socket.emit("read-message", {
+    privateSocket.emit("read-message", {
       conversationId,
       participantId: participantInfo.receiver_details._id,
     });
     return () => {
-      socket.emit("leave-room", {
+      privateSocket.emit("leave-room", {
         conversationId,
         receiverId: participantInfo.receiver_details?._id,
       });
@@ -144,12 +145,12 @@ function Chatboard({ conversationId }: { conversationId: string }) {
     conversationId,
     participantInfo?.receiver_details._id,
     queryClient,
-    socket,
+    privateSocket,
     status,
   ]);
   useEffect(() => {
-    if (!socket) return;
-    socket.on("display-seen-text", ({ user, totalUnreadMessages }) => {
+    if (!privateSocket) return;
+    privateSocket.on("display-seen-text", ({ user, totalUnreadMessages }) => {
       queryClient.setQueryData<GetParticipantInfo | undefined>(
         ["participant-info", conversationId],
         (cachedData: GetParticipantInfo | undefined) => {
@@ -165,24 +166,24 @@ function Chatboard({ conversationId }: { conversationId: string }) {
         }
       );
     });
-    socket.on("display-message", ({ getProfile }) => {
+    privateSocket.on("display-message", ({ getProfile }) => {
       setAllMessages((prevMessages) => [...prevMessages, getProfile]);
     });
-    socket.on("during-typing", (conversationId) => {
+    privateSocket.on("during-typing", (conversationId) => {
       setTypingUsers((prevUsers) => [...prevUsers, conversationId]);
     });
-    socket.on("stop-typing", (conversationId) => {
+    privateSocket.on("stop-typing", (conversationId) => {
       setTypingUsers((prevUsers) =>
         prevUsers.filter((user) => user !== conversationId)
       );
     });
     return () => {
-      socket.off("display-seen-text");
-      socket.off("display-message");
-      socket.off("during-typing");
-      socket.off("stop-typing");
+      privateSocket.off("display-seen-text");
+      privateSocket.off("display-message");
+      privateSocket.off("during-typing");
+      privateSocket.off("stop-typing");
     };
-  }, [conversationId, queryClient, socket]);
+  }, [conversationId, queryClient, privateSocket]);
 
   if (conversationId.toLowerCase() === "new") {
     return <NewUser />;
@@ -194,21 +195,16 @@ function Chatboard({ conversationId }: { conversationId: string }) {
     }
   }
   function sendMessage(messageContent: string) {
-    queryClient.setQueryData<GetParticipantInfo | undefined>(
-      ["participant-info", conversationId],
-      (cachedData: GetParticipantInfo | undefined) => {
-        if (cachedData) {
-          return {
-            ...cachedData,
-            hasUnreadMessages: {
-              ...cachedData.hasUnreadMessages,
-              totalUnreadMessages:
-                cachedData.hasUnreadMessages.totalUnreadMessages + 1,
-            },
-          };
-        }
-      }
-    );
+    // queryClient.setQueryData<GetParticipantInfo | undefined>(
+    //   ["participant-info", conversationId],
+    //   (cachedData: GetParticipantInfo | undefined) => {
+    //     if (cachedData) {
+    //       return {
+    //         ...cachedData,
+    //       };
+    //     }
+    //   }
+    // );
     setAllMessages((prevMessages: Message<User>[]): Message<User>[] => {
       return [
         ...prevMessages,
@@ -228,11 +224,12 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       ];
     });
 
-    socket?.emit("stop-typing", conversationId);
+    privateSocket?.emit("stop-typing", conversationId);
     setTimeout(() => {
       scrollRef.current?.scrollIntoView({ block: "end" }); //To bypass the closure nature of react :)
     }, 0);
   }
+
   return (
     <ParentDiv setOpenEmoji={setOpenEmoji}>
       <ChatHeader
@@ -252,7 +249,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                 </h3>
                 <button
                   onClick={() => {
-                    socket?.emit("send-message", {
+                    privateSocket?.emit("send-message", {
                       message: "👋",
                       conversationId,
                       receiverId: participantInfo?.receiver_details._id,
@@ -319,10 +316,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                 ) : null}
                 <div
                   className={`w-full justify-end items-end relative bottom-3 pr-1 pt-1.5 ${
-                    participantInfo?.hasUnreadMessages?.user !==
-                      session?.user.userId &&
-                    participantInfo?.hasUnreadMessages?.totalUnreadMessages ===
-                      0
+                    participantInfo?.is_user_already_seen_message
                       ? "flex"
                       : "hidden"
                   } `}
@@ -367,8 +361,9 @@ function Chatboard({ conversationId }: { conversationId: string }) {
         )}
       </div>
       <MessageField
-        socket={socket}
+        socket={privateSocket}
         conversationId={conversationId}
+        participant={participantInfo?.receiver_details._id}
         message={message}
         openEmoji={openEmoji}
         senderId={session?.user.userId}

@@ -2,26 +2,38 @@ import { Socket } from "socket.io-client";
 import { create, StoreApi } from "zustand";
 
 type SocketStore = {
-  socket: Socket | null;
+  publicSocket: Socket | null;
+  privateSocket: Socket | null;
+  groupSocket: Socket | null;
   mailSocket: Socket | null;
-  groupMessageSocket: Socket | null;
+  notificationSocket: Socket | null;
 } & {
+  setPublicSocket: (socket: Socket | null) => void;
   setPrivateSocket: (socket: Socket | null) => void;
-  setMailSocket: (socket: Socket | null) => void;
   setGroupSocket: (socket: Socket | null) => void;
+  setMailSocket: (socket: Socket | null) => void;
+  setNoficationSocket: (socket: Socket | null) => void;
 };
 const store = (set: StoreApi<SocketStore>["setState"]) => ({
-  socket: null,
+  publicSocket: null,
+  privateSocket: null,
   mailSocket: null,
-  groupMessageSocket: null,
+  groupSocket: null,
+  notificationSocket: null,
+  setPublicSocket: (socket: Socket | null) => {
+    set({ publicSocket: socket });
+  },
   setPrivateSocket: (socket: Socket | null) => {
-    set({ socket });
+    set({ privateSocket: socket });
+  },
+  setGroupSocket: (socket: Socket | null) => {
+    set({ groupSocket: socket });
   },
   setMailSocket: (socket: Socket | null) => {
     set({ mailSocket: socket });
   },
-  setGroupSocket: (socket: Socket | null) => {
-    set({ groupMessageSocket: socket });
+  setNoficationSocket: (socket: Socket | null) => {
+    set({ notificationSocket: socket });
   },
 });
 

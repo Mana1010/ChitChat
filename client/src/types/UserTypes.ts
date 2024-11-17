@@ -10,10 +10,8 @@ export interface FullInfoUser extends User {
 export interface Conversation {
   receiver_details: User;
   _id: string;
-  hasUnreadMessages: {
-    user: User | string;
-    totalUnreadMessages: number;
-  };
+  is_user_read_message: boolean;
+  // userReadMessage: string[];
   lastMessage: {
     sender: User | string;
     text: string;
@@ -34,10 +32,7 @@ export interface PublicMessages<UserType = string> {
 export interface GetParticipantInfo {
   _id: string;
   receiver_details: FullInfoUser;
-  hasUnreadMessages: {
-    user: User | string;
-    totalUnreadMessages: number;
-  };
+  is_user_already_seen_message: boolean;
 }
 
 export interface ReactionSchema {

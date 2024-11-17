@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import { AiFillMessage } from "react-icons/ai";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
@@ -73,7 +73,6 @@ function Sidebar() {
       }`,
     },
   ];
-
   return (
     <div className=" flex justify-between items-center flex-col pt-4 h-full px-2 ">
       <div className="flex flex-col items-center w-full justify-center">

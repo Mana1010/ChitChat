@@ -18,10 +18,10 @@ function PrivateReactions({
   setMessage: Dispatch<SetStateAction<Message<User>[]>>;
   setOpenReaction: Dispatch<SetStateAction<string | undefined>>;
 }) {
-  const { socket } = useSocketStore();
+  const { privateSocket } = useSocketStore();
   function sendReaction(content: string) {
-    if (!socket) return;
-    socket.emit("send-reaction", {
+    if (!privateSocket) return;
+    privateSocket.emit("send-reaction", {
       reaction: content,
       messageId,
       conversationId,

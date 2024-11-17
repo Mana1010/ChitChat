@@ -24,7 +24,7 @@ function ChatList({
   searchChat: string;
   conversationId: string;
 }) {
-  const { socket } = useSocketStore();
+  const { privateSocket } = useSocketStore();
   const { data: session, status } = useSession();
   const router = useRouter();
   const displayAllChats: UseQueryResult<
@@ -42,8 +42,8 @@ function ChatList({
   });
   const queryClient = useQueryClient();
   useEffect(() => {
-    if (!socket || status === "unauthenticated") return;
-    socket.on(
+    if (!privateSocket || status === "unauthenticated") return;
+    privateSocket.on(
       "display-updated-chatlist",
       ({
         newMessage,
@@ -63,33 +63,33 @@ function ChatList({
         );
       }
     );
-    socket.on("seen-message", ({ conversationId, hasUnreadMessages }) => {
-      queryClient.setQueryData<Conversation[] | undefined>(
-        ["chat-list"],
-        (cachedData) => {
-          if (cachedData) {
-            return cachedData.map((conversation: Conversation) => {
-              if (conversation._id === conversationId) {
-                return {
-                  ...conversation,
-                  hasUnreadMessages: {
-                    user: hasUnreadMessages.user,
-                    totalUnreadMessages: hasUnreadMessages.totalUnreadMessages,
-                  },
-                };
-              } else {
-                return conversation;
-              }
-            });
+    privateSocket.on(
+      "seen-message",
+      ({ conversationId, hasUnreadMessages }) => {
+        queryClient.setQueryData<Conversation[] | undefined>(
+          ["chat-list"],
+          (cachedData) => {
+            if (cachedData) {
+              return cachedData.map((conversation: Conversation) => {
+                if (conversation._id === conversationId) {
+                  return {
+                    ...conversation,
+                    is_user_read_message: true,
+                  };
+                } else {
+                  return conversation;
+                }
+              });
+            } else return cachedData;
           }
-        }
-      );
-    });
+        );
+      }
+    );
     return () => {
-      socket.off("display-updated-chatlist");
-      socket.off("seen-message");
+      privateSocket.off("display-updated-chatlist");
+      privateSocket.off("seen-message");
     };
-  }, [queryClient, socket, status]);
+  }, [queryClient, privateSocket, status]);
 
   const searchResult = displayAllChats.data?.filter((user) =>
     new RegExp(searchChat, "i").test(user.receiver_details.name as string)
@@ -157,10 +157,7 @@ function ChatList({
                 </h1>
                 <small
                   className={`text-[0.75rem] break-all ${
-                    user.hasUnreadMessages.user === session?.user.userId &&
-                    user.hasUnreadMessages.totalUnreadMessages !== 0
-                      ? "text-white font-bold"
-                      : "text-zinc-300"
+                    false ? "text-white font-bold" : "text-zinc-300"
                   }`}
                 >
                   {`${
@@ -175,14 +172,14 @@ function ChatList({
                 </small>
               </div>
             </div>
-            <div
+            {/* <div
               className={`w-2.5 h-2.5 rounded-full items-center justify-center bg-[#6486FF] ${
                 user.hasUnreadMessages.user === session?.user.userId &&
                 user.hasUnreadMessages.totalUnreadMessages !== 0
                   ? "flex"
                   : "hidden"
               }`}
-            ></div>
+            ></div> */}
           </button>
         ))}{" "}
       </div>
