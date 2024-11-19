@@ -22,8 +22,10 @@ function useParticipantInfo(
       const response = await axios.get(
         `${PRIVATE_SERVER_URL}/participant/info/${sessionData?.user.userId}/${conversationId}`
       );
+      console.log(response.data.message);
       return response.data.message;
     },
+    refetchOnWindowFocus: false,
     enabled: status === "authenticated",
   });
   return { participantInfo: data, isLoading };

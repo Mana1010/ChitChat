@@ -4,6 +4,7 @@ import { User } from "../model/user.model";
 import { Private } from "../model/private.model";
 import { PrivateConversation } from "../model/privateConversation.model";
 import mongoose from "mongoose";
+import { groupLogger } from "../utils/loggers.utils";
 
 export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
   const { limit, page } = req.query;
@@ -32,33 +33,53 @@ export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
 export const getAllUsersConversation = asyncHandler(
   async (req: Request, res: Response) => {
     const { id } = req.params;
-    const getAllConversation = await PrivateConversation.aggregate([
-      { $match: { participants: { $in: [new mongoose.Types.ObjectId(id)] } } },
-      { $unwind: "$participants" },
-      {
-        $match: { participants: { $ne: new mongoose.Types.ObjectId(id) } },
-      },
-      {
-        $lookup: {
-          from: "users",
-          localField: "participants",
-          foreignField: "_id",
-          as: "receiver_details",
+    try {
+      const getAllConversation = await PrivateConversation.aggregate([
+        {
+          $match: { participants: { $in: [new mongoose.Types.ObjectId(id)] } },
         },
-      },
-      {
-        $sort: { "lastMessage.lastMessageCreatedAt": -1 },
-      },
-      {
-        $project: {
-          receiver_details: { $first: "$receiver_details" },
-          _id: 1,
-          lastMessage: 1,
-          updatedAt: 1,
+        { $unwind: "$participants" },
+        {
+          $match: { participants: { $ne: new mongoose.Types.ObjectId(id) } },
         },
-      },
-    ]);
-    res.status(200).json({ message: getAllConversation });
+        {
+          $lookup: {
+            from: "users",
+            localField: "participants",
+            foreignField: "_id",
+            as: "receiver_details",
+          },
+        },
+        {
+          $sort: { "lastMessage.lastMessageCreatedAt": -1 },
+        },
+        {
+          $addFields: {
+            already_read_message: {
+              $cond: {
+                if: {
+                  $in: [new mongoose.Types.ObjectId(id), "$userReadMessage"], //Will check if user is already
+                },
+                then: true,
+                else: false,
+              },
+            },
+          },
+        },
+        {
+          $project: {
+            receiver_details: { $first: "$receiver_details" },
+            _id: 1,
+            lastMessage: 1,
+            updatedAt: 1,
+            already_read_message: 1,
+          },
+        },
+      ]);
+      res.status(200).json({ message: getAllConversation });
+    } catch (err) {
+      groupLogger.error(err);
+    }
   }
 );
 
@@ -152,12 +173,7 @@ export const getParticipantInfo = asyncHandler(
       {
         $addFields: {
           check_user_read: {
-            $size: {
-              $filter: {
-                input: "$userReadMessage",
-                cond: { $ne: ["$$this", new mongoose.Types.ObjectId(userId)] },
-              },
-            },
+            $size: "$userReadMessage",
           },
         },
       },
@@ -167,7 +183,17 @@ export const getParticipantInfo = asyncHandler(
           is_user_already_seen_message: {
             $cond: {
               if: {
-                $gt: ["$check_user_read", 0], //To check if the check_user_read contains a receiver id who already read the message
+                $and: [
+                  {
+                    $eq: ["$check_user_read", 2], //To check if the check_user_read contains a receiver id who already read the message
+                  },
+                  {
+                    $eq: [
+                      "$lastMessage.sender",
+                      new mongoose.Types.ObjectId(userId),
+                    ],
+                  },
+                ],
               },
               then: true,
               else: false,
@@ -175,7 +201,6 @@ export const getParticipantInfo = asyncHandler(
           },
         },
       },
-
       {
         $project: {
           receiver_details: {
@@ -190,7 +215,6 @@ export const getParticipantInfo = asyncHandler(
         },
       },
     ]);
-    console.log("Hello world");
     if (!getUserInfo) {
       res.status(404);
       throw new Error("User not found");

@@ -1,4 +1,3 @@
-import React from "react";
 import { User } from "./shared.types";
 import { Reaction } from "./shared.types";
 export interface FullInfoUser extends User {
@@ -10,8 +9,9 @@ export interface FullInfoUser extends User {
 export interface Conversation {
   receiver_details: User;
   _id: string;
-  is_user_read_message: boolean;
+  is_user_already_seen_message: boolean;
   // userReadMessage: string[];
+  already_read_message: boolean;
   lastMessage: {
     sender: User | string;
     text: string;

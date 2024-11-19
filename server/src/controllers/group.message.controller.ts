@@ -180,7 +180,6 @@ export const getAllGroupChatConversation = asyncHandler(
           groupPhoto: 1,
           _id: 1,
           lastMessage: 1,
-          hasUnreadMessages: 1,
           updatedAt: 1,
         },
       },

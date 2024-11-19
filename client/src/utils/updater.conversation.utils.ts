@@ -42,3 +42,21 @@ export function updateConversationList<
     }
   );
 }
+
+export function handleSeenUpdate<
+  ParticipantType extends { is_user_already_seen_message: boolean }
+>(queryClient: QueryClient, queryKey: string[], value: boolean) {
+  queryClient.setQueryData<ParticipantType | undefined>(
+    queryKey,
+    (cachedData: ParticipantType | undefined) => {
+      if (cachedData) {
+        return {
+          ...cachedData,
+          is_user_already_seen_message: value,
+        };
+      } else {
+        return cachedData;
+      }
+    }
+  );
+}

@@ -35,7 +35,6 @@ export function handlePrivateSocket(io: Server) {
     socket.on(
       "send-message",
       async ({ message, messageType, conversationId, receiverId }) => {
-        console.log(`SEND MESSAGE ${receiverId}`);
         try {
           if (conversationId) {
             const createMessage = await Private.create({
@@ -64,6 +63,7 @@ export function handlePrivateSocket(io: Server) {
             socket.broadcast
               .to(receiverId)
               .emit("display-unread-message", conversationId);
+
             socket.broadcast
               .to(receiverId) //To emit only to the receiver to avoid unnecessary emitting from the other connection
               .emit("display-updated-chatlist", {
@@ -74,6 +74,9 @@ export function handlePrivateSocket(io: Server) {
                   updatedConversation.lastMessage.lastMessageCreatedAt,
               });
           }
+          socket.broadcast.to(conversationId).emit("display-seen-user", {
+            display_seen: false, //This will reset or remove the seen user icon.
+          });
         } catch (err) {
           console.log(err);
         }
@@ -81,31 +84,35 @@ export function handlePrivateSocket(io: Server) {
     );
     socket.on("read-message", async ({ conversationId, participantId }) => {
       try {
-        if (conversationId && participantId) {
-          const getUnreadMessages = await PrivateConversation.findById(
-            conversationId
-          ).select("hasUnreadMessages");
-          // const getUnread = getUnreadMessages.hasUnreadMessages;
-          //This nested if will be checking and update only the hasUnreadMessages if there is no
-          //unread messages yet and also to match the user that has not read the messages;
-          // if (getUnreadMessages) {
-          //   if (
-          //     getUnread.totalUnreadMessages !== 0 &&
-          //     getUnread.user.toString() === userId
-          //   ) {
-          //     getUnread.totalUnreadMessages = 0;
-          //     await getUnreadMessages.save();
-          //   }
-          // }
-
-          socket.emit("seen-message", {
-            conversationId,
-            // hasUnreadMessages: getUnread,
-          });
-          // socket.broadcast.to(conversationId).emit("display-seen-text", {
-          //   // totalUnreadMessages: getUnread.totalUnreadMessages,
-          // });
+        if (!conversationId || !participantId) {
+          console.log("Empty Payload");
+          return;
         }
+        const checkIfUserNotSeenMessage = await PrivateConversation.findById(
+          conversationId
+        ).select(["userReadMessage", "lastMessage.sender"]);
+
+        if (!checkIfUserNotSeenMessage) return;
+        console.log(checkIfUserNotSeenMessage);
+        const listConversationUser =
+          checkIfUserNotSeenMessage.userReadMessage.map((user: string) =>
+            user.toString()
+          ); //Lets first transform the new mongoose type to string();
+        const isUserNotSeenMessage = listConversationUser.includes(userId);
+
+        if (!isUserNotSeenMessage && listConversationUser.length <= 2) {
+          console.log("Pusheddd");
+          checkIfUserNotSeenMessage.userReadMessage.push(userId);
+          await checkIfUserNotSeenMessage.save();
+        }
+        socket.to(conversationId).emit("seen-message", {
+          conversationId,
+        });
+        socket.broadcast.to(conversationId).emit("display-seen-user", {
+          display_seen:
+            checkIfUserNotSeenMessage.lastMessage.sender.toString() ===
+            participantId, //This will check and only show the seen user display to those who sent the latest message
+        });
       } catch (err) {
         console.log(err);
       }

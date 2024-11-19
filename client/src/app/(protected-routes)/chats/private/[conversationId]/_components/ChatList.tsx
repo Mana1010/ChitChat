@@ -13,7 +13,6 @@ import { useSocketStore } from "@/utils/store/socket.store";
 import ConversationListSkeleton from "../../../_components/ConversationListSkeleton";
 import NoItemFound from "@/components/NoItemFound";
 import { updateConversationList } from "@/utils/updater.conversation.utils";
-
 function ParentDiv({ children }: { children: ReactNode }) {
   return <div className="w-full flex-grow flex h-[200px]">{children}</div>;
 }
@@ -63,28 +62,25 @@ function ChatList({
         );
       }
     );
-    privateSocket.on(
-      "seen-message",
-      ({ conversationId, hasUnreadMessages }) => {
-        queryClient.setQueryData<Conversation[] | undefined>(
-          ["chat-list"],
-          (cachedData) => {
-            if (cachedData) {
-              return cachedData.map((conversation: Conversation) => {
-                if (conversation._id === conversationId) {
-                  return {
-                    ...conversation,
-                    is_user_read_message: true,
-                  };
-                } else {
-                  return conversation;
-                }
-              });
-            } else return cachedData;
-          }
-        );
-      }
-    );
+    privateSocket.on("seen-message", ({ conversationId }) => {
+      queryClient.setQueryData<Conversation[] | undefined>(
+        ["chat-list"],
+        (cachedData) => {
+          if (cachedData) {
+            return cachedData.map((conversation: Conversation) => {
+              if (conversation._id === conversationId) {
+                return {
+                  ...conversation,
+                  is_user_already_seen_message: true,
+                };
+              } else {
+                return conversation;
+              }
+            });
+          } else return cachedData;
+        }
+      );
+    });
     return () => {
       privateSocket.off("display-updated-chatlist");
       privateSocket.off("seen-message");
@@ -172,14 +168,11 @@ function ChatList({
                 </small>
               </div>
             </div>
-            {/* <div
+            <div
               className={`w-2.5 h-2.5 rounded-full items-center justify-center bg-[#6486FF] ${
-                user.hasUnreadMessages.user === session?.user.userId &&
-                user.hasUnreadMessages.totalUnreadMessages !== 0
-                  ? "flex"
-                  : "hidden"
+                !user.already_read_message ? "flex" : "hidden"
               }`}
-            ></div> */}
+            ></div>
           </button>
         ))}{" "}
       </div>

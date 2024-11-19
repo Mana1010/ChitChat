@@ -4,6 +4,7 @@ import { MdEmojiEmotions } from "react-icons/md";
 import { LuSend } from "react-icons/lu";
 import { Socket } from "socket.io-client";
 import { GetParticipantInfo } from "@/types/UserTypes";
+import { handleSeenUpdate } from "@/utils/updater.conversation.utils";
 import { GrAttachment } from "react-icons/gr";
 import { useQueryClient } from "react-query";
 import { updateConversationList } from "@/utils/updater.conversation.utils";
@@ -60,6 +61,11 @@ function MessageField({
           senderId,
           "text",
           "chat-list"
+        );
+        handleSeenUpdate(
+          queryClient,
+          ["participant-info", conversationId],
+          false
         );
         setMessage("");
         queryClient.invalidateQueries(["sidebar"]);

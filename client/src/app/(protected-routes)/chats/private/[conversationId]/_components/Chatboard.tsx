@@ -15,7 +15,7 @@ import { useSession } from "next-auth/react";
 import { PRIVATE_SERVER_URL } from "@/utils/serverUrl";
 import NewUser from "./NewUser";
 import UserNotFound from "./UserNotFound";
-import { Conversation, GetParticipantInfo } from "@/types/UserTypes";
+import { GetParticipantInfo } from "@/types/UserTypes";
 import { Message, User } from "@/types/shared.types";
 import { useSocketStore } from "@/utils/store/socket.store";
 import { nanoid } from "nanoid";
@@ -31,6 +31,7 @@ import typingAnimation from "../../../../../../assets/images/gif-animation/typin
 import SendAttachment from "@/components/SendAttachment";
 import useParticipantInfo from "@/hooks/useParticipantInfo.hook";
 import { updateConversationList } from "@/utils/updater.conversation.utils";
+import { handleSeenUpdate } from "@/utils/updater.conversation.utils";
 function ParentDiv({
   children,
   setOpenEmoji,
@@ -120,6 +121,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       fetchNextPage();
     }
   }, [hasNextPage, fetchNextPage, inView]);
+
   useEffect(() => {
     if (
       !privateSocket ||
@@ -148,22 +150,14 @@ function Chatboard({ conversationId }: { conversationId: string }) {
     privateSocket,
     status,
   ]);
+
   useEffect(() => {
     if (!privateSocket) return;
-    privateSocket.on("display-seen-text", ({ user, totalUnreadMessages }) => {
-      queryClient.setQueryData<GetParticipantInfo | undefined>(
+    privateSocket.on("display-seen-user", ({ display_seen }) => {
+      handleSeenUpdate(
+        queryClient,
         ["participant-info", conversationId],
-        (cachedData: GetParticipantInfo | undefined) => {
-          if (cachedData) {
-            return {
-              ...cachedData,
-              hasUnreadMessages: {
-                user,
-                totalUnreadMessages,
-              },
-            };
-          }
-        }
+        display_seen
       );
     });
     privateSocket.on("display-message", ({ getProfile }) => {
@@ -183,7 +177,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       privateSocket.off("during-typing");
       privateSocket.off("stop-typing");
     };
-  }, [conversationId, queryClient, privateSocket]);
+  }, [conversationId, queryClient, privateSocket, session?.user.userId]);
 
   if (conversationId.toLowerCase() === "new") {
     return <NewUser />;
@@ -195,16 +189,6 @@ function Chatboard({ conversationId }: { conversationId: string }) {
     }
   }
   function sendMessage(messageContent: string) {
-    // queryClient.setQueryData<GetParticipantInfo | undefined>(
-    //   ["participant-info", conversationId],
-    //   (cachedData: GetParticipantInfo | undefined) => {
-    //     if (cachedData) {
-    //       return {
-    //         ...cachedData,
-    //       };
-    //     }
-    //   }
-    // );
     setAllMessages((prevMessages: Message<User>[]): Message<User>[] => {
       return [
         ...prevMessages,

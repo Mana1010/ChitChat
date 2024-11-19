@@ -5,6 +5,12 @@ const privateConversationSchema = new mongoose.Schema({
   userReadMessage: {
     type: [referenceModel("User")],
     default: [],
+    validate: {
+      validator: (arr: string[]) => {
+        return arr.length <= 2; //Should be 2 user only
+      },
+      message: "Maximum of 2 users only",
+    },
   },
   lastMessage: {
     sender: referenceModel("User", false),
