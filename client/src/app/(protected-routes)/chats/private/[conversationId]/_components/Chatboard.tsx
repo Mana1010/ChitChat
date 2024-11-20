@@ -23,14 +23,17 @@ import LoadingChat from "@/components/LoadingChat";
 import { useInView } from "react-intersection-observer";
 import ChatHeader from "./ChatHeader";
 import ChatBubbles from "./ChatBubbles";
-import MessageField from "@/components/MessageField";
 import { IoIosArrowRoundDown } from "react-icons/io";
 import { AnimatePresence, motion } from "framer-motion";
 import ProfileCard from "../../../_components/ProfileCard";
 import typingAnimation from "../../../../../../assets/images/gif-animation/typing-animation-ver-2.gif";
 import SendAttachment from "@/components/SendAttachment";
 import useParticipantInfo from "@/hooks/useParticipantInfo.hook";
-import { updateConversationList } from "@/utils/updater.conversation.utils";
+import PrivateMessageField from "./PrivateMessageField";
+import {
+  handleUnreadMessageSign,
+  updateConversationList,
+} from "@/utils/updater.conversation.utils";
 import { handleSeenUpdate } from "@/utils/updater.conversation.utils";
 function ParentDiv({
   children,
@@ -129,20 +132,10 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       !participantInfo?.receiver_details._id
     )
       return;
-    privateSocket.emit("join-room", {
-      conversationId,
-      receiverId: participantInfo.receiver_details._id,
-    });
     privateSocket.emit("read-message", {
       conversationId,
       participantId: participantInfo.receiver_details._id,
     });
-    return () => {
-      privateSocket.emit("leave-room", {
-        conversationId,
-        receiverId: participantInfo.receiver_details?._id,
-      });
-    };
   }, [
     conversationId,
     participantInfo?.receiver_details._id,
@@ -171,6 +164,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
         prevUsers.filter((user) => user !== conversationId)
       );
     });
+    handleUnreadMessageSign(queryClient, conversationId, true);
     return () => {
       privateSocket.off("display-seen-text");
       privateSocket.off("display-message");
@@ -245,7 +239,8 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                       conversationId,
                       session?.user.userId,
                       "text",
-                      "chat-list"
+                      "chat-list",
+                      true
                     );
                   }}
                   className="bg-[#414141] text-lg px-3 py-1.5 rounded-md overflow-hidden"
@@ -344,7 +339,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
           </div>
         )}
       </div>
-      <MessageField
+      <PrivateMessageField
         socket={privateSocket}
         conversationId={conversationId}
         participant={participantInfo?.receiver_details._id}

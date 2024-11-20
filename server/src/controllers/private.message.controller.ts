@@ -8,13 +8,14 @@ import { groupLogger } from "../utils/loggers.utils";
 
 export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
   const { limit, page } = req.query;
+  const { userId } = req.params;
   if (!page || !limit) {
     res.status(403);
     throw new Error("Forbidden");
   }
   const LIMIT = +limit;
   const PAGE = +page;
-  const getAllUsers = await User.find()
+  const getAllUsers = await User.find({ _id: { $ne: userId } })
     .select(["name", "profilePic", "status"])
     .sort({ status: -1 }) //Online to Offline
     .skip(PAGE * LIMIT)
@@ -96,11 +97,22 @@ export const chatUser = asyncHandler(async (req: Request, res: Response) => {
   if (!checkExistingConversation) {
     const addConversation = await PrivateConversation.create({
       participants: [senderId, receiverId],
+      lastMessage: {
+        sender: senderId,
+        type: "system",
+      },
     });
-    res.status(201).json({ message: addConversation._id });
+    res.status(201).json({
+      conversationId: addConversation._id,
+      receiverId,
+      is_already_chatting: false,
+    });
     return;
   }
-  res.status(201).json({ message: checkExistingConversation._id });
+  res.status(201).json({
+    conversationId: checkExistingConversation._id,
+    is_already_chatting: true,
+  });
 });
 
 export const getPrivateMessages = asyncHandler(

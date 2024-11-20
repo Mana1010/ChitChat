@@ -15,13 +15,15 @@ import useDebounce from "@/hooks/useDebounce.hook";
 import useSearchUser from "@/hooks/useSearchUser.hook";
 import { useInView } from "react-intersection-observer";
 import NoItemFound from "@/components/NoItemFound";
+import { useSocketStore } from "@/utils/store/socket.store";
 function UserList({ searchUser }: { searchUser: string }) {
   const router = useRouter();
+  const { privateSocket } = useSocketStore();
   const { ref, inView } = useInView();
   const [hasNextPage, setHasNextPage] = useState(true);
   const [allUserList, setAllUserList] = useState<User[]>([]);
   const currentPageRef = useRef(0);
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const debouncedValue = useDebounce(searchUser);
   const { searchUser: debouncedSearchUser, isLoading: loadingSearchUser } =
     useSearchUser(debouncedValue);
@@ -29,7 +31,9 @@ function UserList({ searchUser }: { searchUser: string }) {
     queryKey: ["user-list"],
     queryFn: async ({ pageParam = 0 }) => {
       const response = await axios.get(
-        `${PRIVATE_SERVER_URL}/all/user/list?page=${pageParam}&limit=${10}`
+        `${PRIVATE_SERVER_URL}/all/user/${
+          session?.user.userId
+        }/list?page=${pageParam}&limit=${10}`
       );
       return response.data.message;
     },
@@ -40,6 +44,7 @@ function UserList({ searchUser }: { searchUser: string }) {
       return lastPage.nextPage ?? null;
     },
     refetchOnWindowFocus: false,
+    enabled: status === "authenticated",
     onSuccess: (data) => {
       setAllUserList((prevData) => [
         ...prevData,
@@ -48,15 +53,19 @@ function UserList({ searchUser }: { searchUser: string }) {
     },
   });
   const queryClient = useQueryClient();
+
   const chatUser = useMutation({
     mutationFn: async (data: { senderId: string; receiverId: string }) => {
       const response = await axios.post(`${PRIVATE_SERVER_URL}/new/chat`, data);
-      return response.data.message;
+      return response.data;
     },
-    onSuccess: (id) => {
-      queryClient.invalidateQueries("chat-list");
-      queryClient.invalidateQueries("sidebar");
-      router.push(`/chats/private/${id}?type=chats`);
+    onSuccess: ({ conversationId, is_already_chatting, receiverId }) => {
+      if (!is_already_chatting) {
+        privateSocket?.emit("add-conversation", { conversationId, receiverId });
+        queryClient.invalidateQueries("chat-list");
+        queryClient.invalidateQueries("sidebar");
+      }
+      router.push(`/chats/private/${conversationId}?type=chats`);
     },
     onError: (err: AxiosError<{ message: string }>) => {
       toast.error(err.response?.data.message);
@@ -79,6 +88,13 @@ function UserList({ searchUser }: { searchUser: string }) {
     return <LoadingChat />;
   }
 
+  if (searchUser.length === 0 && allUserList.length === 0) {
+    return (
+      <div className="flex-grow w-full flex h-[200px]">
+        <NoItemFound>No User Found</NoItemFound>
+      </div>
+    );
+  }
   return (
     <div className="flex-grow w-full flex h-[200px]">
       {debouncedSearchUser?.length === 0 ? (
@@ -111,7 +127,7 @@ function UserList({ searchUser }: { searchUser: string }) {
                   ></span>
                 </div>{" "}
                 <h1 className="text-white font-bold text-sm break-all">
-                  {user._id === session?.user.userId ? "You" : user.name}
+                  {user.name}
                 </h1>
               </div>
               <button

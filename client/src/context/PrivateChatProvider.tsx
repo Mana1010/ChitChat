@@ -6,18 +6,37 @@ import { useSession } from "next-auth/react";
 import { useParams } from "next/navigation";
 function PrivateChatProvider({ children }: { children: ReactNode }) {
   const { status, data: session } = useSession();
-  const { setPrivateSocket, socket } = useSocketStore();
+  const { setPrivateSocket, privateSocket } = useSocketStore();
   const { conversationId } = useParams();
   useEffect(() => {
-    if (!socket && status === "authenticated") {
+    if (!privateSocket && status === "authenticated") {
       const socket = initializePrivateChatSocket(session.user.userId);
       setPrivateSocket(socket);
       socket.on("connect", () =>
         console.log("Connected Private Chat Successfully")
       );
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status]);
+
+    if (privateSocket && status === "authenticated") {
+      privateSocket.emit("join-room", {
+        conversationId,
+        userId: session.user.userId,
+      });
+    }
+    return () => {
+      privateSocket?.emit("leave-room", {
+        conversationId,
+        userId: session?.user.userId,
+      });
+    };
+  }, [
+    conversationId,
+    privateSocket,
+    session?.user.userId,
+    setPrivateSocket,
+    status,
+  ]);
+
   return (
     <div className="space-x-3 grid grid-cols-3 h-full w-full pr-5 overflow-y-auto">
       {children}

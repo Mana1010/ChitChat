@@ -5,7 +5,7 @@ import React, { ReactNode } from "react";
 import { useEffect } from "react";
 import { useQuery, UseQueryResult, useQueryClient } from "react-query";
 import { useSession } from "next-auth/react";
-import { Conversation } from "@/types/UserTypes";
+import { Conversation } from "@/types/private.types";
 import EmptyConversation from "@/components/EmptyConversation";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -13,6 +13,7 @@ import { useSocketStore } from "@/utils/store/socket.store";
 import ConversationListSkeleton from "../../../_components/ConversationListSkeleton";
 import NoItemFound from "@/components/NoItemFound";
 import { updateConversationList } from "@/utils/updater.conversation.utils";
+import { handleSeenUpdate } from "@/utils/updater.conversation.utils";
 function ParentDiv({ children }: { children: ReactNode }) {
   return <div className="w-full flex-grow flex h-[200px]">{children}</div>;
 }
@@ -51,6 +52,7 @@ function ChatList({
         participantId,
         lastMessageCreatedAt,
       }) => {
+        alert("RUNNING");
         updateConversationList(
           queryClient,
           newMessage,
@@ -58,29 +60,12 @@ function ChatList({
           participantId,
           messageType,
           "chat-list",
+          false,
           lastMessageCreatedAt
         );
       }
     );
-    privateSocket.on("seen-message", ({ conversationId }) => {
-      queryClient.setQueryData<Conversation[] | undefined>(
-        ["chat-list"],
-        (cachedData) => {
-          if (cachedData) {
-            return cachedData.map((conversation: Conversation) => {
-              if (conversation._id === conversationId) {
-                return {
-                  ...conversation,
-                  is_user_already_seen_message: true,
-                };
-              } else {
-                return conversation;
-              }
-            });
-          } else return cachedData;
-        }
-      );
-    });
+
     return () => {
       privateSocket.off("display-updated-chatlist");
       privateSocket.off("seen-message");
@@ -153,11 +138,14 @@ function ChatList({
                 </h1>
                 <small
                   className={`text-[0.75rem] break-all ${
-                    false ? "text-white font-bold" : "text-zinc-300"
+                    !user.already_read_message
+                      ? "text-white font-bold"
+                      : "text-zinc-300"
                   }`}
                 >
                   {`${
-                    user.lastMessage.sender === session?.user.userId
+                    user.lastMessage.sender === session?.user.userId &&
+                    user.lastMessage.type === "text"
                       ? "You:"
                       : ""
                   } ${

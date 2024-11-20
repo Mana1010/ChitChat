@@ -3,14 +3,16 @@ import Picker from "emoji-picker-react";
 import { MdEmojiEmotions } from "react-icons/md";
 import { LuSend } from "react-icons/lu";
 import { Socket } from "socket.io-client";
-import { GetParticipantInfo } from "@/types/UserTypes";
-import { handleSeenUpdate } from "@/utils/updater.conversation.utils";
+import {
+  handleSeenUpdate,
+  handleUnreadMessageSign,
+} from "@/utils/updater.conversation.utils";
 import { GrAttachment } from "react-icons/gr";
 import { useQueryClient } from "react-query";
 import { updateConversationList } from "@/utils/updater.conversation.utils";
 interface MessageFieldProps<ParticipantType = string | null> {
   socket: Socket | null;
-  participant?: ParticipantType;
+  participant: ParticipantType | undefined;
   conversationId: string;
   senderId: string | undefined;
   message: string;
@@ -20,7 +22,7 @@ interface MessageFieldProps<ParticipantType = string | null> {
   setOpenEmoji: Dispatch<SetStateAction<boolean>>;
   setOpenAttachmentModal: Dispatch<SetStateAction<boolean>>;
 }
-function MessageField({
+function PrivateMessageField({
   socket,
   participant,
   conversationId,
@@ -32,7 +34,6 @@ function MessageField({
   setOpenEmoji,
   setOpenAttachmentModal,
 }: MessageFieldProps) {
-  console.log(participant);
   const queryClient = useQueryClient();
   return (
     <form
@@ -60,7 +61,8 @@ function MessageField({
           conversationId,
           senderId,
           "text",
-          "chat-list"
+          "chat-list",
+          true
         );
         handleSeenUpdate(
           queryClient,
@@ -79,6 +81,7 @@ function MessageField({
             participantId: participant,
           });
           socket?.emit("during-typing", conversationId);
+          handleUnreadMessageSign(queryClient, conversationId, true); //This will update the conversation read sign
         }}
         onBlur={() => socket?.emit("stop-typing", conversationId)}
         value={message}
@@ -144,4 +147,4 @@ function MessageField({
   );
 }
 
-export default MessageField;
+export default PrivateMessageField;

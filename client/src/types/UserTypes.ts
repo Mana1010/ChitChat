@@ -6,21 +6,6 @@ export interface FullInfoUser extends User {
   bio: string;
 }
 
-export interface Conversation {
-  receiver_details: User;
-  _id: string;
-  is_user_already_seen_message: boolean;
-  // userReadMessage: string[];
-  already_read_message: boolean;
-  lastMessage: {
-    sender: User | string;
-    text: string;
-    type: string;
-    lastMessageCreatedAt: Date;
-  };
-  updatedAt: string;
-}
-
 export interface PublicMessages<UserType = string> {
   _id: string;
   sender: UserType;

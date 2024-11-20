@@ -82,6 +82,7 @@ export function handlePrivateSocket(io: Server) {
         }
       }
     );
+
     socket.on("read-message", async ({ conversationId, participantId }) => {
       try {
         if (!conversationId || !participantId) {
@@ -117,6 +118,19 @@ export function handlePrivateSocket(io: Server) {
         console.log(err);
       }
     });
+    socket.on("add-conversation", async ({ conversationId, receiverId }) => {
+      console.log(conversationId, receiverId);
+      if (!conversationId || !receiverId) return;
+      const getConversation = await PrivateConversation.findById(
+        conversationId
+      ).select("createdAt");
+      socket.broadcast.to(receiverId).emit("display-updated-chatlist", {
+        newMessage: "💭 Conversation Started",
+        conversationId,
+        participantId: "",
+        lastMessageCreatedAt: getConversation.createdAt,
+      });
+    });
     socket.on(
       "send-reaction",
       async ({ reaction, messageId, conversationId }) => {
@@ -137,13 +151,13 @@ export function handlePrivateSocket(io: Server) {
     socket.on("stop-typing", (conversationId) => {
       socket.broadcast.to(conversationId).emit("stop-typing", conversationId);
     });
-    socket.on("join-room", ({ conversationId, receiverId }) => {
+    socket.on("join-room", ({ conversationId, userId }) => {
       socket.join(conversationId);
-      socket.join(receiverId);
+      socket.join(userId);
     });
-    socket.on("leave-room", ({ conversationId, receiverId }) => {
+    socket.on("leave-room", ({ conversationId, userId }) => {
       socket.leave(conversationId);
-      socket.leave(receiverId);
+      socket.leave(userId);
     });
   });
 }

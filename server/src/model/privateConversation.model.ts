@@ -13,8 +13,8 @@ const privateConversationSchema = new mongoose.Schema({
     },
   },
   lastMessage: {
-    sender: referenceModel("User", false),
-    text: { type: String, default: `Wave "👋" to them` },
+    sender: referenceModel("User"),
+    text: { type: String, default: `💭 Conversation Started` },
     type: {
       type: String,
       enum: ["text", "file", "system"],

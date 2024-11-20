@@ -7,7 +7,7 @@ import { useSession } from "next-auth/react";
 import { GROUP_SERVER_URL } from "@/utils/serverUrl";
 import NoGroup from "./NoGroup";
 import UserNotFound from "./UserNotFound";
-import { Conversation, GetParticipantInfo } from "@/types/UserTypes";
+import { GetParticipantInfo } from "@/types/UserTypes";
 import { Message } from "@/types/shared.types";
 import { useSocketStore } from "@/utils/store/socket.store";
 import { nanoid } from "nanoid";
