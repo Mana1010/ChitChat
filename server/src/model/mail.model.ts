@@ -1,6 +1,5 @@
-import mongoose, { mongo } from "mongoose";
+import mongoose from "mongoose";
 import { referenceModel } from "../utils/referenceModel";
-import { Schema } from "mongoose";
 const mailSchema = new mongoose.Schema(
   {
     to: referenceModel("User"),
@@ -18,8 +17,16 @@ type MailSchema = mongoose.InferSchemaType<typeof mailSchema>;
 export const Mail =
   mongoose.models.Mail || mongoose.model<MailSchema>("Mail", mailSchema);
 
-export const Invitation = Mail.discriminator<any>(
+export const Invitation = Mail.discriminator(
   "invitation",
+  new mongoose.Schema({
+    from: referenceModel("User"),
+    body: referenceModel("GroupConversation"),
+  })
+);
+
+export const Request = Mail.discriminator(
+  "request",
   new mongoose.Schema({
     from: referenceModel("User"),
     body: referenceModel("GroupConversation"),
@@ -32,3 +39,5 @@ export const Message = Mail.discriminator(
     from: { type: String, default: "ChitChat Developer" },
   })
 );
+
+mailSchema.index({ sentAt: 1 });

@@ -172,7 +172,6 @@ export async function handleGroupSocket(io: Server) {
         membersWhoReadMessage.set(groupId, []);
         getUserId = membersWhoReadMessage.get(groupId);
       }
-      console.log(getUserId);
       if (
         membersWhoReadMessage.has(groupId) &&
         !getUserId?.some((memberId) => userId === memberId)
@@ -183,14 +182,15 @@ export async function handleGroupSocket(io: Server) {
         getUserId?.push(userId);
       }
     });
-    socket.on("join-room", ({ groupId, memberId }) => {
+
+    socket.on("join-room", ({ groupId, userId }) => {
       console.log("SUCCESSFULLY JOINED THE ROOM FOR GROUP");
       socket.join(groupId);
-      socket.join(memberId);
+      socket.join(userId);
     });
-    socket.on("leave-room", ({ groupId, memberId }) => {
+    socket.on("leave-room", ({ groupId, userId }) => {
       socket.leave(groupId);
-      socket.leave(memberId);
+      socket.leave(userId);
     });
   });
 }

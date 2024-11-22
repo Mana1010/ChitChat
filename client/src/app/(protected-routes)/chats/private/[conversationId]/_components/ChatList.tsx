@@ -52,7 +52,6 @@ function ChatList({
         participantId,
         lastMessageCreatedAt,
       }) => {
-        alert("RUNNING");
         updateConversationList(
           queryClient,
           newMessage,

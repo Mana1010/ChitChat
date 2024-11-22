@@ -1,70 +1,53 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
-import { useQuery, UseQueryResult } from "react-query";
-import axios, { AxiosError } from "axios";
-import { APP_SERVER_URL } from "@/utils/serverUrl";
 import { MailDetailsSchema } from "@/types/app.types";
-import { MdGroups } from "react-icons/md";
-import mailInvitation from "../../../../../assets/images/mail-invitation.png";
-import invited from "../../../../../assets/images/invited.png";
-import { CiCircleCheck } from "react-icons/ci";
-import { CiCircleRemove } from "react-icons/ci";
+import invitationImg from "../../../../../assets/images/svg/invitation-img.svg";
+import GroupChatInfo from "./GroupChatInfo";
+import { AnimatePresence } from "framer-motion";
 function InvitationText({
   getMailContent,
 }: {
   getMailContent: MailDetailsSchema | undefined;
 }) {
+  const [showInfoModal, setShowInfoModal] = useState(false);
   return (
-    <div className="w-full flex flex-col relative overflow-hidden">
-      <header className="py-5 flex items-center justify-between px-3 ">
-        <div className="flex space-x-3 items-center">
-          <Image
-            src={getMailContent?.group_details?.groupPhoto.photoUrl ?? ""}
-            alt="group-photo"
-            width={80}
-            height={80}
-            priority
-          />
-          <div className="flex flex-col space-y-2">
-            <h1 className="text-white text-lg font-bold">
-              {getMailContent?.group_details.groupName}
-            </h1>
-            <div className="flex items-center space-x-2">
-              <span className="text-[#6486FF] text-lg">
-                <MdGroups />
-              </span>
-              <span className="text-white text-[0.8rem] font-semibold">
-                {getMailContent?.group_details?.total_members}
-              </span>
-            </div>
-          </div>
-        </div>
-      </header>
-      <div className="flex-grow items-center flex justify-center flex-col">
+    <div className="w-full flex flex-col relative text-white justify-center items-center">
+      <div className="flex flex-col space-y-1 items-center">
         <Image
-          src={invited}
-          alt="invited-icon"
-          width={200}
-          height={200}
+          src={invitationImg}
+          alt="invitation-image"
+          width={300}
+          height={300}
           priority
         />
-        <h1 className="text-white text-xl font-bold">
-          You&apos;re Invited to Join the Group Chat!
-        </h1>
-        <div className="space-x-2 pt-2 flex items-center">
-          <button className="py-2 px-3 bg-red-500 text-white rounded-sm flex items-center space-x-2">
-            <span className="text-lg">
-              <CiCircleRemove />
+        <div className="w-1/2 space-y-2 flex flex-col relative">
+          <div className="flex flex-col ">
+            <h3 className="text-[0.9rem] font-bold">Join Our Group Chat!</h3>
+            <span className="leading-6 text-[0.9rem] py-3">
+              Hey there! 👋 We&apos;d love to have you join our group chat.
+              It&apos;s a great place to connect, share ideas, and have some fun
+              together! See the info below:
             </span>
-            <span>Reject</span>
-          </button>
-          <button className="py-2 px-3 bg-[#6486FF] text-white rounded-sm flex items-center space-x-2">
-            <span className="text-lg">
-              <CiCircleCheck />
-            </span>
-            <span>Accept</span>
-          </button>
+            <button
+              onMouseEnter={() => setShowInfoModal((prev) => !prev)}
+              onMouseLeave={() => setShowInfoModal((prev) => !prev)}
+              className="text-[#6486FF] text-[0.9rem] self-start hover:text-[#6486FF]/65 hover:underline hover:decoration-[#6486FF] underline-offset-2"
+            >
+              Hover to see info
+            </button>
+          </div>
+          <AnimatePresence mode="wait">
+            {showInfoModal && <GroupChatInfo getGroupInfo={getMailContent} />}
+          </AnimatePresence>
+          <div className="self-center md:self-end flex text-[0.9rem] space-x-2">
+            <button className="bg-[#6486FF] px-3 py-2 rounded-sm text-white text-[0.9rem]">
+              Accept
+            </button>
+            <button className="bg-[#414141] px-3 py-2 rounded-sm text-white text-[0.9rem]">
+              Decline
+            </button>
+          </div>
         </div>
       </div>
     </div>

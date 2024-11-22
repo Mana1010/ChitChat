@@ -15,8 +15,7 @@ export interface MailDetailsSchema {
     _id: string;
     total_members: number;
   };
-  totalMember: number;
-  kind: string;
+  kind: "invitation" | "request" | "message";
   from: string;
   _id: string;
 }

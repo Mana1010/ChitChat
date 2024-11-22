@@ -21,7 +21,7 @@ function GroupChatProvider({ children }: { children: ReactNode }) {
     if (groupSocket && status === "authenticated") {
       groupSocket.emit("join-room", {
         groupId: params.groupId,
-        memberId: session.user.userId,
+        userId: session.user.userId,
       });
     }
     return () => {
@@ -29,7 +29,7 @@ function GroupChatProvider({ children }: { children: ReactNode }) {
         groupSocket.off("connect");
         groupSocket.emit("leave-room", {
           groupId: params.groupId,
-          memberId: session.user.userId,
+          userId: session.user.userId,
         });
       }
     };

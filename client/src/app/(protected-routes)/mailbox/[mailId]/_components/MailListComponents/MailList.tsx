@@ -75,15 +75,6 @@ function MailList({ mailId }: { mailId: string }) {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (!mailSocket || status === "unauthenticated") return;
-    mailSocket.emit("join-room", { userId: session?.user.userId });
-
-    return () => {
-      mailSocket.emit("leave-room", { userId: session?.user.userId });
-    };
-  }, [mailSocket, session?.user.userId, status]);
-
-  useEffect(() => {
     if (!mailSocket) return;
     mailSocket.on("update-mail", ({ sentAt, isAlreadyRead }) => {
       queryClient.setQueryData<MailListSchema[] | undefined>(

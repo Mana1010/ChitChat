@@ -3,8 +3,6 @@ import React, { ReactNode } from "react";
 import Image from "next/image";
 import emailIcon from "../../../../../assets/images/svg/mailbox.svg";
 import InvitationText from "./InvitationText";
-import { getServerSession } from "next-auth";
-import authOptions from "@/utils/authOption";
 import { useSession } from "next-auth/react";
 import { APP_SERVER_URL } from "@/utils/serverUrl";
 import { UseQueryResult, useQuery } from "react-query";
@@ -58,11 +56,16 @@ function MailDetails({ mailId }: { mailId: string }) {
   }
   return (
     <ParentDiv>
-      {getMailContent.data?.kind === "invitation" ? (
-        <InvitationText getMailContent={getMailContent.data} />
-      ) : (
-        <MessageText />
-      )}
+      {(() => {
+        switch (getMailContent.data?.kind) {
+          case "invitation":
+            return <InvitationText getMailContent={getMailContent.data} />;
+          case "message":
+            return <MessageText />;
+          default:
+            return <h1>No Mail created</h1>;
+        }
+      })()}
     </ParentDiv>
   );
 }

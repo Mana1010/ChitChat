@@ -14,8 +14,16 @@ function MailProvider({ children }: { children: ReactNode }) {
         console.log("Mail Socket Connected Successfully")
       );
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status]);
+    if (mailSocket && status === "authenticated") {
+      mailSocket.emit("join-room", { userId: session.user.userId });
+    }
+    return () => {
+      if (mailSocket && status === "authenticated") {
+        mailSocket.emit("leave-room", { userId: session.user.userId });
+      }
+    };
+  }, [mailSocket, session?.user.userId, setMailSocket, status]);
+
   return (
     <div className="space-x-3 grid grid-cols-3 h-full w-full pr-5 overflow-y-auto">
       {children}
