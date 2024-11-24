@@ -29,9 +29,6 @@ function MailDetails({ mailId }: { mailId: string }) {
       return response.data.message;
     },
     enabled: status === "authenticated" || !checkIfParamsValid,
-    onSuccess: (data) => {
-      console.log(data);
-    },
   });
   if (checkIfParamsValid) {
     return (
@@ -59,9 +56,16 @@ function MailDetails({ mailId }: { mailId: string }) {
       {(() => {
         switch (getMailContent.data?.kind) {
           case "invitation":
-            return <InvitationText getMailContent={getMailContent.data} />;
+            return (
+              <InvitationText
+                getMailContent={getMailContent.data}
+                mailId={mailId}
+              />
+            );
           case "message":
             return <MessageText />;
+          case "request":
+            return <h1>Request</h1>;
           default:
             return <h1>No Mail created</h1>;
         }

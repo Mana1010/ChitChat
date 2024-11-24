@@ -138,16 +138,26 @@ export const getMailDetails = asyncHandler(
         },
       },
       {
+        $lookup: {
+          from: "users",
+          localField: "from",
+          foreignField: "_id",
+          as: "inviter_details",
+        },
+      },
+      {
         $addFields: {
           group_details: { $first: "$group_details" },
+          inviter_details: { $first: "$inviter_details" },
         },
       },
       {
         $project: {
           kind: 1,
-          from: 1,
+          status: 1,
           sentAt: 1,
           group_details: {
+            _id: 1,
             groupName: 1,
             groupPhoto: 1,
             total_members: {
@@ -159,9 +169,14 @@ export const getMailDetails = asyncHandler(
               },
             },
           },
+          inviter_details: {
+            name: 1,
+            profilePic: 1,
+          },
         },
       },
     ]);
+
     if (!getMailContent) {
       res.status(404);
       throw new Error("Mail does not exist");

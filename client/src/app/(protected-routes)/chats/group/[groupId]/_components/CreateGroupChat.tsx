@@ -76,8 +76,8 @@ function CreateGroupChat() {
         groupId: data.groupId,
       });
       toast.success(data.content);
-      queryClient.invalidateQueries("groupchat-list");
-      queryClient.invalidateQueries("sidebar");
+      queryClient.invalidateQueries(["groupchat-list"]);
+      queryClient.invalidateQueries(["sidebar"]);
       setShowCreateGroupForm(false);
       setCreateGroupFormPayload({
         groupName: "",

@@ -7,7 +7,6 @@ import {
   createGroupChat,
   getGroupChatInfo,
   getGroupMessages,
-  invitationResponse,
 } from "../controllers/group.message.controller";
 
 export const router = express.Router();
@@ -19,4 +18,3 @@ router.get("/conversation/search/group", searchGroupResult);
 router.post("/create/groupchat", createGroupChat);
 router.get("/group/info/:groupId", getGroupChatInfo);
 router.get("/message/list/:groupId", getGroupMessages);
-router.patch("/invitation/response/:groupId/:userId", invitationResponse);

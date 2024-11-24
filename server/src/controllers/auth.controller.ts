@@ -5,7 +5,7 @@ import { Message } from "../model/mail.model";
 
 export const createUser = asyncHandler(async (req: Request, res: Response) => {
   const userId = await User.create(req.body);
-  await Message.create({ to: userId, type: "message" });
+  await Message.create({ to: userId, status: "none" });
   res.status(201).json({ message: "Log in successfully" });
 });
 

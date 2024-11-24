@@ -1,11 +1,15 @@
+import { User } from "./shared.types";
+
 export interface MailListSchema {
   _id: string;
   isAlreadyRead: boolean;
-  kind: string;
+  kind: "request" | "message" | "invitation";
   sentAt: string;
 }
 export interface MailDetailsSchema {
   sentAt: string;
+  to: string;
+  status: "pending" | "accepted" | "declined" | "cancelled" | "none";
   group_details: {
     groupName: string;
     groupPhoto: {
@@ -16,7 +20,7 @@ export interface MailDetailsSchema {
     total_members: number;
   };
   kind: "invitation" | "request" | "message";
-  from: string;
+  inviter_details: Pick<User, "name" | "profilePic">;
   _id: string;
 }
 

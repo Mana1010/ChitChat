@@ -11,12 +11,12 @@ import { router as privateMessageRoute } from "./routes/private.message.route";
 import { router as groupMessageRoute } from "./routes/group.message.route";
 import { router as authRoute } from "./routes/auth.route";
 import { router as appRoute } from "./routes/app.route";
+import { router as sharedRoute } from "./routes/shared.route";
 import { errorHandle } from "./middleware/error.handling";
 import { handlePublicSocket } from "./socket/public.socket";
 import { handlePrivateSocket } from "./socket/private.socket";
 import { handleGroupSocket } from "./socket/group.socket";
 import { handleMailSocket } from "./socket/mail.socket";
-import { handleNotificationSocket } from "./socket/notification.socket";
 import { v2 as cloudinary } from "cloudinary";
 import helmet from "helmet";
 
@@ -47,6 +47,7 @@ app.use("/api/auth", authRoute);
 app.use("/api/public", publicMessageRoute);
 app.use("/api/private", privateMessageRoute);
 app.use("/api/group", groupMessageRoute);
+app.use("/api/shared", sharedRoute);
 //Consolidated route
 app.use("/api/app", appRoute);
 app.use(errorHandle);
@@ -60,7 +61,7 @@ async function connectDb() {
   try {
     await mongoose.connect(process.env.MONGO_URI!);
   } catch (err) {
-    process.exit(0);
+    process.exit(1);
   }
 }
 connectDb();

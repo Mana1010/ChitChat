@@ -1,16 +1,49 @@
-"use client";
 import React, { useState } from "react";
 import Image from "next/image";
 import { MailDetailsSchema } from "@/types/app.types";
 import invitationImg from "../../../../../assets/images/svg/invitation-img.svg";
 import GroupChatInfo from "./GroupChatInfo";
 import { AnimatePresence } from "framer-motion";
+import { useQueryClient } from "react-query";
+import { useSession } from "next-auth/react";
+import { useSocketStore } from "@/utils/store/socket.store";
+import { capitalizeFirstLetter } from "@/utils/capitalizeFirstLetter";
+import loadingIcon from "../../../../../assets/images/gif-animation/chat-loading.gif";
+import { useRouter } from "next/navigation";
+import useInvitationResponse from "@/hooks/useInvitationResponse";
+import { GoTrash } from "react-icons/go";
 function InvitationText({
   getMailContent,
+  mailId,
 }: {
   getMailContent: MailDetailsSchema | undefined;
+  mailId: string;
 }) {
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const { data: session } = useSession();
+  const { groupSocket } = useSocketStore();
+  const router = useRouter();
+
+  const queryClient = useQueryClient();
+
+  const {
+    acceptInvitation,
+    declineInvitation,
+    acceptInvitationLoading,
+    declineInvitationLoading,
+  } = useInvitationResponse(updateMailDetails);
+
+  function updateMailDetails(groupId: string) {
+    queryClient.setQueryData<MailDetailsSchema | undefined>(
+      ["mail-details", mailId],
+      (cachedData) => {
+        if (cachedData) {
+          return { ...cachedData, status: "declined" };
+        }
+      }
+    );
+  }
+  console.log(getMailContent);
   return (
     <div className="w-full flex flex-col relative text-white justify-center items-center">
       <div className="flex flex-col space-y-1 items-center">
@@ -38,15 +71,74 @@ function InvitationText({
             </button>
           </div>
           <AnimatePresence mode="wait">
-            {showInfoModal && <GroupChatInfo getGroupInfo={getMailContent} />}
+            {showInfoModal && (
+              <GroupChatInfo
+                getGroupInfo={getMailContent?.group_details}
+                invitedBy={getMailContent?.inviter_details}
+              />
+            )}
           </AnimatePresence>
-          <div className="self-center md:self-end flex text-[0.9rem] space-x-2">
-            <button className="bg-[#6486FF] px-3 py-2 rounded-sm text-white text-[0.9rem]">
-              Accept
-            </button>
-            <button className="bg-[#414141] px-3 py-2 rounded-sm text-white text-[0.9rem]">
-              Decline
-            </button>
+          <div className="self-center md:self-end">
+            {getMailContent?.status === "pending" ? (
+              <div className="flex space-x-2">
+                <button
+                  disabled={acceptInvitationLoading}
+                  onClick={() =>
+                    acceptInvitation.mutate({
+                      groupId: getMailContent.group_details._id as string,
+                      userId: session?.user.userId as string,
+                    })
+                  }
+                  className="bg-[#6486FF] w-[80px] py-2 flex items-center justify-center rounded-sm text-white text-[0.9rem] disabled:bg-[#6486FF]/50"
+                >
+                  {acceptInvitationLoading ? (
+                    <Image
+                      src={loadingIcon}
+                      alt="loading-icon"
+                      width={20}
+                      height={20}
+                      priority
+                    />
+                  ) : (
+                    "Accept"
+                  )}
+                </button>
+                <button
+                  disabled={declineInvitationLoading}
+                  onClick={() =>
+                    declineInvitation.mutate({
+                      groupId: getMailContent.group_details._id as string,
+                      userId: session?.user.userId as string,
+                    })
+                  }
+                  className="bg-[#414141] w-[80px] py-2 rounded-sm text-white text-[0.9rem] disabled:bg-[#6486FF]/50"
+                >
+                  {declineInvitationLoading ? (
+                    <Image
+                      src={loadingIcon}
+                      alt="loading-icon"
+                      width={20}
+                      height={20}
+                      priority
+                    />
+                  ) : (
+                    "Decline"
+                  )}
+                </button>
+              </div>
+            ) : (
+              <div className="flex space-x-2">
+                <button
+                  disabled
+                  className="bg-[#414141] px-3 py-2 rounded-sm text-white text-[0.9rem]"
+                >
+                  {capitalizeFirstLetter(getMailContent?.status)}
+                </button>
+                <button className="bg-red-500 px-3 py-2 rounded-sm text-white text-[0.9rem]">
+                  <GoTrash />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

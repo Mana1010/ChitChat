@@ -48,13 +48,14 @@ export async function handleGroupSocket(io: Server) {
         );
         membersWhoReadMessage.set(groupId, []); //add the group in map
         requestedUsers.forEach((user) => {
+          console.log(user);
           MAIL_NAMESPACE(io)
             .to(user.id)
             .emit("update-mail", { sentAt: new Date(), isAlreadyRead: false });
         });
       }
     );
-    socket.on("invitation-accepted", async (groupId) => {
+    socket.on("invitation-accepted", async ({ groupId }) => {
       const result = await Group.create({
         sender: userId,
         groupId,
@@ -67,7 +68,7 @@ export async function handleGroupSocket(io: Server) {
         })
       );
 
-      socket.broadcast.to(groupId).emit("display-message", {
+      socket.to(groupId).emit("display-message", {
         messageDetails: result,
       });
     });

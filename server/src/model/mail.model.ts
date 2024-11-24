@@ -1,12 +1,13 @@
 import mongoose from "mongoose";
 import { referenceModel } from "../utils/referenceModel";
+
 const mailSchema = new mongoose.Schema(
   {
     to: referenceModel("User"),
     isAlreadyRead: { type: Boolean, default: false },
     status: {
       type: String,
-      enum: ["pending", "accepted", "declined", "cancelled"],
+      enum: ["pending", "accepted", "declined", "cancelled", "none"],
       default: "pending",
     },
     sentAt: { type: Date, default: Date.now },

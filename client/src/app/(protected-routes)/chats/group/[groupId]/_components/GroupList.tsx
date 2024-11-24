@@ -4,11 +4,9 @@ import { useMutation, useQueryClient, useInfiniteQuery } from "react-query";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
-import axios, { Axios, AxiosError } from "axios";
-import { serverUrl, GROUP_SERVER_URL } from "@/utils/serverUrl";
-import { User } from "@/types/shared.types";
+import axios, { AxiosError } from "axios";
+import { GROUP_SERVER_URL, SHARED_SERVER_URL } from "@/utils/serverUrl";
 import { GroupChatList } from "@/types/group.types";
-import noSearchFoundImg from "../../../../../../assets/images/not-found.png";
 import LoadingChat from "@/components/LoadingChat";
 import { toast } from "sonner";
 import ConversationListSkeleton from "../../../_components/ConversationListSkeleton";
@@ -36,6 +34,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useSocketStore } from "@/utils/store/socket.store";
+import useInvitationResponse from "@/hooks/useInvitationResponse";
 
 function ParentDiv({ children }: { children: ReactNode }) {
   return (
@@ -53,6 +52,10 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
   const debouncedValue = useDebounce(searchGroup);
   const { groupSocket } = useSocketStore();
   const [sortBy, setSortBy] = useState("popular");
+
+  const { acceptInvitation, declineInvitation } =
+    useInvitationResponse(updateGrouplist);
+
   const { searchGroup: debouncedSearchGroup, isLoading: loadingSearchGroup } =
     useSearchGroup(debouncedValue);
   const { data, fetchNextPage, error, isLoading, isError, refetch } =
@@ -98,44 +101,6 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
     },
   });
 
-  const invitationResponse = useMutation({
-    mutationFn: async ({
-      type,
-      groupId,
-    }: {
-      type: string;
-      groupId: string;
-    }) => {
-      const response = await axios.patch(
-        `${GROUP_SERVER_URL}/invitation/response/${groupId}/${session?.user.userId}`,
-        { type }
-      );
-      return response.data;
-    },
-    onSuccess: ({ type, message, groupId }) => {
-      if (type === "accepted" && groupSocket) {
-        groupSocket.emit("invitation-accepted", groupId);
-        queryClient.invalidateQueries("groupchat-list");
-        toast.success(message);
-        router.push(`/chats/group/${groupId}?type=chats`);
-      } else {
-        setAllGroupChatList((groupChatList) =>
-          groupChatList.map((groupchat) => {
-            if (groupchat._id === groupId) {
-              return { ...groupchat, this_group_inviting_you: false };
-            } else {
-              return groupchat;
-            }
-          })
-        );
-        toast.success(message);
-      }
-    },
-    onError: (err: AxiosError<{ message: string }>) => {
-      toast.error(err.response?.data.message);
-    },
-  });
-
   const groupList = useMemo(() => {
     return searchGroup.length ? debouncedSearchGroup : allGroupChatList;
   }, [searchGroup, debouncedSearchGroup, allGroupChatList]);
@@ -146,6 +111,17 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
     }
   }, [fetchNextPage, hasNextPage, inView]);
 
+  function updateGrouplist(groupId: string) {
+    setAllGroupChatList((groupChatList) =>
+      groupChatList.map((groupchat) => {
+        if (groupchat._id === groupId) {
+          return { ...groupchat, this_group_inviting_you: false };
+        } else {
+          return groupchat;
+        }
+      })
+    );
+  }
   if (isLoading) {
     return <ConversationListSkeleton />;
   }
@@ -241,9 +217,9 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
                       aria-label="Accept Request"
                       className={`bg-[#6486FF] p-2 rounded-full text-white text-lg`}
                       onClick={() =>
-                        invitationResponse.mutate({
-                          type: "accept",
+                        acceptInvitation.mutate({
                           groupId: group._id,
+                          userId: session?.user.userId as string,
                         })
                       }
                     >
@@ -257,19 +233,19 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger
-                      aria-label="Reject Request"
+                      aria-label="Decline Request"
                       className={`bg-[#6486FF] p-2 rounded-full text-white text-lg`}
                       onClick={() =>
-                        invitationResponse.mutate({
-                          type: "reject",
+                        declineInvitation.mutate({
                           groupId: group._id,
+                          userId: session?.user.userId as string,
                         })
                       }
                     >
                       <FaXmark />
                     </TooltipTrigger>
                     <TooltipContent className="bg-[#6486FF]">
-                      Reject Request
+                      Decline Request
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>

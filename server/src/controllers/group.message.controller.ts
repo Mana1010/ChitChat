@@ -332,39 +332,3 @@ export const getGroupMessages = asyncHandler(
     });
   }
 );
-
-export const invitationResponse = asyncHandler(
-  async (req: Request, res: Response) => {
-    const { type } = req.body;
-    const { groupId, userId } = req.params;
-
-    if (!type || !groupId || !userId) {
-      res.status(400);
-      throw new Error("Client payload is required");
-    }
-
-    if (type === "accept") {
-      await GroupConversation.updateOne(
-        { _id: groupId, "members.memberInfo": userId },
-        {
-          $set: { "members.$.status": "active" },
-        }
-      );
-      res.status(200).json({
-        message: "Invitation accepted successfully",
-        type: "accepted",
-        groupId,
-      });
-    } else {
-      await GroupConversation.findByIdAndUpdate(groupId, {
-        $pull: {
-          members: { memberInfo: userId },
-        },
-      });
-      res.status(200).json({
-        message: "Invitation rejected successfully",
-        type: "rejected",
-      });
-    }
-  }
-);
