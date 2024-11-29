@@ -80,7 +80,7 @@ function SearchUser({
               />
               <span
                 className={`${
-                  userDetails.status === "Online"
+                  userDetails.status.type === "online"
                     ? "bg-green-500"
                     : "bg-red-500"
                 } w-2 h-2 rounded-full absolute bottom-[1px] right-1`}

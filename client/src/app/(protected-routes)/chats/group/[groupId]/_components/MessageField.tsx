@@ -3,7 +3,7 @@ import Picker from "emoji-picker-react";
 import { MdEmojiEmotions } from "react-icons/md";
 import { LuSend } from "react-icons/lu";
 import { Socket } from "socket.io-client";
-import { updateConversationList } from "@/utils/updater.conversation.utils";
+import { updateConversationList } from "@/utils/sharedUpdateFunction";
 import { GrAttachment } from "react-icons/gr";
 import { useQueryClient } from "react-query";
 interface MessageFieldProps {

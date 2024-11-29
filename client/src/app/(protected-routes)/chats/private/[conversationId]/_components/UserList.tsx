@@ -77,17 +77,26 @@ function UserList({ searchUser }: { searchUser: string }) {
 
   useEffect(() => {
     if (statusSocket) {
-      statusSocket.on("display-user-status", ({ userId, status }) => {
-        setAllUserList((prevUserList: User[]) => {
-          return prevUserList.map((user) => {
-            if (user._id === userId) {
-              return { ...user, status };
-            } else {
-              return user;
-            }
+      statusSocket.on(
+        "display-user-status",
+        ({ userId, status: { type, lastActiveAt } }) => {
+          setAllUserList((prevUserList: User[]) => {
+            return prevUserList.map((user) => {
+              if (user._id === userId) {
+                return {
+                  ...user,
+                  status: {
+                    type,
+                    lastActiveAt,
+                  },
+                };
+              } else {
+                return user;
+              }
+            });
           });
-        });
-      });
+        }
+      );
     }
   }, [statusSocket]);
 
@@ -139,7 +148,9 @@ function UserList({ searchUser }: { searchUser: string }) {
                   />
                   <span
                     className={`${
-                      user.status === "Online" ? "bg-green-500" : "bg-zinc-500"
+                      user.status.type === "online"
+                        ? "bg-green-500"
+                        : "bg-zinc-500"
                     } absolute bottom-[3px] right-[2px] w-2 h-2 rounded-full`}
                   ></span>
                 </div>{" "}

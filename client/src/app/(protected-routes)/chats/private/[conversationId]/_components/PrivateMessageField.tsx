@@ -6,10 +6,10 @@ import { Socket } from "socket.io-client";
 import {
   handleSeenUpdate,
   handleUnreadMessageSign,
-} from "@/utils/updater.conversation.utils";
+} from "@/utils/sharedUpdateFunction";
 import { GrAttachment } from "react-icons/gr";
 import { useQueryClient } from "react-query";
-import { updateConversationList } from "@/utils/updater.conversation.utils";
+import { updateConversationList } from "@/utils/sharedUpdateFunction";
 interface MessageFieldProps<ParticipantType = string | null> {
   socket: Socket | null;
   participant: ParticipantType | undefined;

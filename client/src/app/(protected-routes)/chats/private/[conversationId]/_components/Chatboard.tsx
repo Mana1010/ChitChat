@@ -33,8 +33,8 @@ import PrivateMessageField from "./PrivateMessageField";
 import {
   handleUnreadMessageSign,
   updateConversationList,
-} from "@/utils/updater.conversation.utils";
-import { handleSeenUpdate } from "@/utils/updater.conversation.utils";
+} from "@/utils/sharedUpdateFunction";
+import { handleSeenUpdate } from "@/utils/sharedUpdateFunction";
 function ParentDiv({
   children,
   setOpenEmoji,
@@ -193,7 +193,10 @@ function Chatboard({ conversationId }: { conversationId: string }) {
           createdAt: new Date().toString(),
           sender: {
             name: session?.user.name.split(" ")[0] as string,
-            status: "Online",
+            status: {
+              type: "online",
+              lastActiveAt: new Date(),
+            },
             profilePic: session?.user.image as string,
             _id: session?.user.userId as string,
           },

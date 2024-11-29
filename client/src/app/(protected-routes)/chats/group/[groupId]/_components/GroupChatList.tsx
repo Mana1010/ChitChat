@@ -12,7 +12,7 @@ import ConversationListSkeleton from "../../../_components/ConversationListSkele
 import NoItemFound from "@/components/NoItemFound";
 import EmptyConversation from "@/components/EmptyConversation";
 import { GroupChatConversationList } from "@/types/group.types";
-import { updateConversationList } from "@/utils/updater.conversation.utils";
+import { updateConversationList } from "@/utils/sharedUpdateFunction";
 function GroupChatList({
   searchChat,
   groupId,

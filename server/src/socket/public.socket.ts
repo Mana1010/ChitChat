@@ -48,15 +48,6 @@ export function handlePublicSocket(io: Server) {
 
   PUBLIC_NAMESPACE(io).on("connection", async (socket: Socket) => {
     const { userId } = socket.handshake.auth;
-    const getInfo = await User.findById(userId).select(["name", "status"]);
-    if (getInfo.status === "Offline") {
-      getInfo.status = "Online";
-      await getInfo.save();
-      socket.broadcast.emit("display-status", {
-        status: getInfo.status,
-        name: getInfo.name,
-      });
-    }
     socket.on("send-message", async (message: string) => {
       const getId = await Public.create({
         message,
@@ -165,14 +156,6 @@ export function handlePublicSocket(io: Server) {
         "name",
         "status",
       ]);
-      if (disconnectUser === "Online") {
-        disconnectUser.status = "Offline";
-        await disconnectUser.save();
-        socket.broadcast.emit("display-status", {
-          status: disconnectUser.status,
-          name: disconnectUser.name,
-        });
-      }
     });
   });
 }

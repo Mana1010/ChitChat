@@ -96,25 +96,32 @@ function PublicChat() {
 
   useEffect(() => {
     if (statusSocket) {
-      statusSocket.on("display-user-status", ({ userId, status }) => {
-        setAllMessages((allMessage) => {
-          return allMessage.map((message) => {
-            if (message.sender._id === userId) {
-              return {
-                ...message,
-                sender: {
-                  ...message.sender,
-                  status,
-                },
-              };
-            } else {
-              return message;
-            }
+      statusSocket.on(
+        "display-user-status",
+        ({ userId, status: { type, lastActiveAt } }) => {
+          setAllMessages((allMessage) => {
+            return allMessage.map((message) => {
+              if (message.sender._id === userId) {
+                return {
+                  ...message,
+                  sender: {
+                    ...message.sender,
+                    status: {
+                      type,
+                      lastActiveAt,
+                    },
+                  },
+                };
+              } else {
+                return message;
+              }
+            });
           });
-        });
-      });
+        }
+      );
     }
   }, [statusSocket]);
+
   useEffect(() => {
     if (!publicSocket) return;
     const handleGetMessages = (data: User) => {
@@ -192,7 +199,10 @@ function PublicChat() {
     const userData = {
       name: session?.user?.name,
       profilePic: session?.user.image,
-      status: "Online",
+      status: {
+        type: "online" as "online",
+        lastActiveAt: new Date(),
+      },
       _id: session?.user.userId,
     };
     setAllMessages((prevMessages: Message<User, Reaction[]>[]) => {

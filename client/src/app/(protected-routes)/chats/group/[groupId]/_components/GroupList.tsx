@@ -1,11 +1,11 @@
 "use client";
 import React, { ReactNode, useEffect, useMemo, useRef, useState } from "react";
-import { useMutation, useQueryClient, useInfiniteQuery } from "react-query";
+import { useMutation, useInfiniteQuery } from "react-query";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
 import axios, { AxiosError } from "axios";
-import { GROUP_SERVER_URL, SHARED_SERVER_URL } from "@/utils/serverUrl";
+import { GROUP_SERVER_URL } from "@/utils/serverUrl";
 import { GroupChatList } from "@/types/group.types";
 import LoadingChat from "@/components/LoadingChat";
 import { toast } from "sonner";

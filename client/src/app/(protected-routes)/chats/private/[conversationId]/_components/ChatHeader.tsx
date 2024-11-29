@@ -31,7 +31,7 @@ function ChatHeader({
             />
             <span
               className={`${
-                participantInfo.status === "Online"
+                participantInfo.status.type === "online"
                   ? "bg-green-500"
                   : "bg-zinc-500"
               } absolute bottom-[2px] right-[2px] w-2 h-2 rounded-full`}
@@ -40,7 +40,9 @@ function ChatHeader({
           <div>
             <h3 className="text-white text-sm">{participantInfo.name}</h3>
             <small className="text-slate-300">
-              {participantInfo.status === "Online" ? "Active Now" : "Offline"}
+              {participantInfo.status.type === "online"
+                ? "Active Now"
+                : "Offline"}
             </small>
           </div>
         </div>

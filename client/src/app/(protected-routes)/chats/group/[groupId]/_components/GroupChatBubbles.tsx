@@ -21,12 +21,12 @@ function GroupChatBubbles({
   groupId: string;
   setMessage: Dispatch<SetStateAction<Message<User, Reaction[]>[]>>;
 }) {
-  const { socket } = useSocketStore();
+  const { publicSocket } = useSocketStore();
   const [hoveredMessage, setHoveredMessage] = useState<string | undefined>("");
   const [openReaction, setOpenReaction] = useState<string | undefined>("");
   useEffect(() => {
-    if (!socket) return;
-    socket.on("display-reaction", ({ reaction, messageId }) => {
+    if (!publicSocket) return;
+    publicSocket.on("display-reaction", ({ reaction, messageId }) => {
       setMessage((prev) => {
         return prev.map((message) => {
           if (message._id === messageId) {
@@ -37,10 +37,10 @@ function GroupChatBubbles({
         });
       });
       return () => {
-        socket.off("display-reaction");
+        publicSocket.off("display-reaction");
       };
     });
-  }, [setMessage, socket]);
+  }, [setMessage, publicSocket]);
   return (
     <Linkify
       options={{
@@ -161,7 +161,7 @@ function GroupChatBubbles({
               />
               <span
                 className={`w-2 h-2 ${
-                  messageDetails.sender.status === "Online"
+                  messageDetails.sender.status.type === "online"
                     ? "bg-green-500"
                     : "bg-slate-500"
                 } rounded-full absolute right-[1px] bottom-[2px]`}

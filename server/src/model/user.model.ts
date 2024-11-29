@@ -9,7 +9,14 @@ const userSchema = new mongoose.Schema(
     bio: { type: String, default: "No bio" },
     authId: { type: String, required: true },
     provider: { type: String, required: true },
-    status: { type: String, default: "Offline" },
+    status: {
+      type: {
+        type: String,
+        enum: ["offline", "online", "busy"],
+        default: "online",
+      },
+      lastActiveAt: { type: Date, default: Date.now },
+    },
   },
   {
     timestamps: true,

@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 import { useSocketStore } from "@/utils/store/socket.store";
 import ConversationListSkeleton from "../../../_components/ConversationListSkeleton";
 import NoItemFound from "@/components/NoItemFound";
-import { updateConversationList } from "@/utils/updater.conversation.utils";
+import { updateConversationList } from "@/utils/sharedUpdateFunction";
 function ParentDiv({ children }: { children: ReactNode }) {
   return <div className="w-full flex-grow flex h-[200px]">{children}</div>;
 }
@@ -72,30 +72,36 @@ function ChatList({
 
   useEffect(() => {
     if (statusSocket) {
-      statusSocket.on("display-user-status", ({ userId, status }) => {
-        queryClient.setQueryData<Conversation[] | undefined>(
-          ["chat-list"],
-          (cachedData: any) => {
-            if (cachedData) {
-              return cachedData.map((chatlist: Conversation) => {
-                if (chatlist.receiver_details._id === userId) {
-                  return {
-                    ...chatlist,
-                    receiver_details: {
-                      ...chatlist.receiver_details,
-                      status,
-                    },
-                  };
-                } else {
-                  return chatlist;
-                }
-              });
-            } else {
-              return cachedData;
+      statusSocket.on(
+        "display-user-status",
+        ({ userId, status: { type, lastActiveAt } }) => {
+          queryClient.setQueryData<Conversation[] | undefined>(
+            ["chat-list"],
+            (cachedData: any) => {
+              if (cachedData) {
+                return cachedData.map((chatlist: Conversation) => {
+                  if (chatlist.receiver_details._id === userId) {
+                    return {
+                      ...chatlist,
+                      receiver_details: {
+                        ...chatlist.receiver_details,
+                        status: {
+                          type,
+                          lastActiveAt,
+                        },
+                      },
+                    };
+                  } else {
+                    return chatlist;
+                  }
+                });
+              } else {
+                return cachedData;
+              }
             }
-          }
-        );
-      });
+          );
+        }
+      );
     }
   }, [queryClient, statusSocket]);
 
@@ -155,7 +161,7 @@ function ChatList({
                 />
                 <span
                   className={`${
-                    user.receiver_details.status === "Online"
+                    user.receiver_details.status.type === "online"
                       ? "bg-green-500"
                       : "bg-zinc-500"
                   } absolute bottom-[3px] right-[2px] w-2 h-2 rounded-full`}

@@ -23,7 +23,7 @@ import useGroupInfo from "@/hooks/useGroupInfo.hook";
 import { User, Reaction } from "@/types/shared.types";
 import MessageField from "./MessageField";
 import GroupChatBubbles from "./GroupChatBubbles";
-import { updateConversationList } from "@/utils/updater.conversation.utils";
+import { updateConversationList } from "@/utils/sharedUpdateFunction";
 import { GroupChatInfo } from "@/types/group.types";
 function GroupChatboard({ groupId }: { groupId: string }) {
   const { groupSocket } = useSocketStore();

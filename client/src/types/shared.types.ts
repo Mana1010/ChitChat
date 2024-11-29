@@ -2,7 +2,10 @@ export interface User {
   name: string;
   profilePic: string;
   _id: string;
-  status: string;
+  status: {
+    type: "offline" | "online";
+    lastActiveAt: Date;
+  };
   userId?: string;
 }
 export interface Reaction<ReactionType = string> {

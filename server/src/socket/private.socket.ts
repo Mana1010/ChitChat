@@ -102,7 +102,6 @@ export function handlePrivateSocket(io: Server) {
         const isUserNotSeenMessage = listConversationUser.includes(userId);
 
         if (!isUserNotSeenMessage && listConversationUser.length <= 2) {
-          console.log("Pusheddd");
           checkIfUserNotSeenMessage.userReadMessage.push(userId);
           await checkIfUserNotSeenMessage.save();
         }
