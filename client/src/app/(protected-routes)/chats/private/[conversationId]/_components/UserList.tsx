@@ -18,7 +18,7 @@ import NoItemFound from "@/components/NoItemFound";
 import { useSocketStore } from "@/utils/store/socket.store";
 function UserList({ searchUser }: { searchUser: string }) {
   const router = useRouter();
-  const { privateSocket } = useSocketStore();
+  const { privateSocket, statusSocket } = useSocketStore();
   const { ref, inView } = useInView();
   const [hasNextPage, setHasNextPage] = useState(true);
   const [allUserList, setAllUserList] = useState<User[]>([]);
@@ -74,6 +74,23 @@ function UserList({ searchUser }: { searchUser: string }) {
   const userList = useMemo(() => {
     return searchUser.length ? debouncedSearchUser : allUserList;
   }, [searchUser, debouncedSearchUser, allUserList]);
+
+  useEffect(() => {
+    if (statusSocket) {
+      statusSocket.on("display-user-status", ({ userId, status }) => {
+        setAllUserList((prevUserList: User[]) => {
+          return prevUserList.map((user) => {
+            if (user._id === userId) {
+              return { ...user, status };
+            } else {
+              return user;
+            }
+          });
+        });
+      });
+    }
+  }, [statusSocket]);
+
   useEffect(() => {
     if (inView && hasNextPage) {
       currentPageRef.current++;
@@ -88,7 +105,7 @@ function UserList({ searchUser }: { searchUser: string }) {
     return <LoadingChat />;
   }
 
-  if (searchUser.length === 0 && allUserList.length === 0) {
+  if (searchUser.length !== 0 && allUserList.length === 0) {
     return (
       <div className="flex-grow w-full flex h-[200px]">
         <NoItemFound>No User Found</NoItemFound>

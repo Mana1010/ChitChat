@@ -3,14 +3,14 @@ import React, { Dispatch, SetStateAction } from "react";
 import ChatBoardHeaderSkeleton from "../../../_components/ChatBoardHeaderSkeleton";
 import Image from "next/image";
 import { HiOutlineDotsCircleHorizontal } from "react-icons/hi";
-import { GroupChatHeaderInfo } from "@/types/group.types";
+import { GroupChatInfo } from "@/types/group.types";
 import { MdGroups } from "react-icons/md";
 function ChatHeader({
   groupInfo,
   isLoading,
   setOpenProfileModal,
 }: {
-  groupInfo: GroupChatHeaderInfo | undefined;
+  groupInfo: GroupChatInfo | undefined;
   isLoading: boolean;
   setOpenProfileModal: Dispatch<SetStateAction<boolean>>;
 }) {

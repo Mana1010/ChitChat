@@ -21,8 +21,6 @@ function InvitationText({
 }) {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const { data: session } = useSession();
-  const { groupSocket } = useSocketStore();
-  const router = useRouter();
 
   const queryClient = useQueryClient();
 
@@ -33,7 +31,7 @@ function InvitationText({
     declineInvitationLoading,
   } = useInvitationResponse(updateMailDetails);
 
-  function updateMailDetails(groupId: string) {
+  function updateMailDetails() {
     queryClient.setQueryData<MailDetailsSchema | undefined>(
       ["mail-details", mailId],
       (cachedData) => {
@@ -43,7 +41,7 @@ function InvitationText({
       }
     );
   }
-  console.log(getMailContent);
+
   return (
     <div className="w-full flex flex-col relative text-white justify-center items-center">
       <div className="flex flex-col space-y-1 items-center">

@@ -18,3 +18,7 @@ export const GROUP_NAMESPACE = (io: Server) => {
 export const MAIL_NAMESPACE = (io: Server) => {
   return io.of("/mail");
 };
+
+export const STATUS_NAMESPACE = (io: Server) => {
+  return io.of("/status");
+};

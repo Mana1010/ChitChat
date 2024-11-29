@@ -57,7 +57,7 @@ export const getAllGroups = asyncHandler(
               members: {
                 $elemMatch: {
                   memberInfo: new mongoose.Types.ObjectId(userId),
-                  status: "pending",
+                  status: { $ne: "active" },
                 },
               },
             },
@@ -65,7 +65,7 @@ export const getAllGroups = asyncHandler(
         },
       },
       {
-        //this pipeline, we are counting the total members each group to display the total member
+        //this pipeline, we are counting the total active members each group to display the total member
         $addFields: {
           totalMember: {
             $size: {
@@ -94,24 +94,39 @@ export const getAllGroups = asyncHandler(
         //group nga may ara invitation simo kay since mga 1 malang every member sa database, so possibility 1 or 0 lang ang result
         //1 = exist, 0 = not yet exist
         $addFields: {
-          is_group_inviting_you: {
-            $size: {
-              $filter: {
-                input: "$members",
-                cond: {
-                  $and: [
-                    {
-                      $eq: [
-                        "$$this.memberInfo",
-                        new mongoose.Types.ObjectId(userId),
-                      ],
-                    },
-                    {
-                      $eq: ["$$this.status", "pending"],
-                    },
-                  ],
+          user_group_status: {
+            $arrayElemAt: [
+              {
+                $filter: {
+                  input: "$members",
+                  cond: {
+                    $and: [
+                      {
+                        $in: ["$$this.status", ["pending", "requesting"]],
+                      },
+                      {
+                        $eq: [
+                          "$$this.memberInfo",
+                          new mongoose.Types.ObjectId(userId),
+                        ],
+                      },
+                    ],
+                  },
+                  limit: 1,
                 },
               },
+              0,
+            ],
+          },
+        },
+      },
+      {
+        $addFields: {
+          user_group_status: {
+            $cond: {
+              if: { $ne: [{ $ifNull: ["$user_group_status", null] }, null] },
+              then: "$user_group_status.status",
+              else: "no-status",
             },
           },
         },
@@ -123,17 +138,10 @@ export const getAllGroups = asyncHandler(
           groupName: 1,
           groupPhoto: 1,
           totalMember: 1,
-          this_group_inviting_you: {
-            $cond: {
-              if: { $eq: ["$is_group_inviting_you", 1] },
-              then: true,
-              else: false,
-            },
-          },
+          user_group_status: 1,
         },
       },
     ]);
-    console.log(getAllGroups);
 
     const hasNextPage = getAllGroups.length === LIMIT;
     const nextPage = hasNextPage ? PAGE + 1 : null;
@@ -332,3 +340,18 @@ export const getGroupMessages = asyncHandler(
     });
   }
 );
+
+export const joinGroup = asyncHandler(async (req: Request, res: Response) => {
+  const { userId, groupId } = req.params;
+  await GroupConversation.findByIdAndUpdate(groupId, {
+    $push: {
+      members: {
+        memberInfo: userId,
+        status: "requesting",
+      },
+    },
+  });
+  res
+    .status(201)
+    .json({ message: "Successfully request to join the group", groupId });
+});

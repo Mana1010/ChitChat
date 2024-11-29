@@ -7,12 +7,14 @@ type SocketStore = {
   groupSocket: Socket | null;
   mailSocket: Socket | null;
   notificationSocket: Socket | null;
+  statusSocket: Socket | null;
 } & {
   setPublicSocket: (socket: Socket | null) => void;
   setPrivateSocket: (socket: Socket | null) => void;
   setGroupSocket: (socket: Socket | null) => void;
   setMailSocket: (socket: Socket | null) => void;
   setNoficationSocket: (socket: Socket | null) => void;
+  setStatusSocket: (socket: Socket | null) => void;
 };
 const store = (set: StoreApi<SocketStore>["setState"]) => ({
   publicSocket: null,
@@ -20,6 +22,7 @@ const store = (set: StoreApi<SocketStore>["setState"]) => ({
   mailSocket: null,
   groupSocket: null,
   notificationSocket: null,
+  statusSocket: null,
   setPublicSocket: (socket: Socket | null) => {
     set({ publicSocket: socket });
   },
@@ -34,6 +37,9 @@ const store = (set: StoreApi<SocketStore>["setState"]) => ({
   },
   setNoficationSocket: (socket: Socket | null) => {
     set({ notificationSocket: socket });
+  },
+  setStatusSocket: (socket: Socket | null) => {
+    set({ statusSocket: socket });
   },
 });
 

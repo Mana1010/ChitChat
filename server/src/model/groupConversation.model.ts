@@ -12,11 +12,11 @@ const groupSchema = new mongoose.Schema({
   members: [
     {
       memberInfo: referenceModel("User"),
-      role: { type: String, default: "guest" },
+      role: { type: String, enum: ["admin", "guest"], default: "guest" },
       joinedAt: { type: Date, default: Date.now },
       status: {
         type: String,
-        enum: ["active", "pending"],
+        enum: ["active", "pending", "requesting"],
         default: "pending",
       },
     },

@@ -18,15 +18,14 @@ function GroupChatProvider({ children }: { children: ReactNode }) {
       );
     }
 
-    if (groupSocket && status === "authenticated") {
+    if (groupSocket && status === "authenticated" && params.groupId) {
       groupSocket.emit("join-room", {
         groupId: params.groupId,
         userId: session.user.userId,
       });
     }
     return () => {
-      if (groupSocket && status === "authenticated") {
-        groupSocket.off("connect");
+      if (groupSocket && status === "authenticated" && params.groupId) {
         groupSocket.emit("leave-room", {
           groupId: params.groupId,
           userId: session.user.userId,

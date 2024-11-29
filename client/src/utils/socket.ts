@@ -38,3 +38,10 @@ export const initializeMailSocket = (userId: string): Socket => {
     },
   });
 };
+export const initializeStatusSocket = (userId: string): Socket => {
+  return io(`${URL}/status`, {
+    auth: {
+      userId,
+    },
+  });
+};

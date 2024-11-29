@@ -3,7 +3,7 @@ import { User } from "./shared.types";
 export interface MailListSchema {
   _id: string;
   isAlreadyRead: boolean;
-  kind: "request" | "message" | "invitation";
+  kind: "invitation" | "request" | "message";
   sentAt: string;
 }
 export interface MailDetailsSchema {

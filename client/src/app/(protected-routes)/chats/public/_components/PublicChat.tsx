@@ -1,6 +1,5 @@
 "use client";
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import { Socket } from "socket.io-client";
 import { useInfiniteQuery, useQueryClient } from "react-query";
@@ -11,7 +10,6 @@ import { initializePublicChatSocket } from "@/utils/socket";
 import Image from "next/image";
 import themeImg from "../../../../../assets/images/theme-img.png";
 import { IoIosArrowRoundDown } from "react-icons/io";
-import { PublicMessages } from "@/types/UserTypes";
 import { Message } from "@/types/shared.types";
 import { nanoid } from "nanoid";
 import LoadingChat from "@/components/LoadingChat";
@@ -24,7 +22,7 @@ import typingAnimate from "../../../../../assets/images/gif-animation/typing-ani
 import { useSocketStore } from "@/utils/store/socket.store";
 function PublicChat() {
   const [message, setMessage] = useState("");
-  const { publicSocket, setPublicSocket } = useSocketStore();
+  const { publicSocket, setPublicSocket, statusSocket } = useSocketStore();
   const { data: session, status } = useSession();
   const { ref, inView } = useInView();
   const [openEmoji, setOpenEmoji] = useState(false);
@@ -86,6 +84,7 @@ function PublicChat() {
       fetchNextPage();
     }
   }, [fetchNextPage, hasNextPage, inView]);
+
   useEffect(() => {
     if (!publicSocket && session?.user) {
       const socket = initializePublicChatSocket(session.user.userId as string);
@@ -94,6 +93,28 @@ function PublicChat() {
       socket.emit("stop-typing"); //To ensure that the typing animation will be remove or cancel once the user refresh the page
     }
   }, [publicSocket, session?.user, setPublicSocket]);
+
+  useEffect(() => {
+    if (statusSocket) {
+      statusSocket.on("display-user-status", ({ userId, status }) => {
+        setAllMessages((allMessage) => {
+          return allMessage.map((message) => {
+            if (message.sender._id === userId) {
+              return {
+                ...message,
+                sender: {
+                  ...message.sender,
+                  status,
+                },
+              };
+            } else {
+              return message;
+            }
+          });
+        });
+      });
+    }
+  }, [statusSocket]);
   useEffect(() => {
     if (!publicSocket) return;
     const handleGetMessages = (data: User) => {
@@ -138,7 +159,7 @@ function PublicChat() {
           });
         });
       } else {
-        setAllMessages((allMessages): any => {
+        setAllMessages((allMessages) => {
           return allMessages.map((messageDetails) => {
             if (messageDetails._id === data.messageId) {
               return {
@@ -164,6 +185,7 @@ function PublicChat() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [publicSocket]);
+
   function sendMessage() {
     if (status !== "authenticated" || !publicSocket) return;
     publicSocket.emit("send-message", message);

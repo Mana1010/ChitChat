@@ -1,5 +1,5 @@
 "use client";
-import React, { ReactNode } from "react";
+import React, { ReactNode, useEffect } from "react";
 import Image from "next/image";
 import emailIcon from "../../../../../assets/images/svg/mailbox.svg";
 import InvitationText from "./InvitationText";
@@ -10,12 +10,13 @@ import axios, { AxiosError } from "axios";
 import { MailDetailsSchema } from "@/types/app.types";
 import MessageText from "./MessageText";
 import LoadingChat from "@/components/LoadingChat";
+import { useSocketStore } from "@/utils/store/socket.store";
 function ParentDiv({ children }: { children: ReactNode }) {
   return <div className="flex w-full h-full mail-div">{children}</div>;
 }
 function MailDetails({ mailId }: { mailId: string }) {
   const checkIfParamsValid = ["mail", "empty"].includes(mailId);
-
+  const { groupSocket } = useSocketStore();
   const { data: session, status } = useSession();
   const getMailContent: UseQueryResult<
     MailDetailsSchema,
@@ -30,6 +31,7 @@ function MailDetails({ mailId }: { mailId: string }) {
     },
     enabled: status === "authenticated" || !checkIfParamsValid,
   });
+
   if (checkIfParamsValid) {
     return (
       <ParentDiv>
@@ -51,6 +53,7 @@ function MailDetails({ mailId }: { mailId: string }) {
       </ParentDiv>
     );
   }
+
   return (
     <ParentDiv>
       {(() => {

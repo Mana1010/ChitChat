@@ -1,7 +1,7 @@
 import React, { ReactNode } from "react";
 import Sidebar from "./chats/_components/Sidebar";
 import CreateGroupChat from "./chats/group/[groupId]/_components/CreateGroupChat";
-
+import StatusProvider from "@/context/StatusProvider";
 interface Routes {
   children: ReactNode;
   chatboard: ReactNode;
@@ -10,13 +10,11 @@ interface Routes {
 
 function ProtectedRoutesLayout({ children }: Routes) {
   return (
-    <div
-      className={`flex bg-[#171717] h-screen relative w-full py-5 overflow-y-hidden`}
-    >
+    <StatusProvider>
       <CreateGroupChat />
       <Sidebar />
       {children}
-    </div>
+    </StatusProvider>
   );
 }
 

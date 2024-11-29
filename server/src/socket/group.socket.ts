@@ -48,13 +48,55 @@ export async function handleGroupSocket(io: Server) {
         );
         membersWhoReadMessage.set(groupId, []); //add the group in map
         requestedUsers.forEach((user) => {
-          console.log(user);
           MAIL_NAMESPACE(io)
             .to(user.id)
             .emit("update-mail", { sentAt: new Date(), isAlreadyRead: false });
         });
       }
     );
+    socket.on("send-group-request", async ({ groupId }) => {
+      const getAdmins = await GroupConversation.aggregate([
+        {
+          $match: { _id: new mongoose.Types.ObjectId(groupId as string) },
+        },
+        {
+          $addFields: {
+            get_all_admin: {
+              $filter: {
+                input: "$members",
+                cond: {
+                  $eq: ["$$this.role", "admin"],
+                },
+              },
+            },
+          },
+        },
+        {
+          $addFields: {
+            get_all_admin: {
+              $map: {
+                input: "$get_all_admin",
+                in: "$$this.memberInfo",
+              },
+            },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            get_all_admin: 1,
+          },
+        },
+      ]);
+      const getAllAdmin: string[] = getAdmins[0].get_all_admin;
+      getAllAdmin.forEach((admin) => {
+        const convertStr = admin.toString();
+        MAIL_NAMESPACE(io).to(convertStr).emit("update-mail", {
+          sentAt: new Date(),
+          isAlreadyRead: false,
+        });
+      });
+    });
     socket.on("invitation-accepted", async ({ groupId }) => {
       const result = await Group.create({
         sender: userId,
@@ -68,7 +110,7 @@ export async function handleGroupSocket(io: Server) {
         })
       );
 
-      socket.to(groupId).emit("display-message", {
+      socket.to(groupId).emit("user-joined-group", {
         messageDetails: result,
       });
     });
@@ -149,6 +191,7 @@ export async function handleGroupSocket(io: Server) {
                 },
               },
             ]);
+
           membersWhoReadMessage.set(groupId, [userId]);
           for (let i = 0; i < getAllMembers.length; i++) {
             memberIdList.push(getAllMembers[i].member_details._id.toString());
@@ -169,7 +212,6 @@ export async function handleGroupSocket(io: Server) {
     socket.on("read-message", async ({ groupId }) => {
       let getUserId = membersWhoReadMessage.get(groupId);
       if (!membersWhoReadMessage.has(groupId)) {
-        console.log("No Group Yet");
         membersWhoReadMessage.set(groupId, []);
         getUserId = membersWhoReadMessage.get(groupId);
       }

@@ -77,8 +77,9 @@ function MailList({ mailId }: { mailId: string }) {
   useEffect(() => {
     if (!mailSocket) return;
     mailSocket.on("update-mail", ({ sentAt, isAlreadyRead }) => {
+      alert("Gagana HAHAHAAHHAHA");
       queryClient.setQueryData<MailListSchema[] | undefined>(
-        ["all-mail-list"],
+        ["all-mail-list", filteredBy],
         (prevData) => {
           if (prevData) {
             return [
@@ -94,7 +95,7 @@ function MailList({ mailId }: { mailId: string }) {
         }
       );
     });
-  }, [mailSocket, queryClient]);
+  }, [filteredBy, mailSocket, queryClient]);
   function handleMailStatusChange(mailId: string) {
     queryClient.setQueryData<MailListSchema[] | undefined>(
       ["all-mail-list", filteredBy],

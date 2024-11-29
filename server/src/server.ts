@@ -17,6 +17,7 @@ import { handlePublicSocket } from "./socket/public.socket";
 import { handlePrivateSocket } from "./socket/private.socket";
 import { handleGroupSocket } from "./socket/group.socket";
 import { handleMailSocket } from "./socket/mail.socket";
+import { handleStatusSocket } from "./socket/status.socket";
 import { v2 as cloudinary } from "cloudinary";
 import helmet from "helmet";
 
@@ -27,6 +28,8 @@ const io = new Server(server, {
   cors: {
     origin: ["http://localhost:3000", "https://admin.socket.io"],
   },
+  pingInterval: 10000,
+  pingTimeout: 5000,
 });
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -56,6 +59,7 @@ handlePublicSocket(io as any);
 handlePrivateSocket(io as any);
 handleGroupSocket(io as any);
 handleMailSocket(io as any);
+handleStatusSocket(io as any);
 
 async function connectDb() {
   try {

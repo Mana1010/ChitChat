@@ -20,13 +20,7 @@ import { useModalStore } from "@/utils/store/modal.store";
 import { MdGroups } from "react-icons/md";
 import { FaXmark } from "react-icons/fa6";
 import { FaCheck } from "react-icons/fa6";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { FaUserClock } from "react-icons/fa";
 import {
   Tooltip,
   TooltipContent,
@@ -51,50 +45,58 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
   const currentPageRef = useRef(0);
   const debouncedValue = useDebounce(searchGroup);
   const { groupSocket } = useSocketStore();
-  const [sortBy, setSortBy] = useState("popular");
 
   const { acceptInvitation, declineInvitation } =
     useInvitationResponse(updateGrouplist);
 
   const { searchGroup: debouncedSearchGroup, isLoading: loadingSearchGroup } =
     useSearchGroup(debouncedValue);
-  const { data, fetchNextPage, error, isLoading, isError, refetch } =
-    useInfiniteQuery({
-      queryKey: ["explore-group-list"],
-      queryFn: async ({ pageParam = 0 }) => {
-        const response = await axios.get(
-          `${GROUP_SERVER_URL}/explore/all/group/list/${
-            session?.user.userId
-          }?page=${pageParam}&limit=${10}&sort=${sortBy}`
-        );
+  const { data, fetchNextPage, error, isLoading, isError } = useInfiniteQuery({
+    queryKey: ["explore-group-list"],
+    queryFn: async ({ pageParam = 0 }) => {
+      const response = await axios.get(
+        `${GROUP_SERVER_URL}/explore/all/group/list/${
+          session?.user.userId
+        }?page=${pageParam}&limit=${10}`
+      );
 
-        return response.data.message;
-      },
-      enabled: status === "authenticated",
-      getNextPageParam: (lastPage) => {
-        if (lastPage.nextPage === null && hasNextPage) {
-          setHasNextPage(false);
-        }
-        return lastPage.nextPage ?? null;
-      },
-      refetchOnWindowFocus: false,
-      onSuccess: (data) => {
-        setAllGroupChatList((prevData) => [
-          ...prevData,
-          ...data.pages[currentPageRef.current].getAllGroups,
-        ]);
-      },
-    });
-  const queryClient = useQueryClient();
-
-  const joinGroup = useMutation({
-    mutationFn: async (data: { senderId: string; receiverId: string }) => {
-      const response = await axios.post(`${GROUP_SERVER_URL}/new/chat`, data);
       return response.data.message;
     },
-    onSuccess: (id) => {
-      queryClient.invalidateQueries("chat-list");
-      router.push(`/chats/group/${id}?type=chats`);
+    enabled: status === "authenticated",
+    getNextPageParam: (lastPage) => {
+      if (lastPage.nextPage === null && hasNextPage) {
+        setHasNextPage(false);
+      }
+      return lastPage.nextPage ?? null;
+    },
+    refetchOnWindowFocus: false,
+    onSuccess: (data) => {
+      setAllGroupChatList((prevData) => [
+        ...prevData,
+        ...data.pages[currentPageRef.current].getAllGroups,
+      ]);
+    },
+  });
+
+  const joinGroup = useMutation({
+    mutationFn: async ({ groupId }: { groupId: string }) => {
+      const response = await axios.patch(
+        `${GROUP_SERVER_URL}/join/group/${groupId}/${session?.user.userId}`
+      );
+      return response.data;
+    },
+    onSuccess: ({ message, groupId }) => {
+      toast.success(message);
+      groupSocket?.emit("send-group-request", { groupId });
+      setAllGroupChatList((groupchat) => {
+        return groupchat.map((group) => {
+          if (group._id === groupId) {
+            return { ...group, user_group_status: "requesting" };
+          } else {
+            return group;
+          }
+        });
+      });
     },
     onError: (err: AxiosError<{ message: string }>) => {
       toast.error(err.response?.data.message);
@@ -162,23 +164,13 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
 
   return (
     <ParentDiv>
-      <div className="flex justify-end p-2">
-        <Select
-          value={sortBy}
-          onValueChange={(value) => {
-            setSortBy(value);
-          }}
-        >
-          <SelectTrigger className="w-[160px] text-[#6486FF] border-none bg-[#3A3B3C]">
-            <SelectValue placeholder="Sort by" className="text-white" />
-          </SelectTrigger>
-          <SelectContent className="bg-[#414141] text-white">
-            <SelectItem value="popular">Most Popular</SelectItem>
-            <SelectItem value="unpopular">Least Popular</SelectItem>
-            <SelectItem value="latest">Latest</SelectItem>
-            <SelectItem value="oldest">Oldest</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="flex space-x-2 p-2">
+        <button className="bg-[#3A3B3C] text-white px-5 py-2 rounded-md text-sm">
+          All
+        </button>
+        <button className="bg-[#3A3B3C] text-white px-5 py-2 rounded-md text-sm">
+          Invites & Requests
+        </button>
       </div>
       <div className="pt-2 flex flex-col w-full h-full items-center px-1.5 overflow-y-auto">
         {groupList?.map((group: GroupChatList) => (
@@ -209,7 +201,7 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
                 </div>
               </div>
             </div>
-            {group.this_group_inviting_you ? (
+            {group.user_group_status === "pending" ? (
               <div className="flex items-center space-x-2">
                 <TooltipProvider>
                   <Tooltip>
@@ -250,10 +242,26 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
                   </Tooltip>
                 </TooltipProvider>
               </div>
+            ) : group.user_group_status === "requesting" ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger
+                    className={`bg-[#6486FF] p-2 rounded-full text-white text-lg cursor-default`}
+                  >
+                    <FaUserClock />
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-[#6486FF]">
+                    Requesting
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             ) : (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger
+                    onClick={() =>
+                      joinGroup.mutate({ groupId: group._id as string })
+                    }
                     aria-label="Start chatting"
                     className={`bg-[#6486FF] p-2 rounded-full text-white text-lg`}
                   >

@@ -24,6 +24,7 @@ import { User, Reaction } from "@/types/shared.types";
 import MessageField from "./MessageField";
 import GroupChatBubbles from "./GroupChatBubbles";
 import { updateConversationList } from "@/utils/updater.conversation.utils";
+import { GroupChatInfo } from "@/types/group.types";
 function GroupChatboard({ groupId }: { groupId: string }) {
   const { groupSocket } = useSocketStore();
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -136,6 +137,18 @@ function GroupChatboard({ groupId }: { groupId: string }) {
       setAllMessages((prevMessages) => [...prevMessages, messageDetails]);
     });
 
+    groupSocket.on("user-joined-group", ({ messageDetails }) => {
+      setAllMessages((prevMessages) => [...prevMessages, messageDetails]);
+      queryClient.setQueryData<GroupChatInfo | undefined>(
+        ["group-info", groupId],
+        (cachedData) => {
+          if (cachedData) {
+            return { ...cachedData, total_member: cachedData.total_member + 1 };
+          }
+        }
+      );
+    });
+
     groupSocket.on("during-typing", (conversationId) => {
       setTypingUsers((prevUsers) => [...prevUsers, conversationId]);
     });
@@ -147,6 +160,7 @@ function GroupChatboard({ groupId }: { groupId: string }) {
     return () => {
       groupSocket.off("display-seen-text");
       groupSocket.off("display-message");
+      groupSocket.off("user-joined-group");
       groupSocket.off("during-typing");
       groupSocket.off("stop-typing");
     };

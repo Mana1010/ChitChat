@@ -1,7 +1,7 @@
 "use client";
 import { PRIVATE_SERVER_URL } from "@/utils/serverUrl";
 import axios, { AxiosError } from "axios";
-import React, { ReactNode } from "react";
+import React, { ReactNode, useCallback } from "react";
 import { useEffect } from "react";
 import { useQuery, UseQueryResult, useQueryClient } from "react-query";
 import { useSession } from "next-auth/react";
@@ -13,7 +13,6 @@ import { useSocketStore } from "@/utils/store/socket.store";
 import ConversationListSkeleton from "../../../_components/ConversationListSkeleton";
 import NoItemFound from "@/components/NoItemFound";
 import { updateConversationList } from "@/utils/updater.conversation.utils";
-import { handleSeenUpdate } from "@/utils/updater.conversation.utils";
 function ParentDiv({ children }: { children: ReactNode }) {
   return <div className="w-full flex-grow flex h-[200px]">{children}</div>;
 }
@@ -24,7 +23,7 @@ function ChatList({
   searchChat: string;
   conversationId: string;
 }) {
-  const { privateSocket } = useSocketStore();
+  const { privateSocket, statusSocket } = useSocketStore();
   const { data: session, status } = useSession();
   const router = useRouter();
   const displayAllChats: UseQueryResult<
@@ -71,9 +70,39 @@ function ChatList({
     };
   }, [queryClient, privateSocket, status]);
 
+  useEffect(() => {
+    if (statusSocket) {
+      statusSocket.on("display-user-status", ({ userId, status }) => {
+        queryClient.setQueryData<Conversation[] | undefined>(
+          ["chat-list"],
+          (cachedData: any) => {
+            if (cachedData) {
+              return cachedData.map((chatlist: Conversation) => {
+                if (chatlist.receiver_details._id === userId) {
+                  return {
+                    ...chatlist,
+                    receiver_details: {
+                      ...chatlist.receiver_details,
+                      status,
+                    },
+                  };
+                } else {
+                  return chatlist;
+                }
+              });
+            } else {
+              return cachedData;
+            }
+          }
+        );
+      });
+    }
+  }, [queryClient, statusSocket]);
+
   const searchResult = displayAllChats.data?.filter((user) =>
     new RegExp(searchChat, "i").test(user.receiver_details.name as string)
   );
+
   if (displayAllChats.isLoading) {
     return <ConversationListSkeleton />;
   }
@@ -102,6 +131,7 @@ function ChatList({
     );
   }
 
+  console.log(displayAllChats.data);
   return (
     <ParentDiv>
       <div className="pt-2 flex flex-col w-full overflow-y-auto h-full items-center px-1.5">

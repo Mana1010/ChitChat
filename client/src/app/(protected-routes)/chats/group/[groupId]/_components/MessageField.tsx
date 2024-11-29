@@ -54,7 +54,8 @@ function MessageField({
           groupId,
           senderId,
           "text",
-          "groupchat-list"
+          "groupchat-list",
+          false
         );
         setMessage("");
       }}
