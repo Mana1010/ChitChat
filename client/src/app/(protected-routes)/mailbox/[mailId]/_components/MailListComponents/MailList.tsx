@@ -77,7 +77,6 @@ function MailList({ mailId }: { mailId: string }) {
   useEffect(() => {
     if (!mailSocket) return;
     mailSocket.on("update-mail", ({ sentAt, isAlreadyRead }) => {
-      alert("Gagana HAHAHAAHHAHA");
       queryClient.setQueryData<MailListSchema[] | undefined>(
         ["all-mail-list", filteredBy],
         (prevData) => {

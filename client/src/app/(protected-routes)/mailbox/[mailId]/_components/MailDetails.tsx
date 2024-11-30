@@ -53,7 +53,7 @@ function MailDetails({ mailId }: { mailId: string }) {
       </ParentDiv>
     );
   }
-
+  console.log(getMailContent.data);
   return (
     <ParentDiv>
       {(() => {

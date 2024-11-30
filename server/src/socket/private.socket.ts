@@ -133,10 +133,12 @@ export function handlePrivateSocket(io: Server) {
     socket.on(
       "send-reaction",
       async ({ reaction, messageId, conversationId }) => {
-        await Private.findOne(
+        await Private.updateOne(
           { _id: messageId },
           {
-            reactions: reaction,
+            $set: {
+              reactions: reaction,
+            },
           }
         );
         socket.broadcast

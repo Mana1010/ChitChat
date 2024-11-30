@@ -61,7 +61,7 @@ function PublicMessageField({
       }}
       className="flex-grow flex space-x-2 items-center pt-3 justify-between"
     >
-      <input
+      <textarea
         onChange={(e) => {
           setMessage(e.target.value);
         }}
@@ -73,16 +73,15 @@ function PublicMessageField({
         onBlur={() => {
           socketRef?.emit("stop-typing");
         }}
-        ref={inputRef}
         value={
           timer > 0
             ? `Please wait ${timer} seconds before sending your next message.`
             : message
         }
+        rows={1}
         disabled={timer > 0}
-        type="text"
         placeholder="Send a message"
-        className="text-zinc-100 placeholder:text-zinc-300 py-3 rounded-md bg-[#3A3B3C] px-3 flex-grow disabled:bg-[#222222]/30 text-sm"
+        className="text-zinc-100 placeholder:text-zinc-300 py-3 rounded-md bg-[#3A3B3C] px-3 flex-grow disabled:bg-[#222222]/30 text-sm resize-none"
       />
       {/* For Emoji */}
       <div className="relative">

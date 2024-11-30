@@ -63,7 +63,7 @@ function PublicReactions({
     (reaction) => reaction.reactor === userId
   );
   return (
-    <div className="absolute -top-10 -left-25 rounded-md bg-[#414141] flex items-center justify-center h-[40px] z-[99999]">
+    <div className="absolute -top-10 -left-32 rounded-md bg-[#414141] flex items-center justify-center h-[40px] z-[99999]">
       {reactions.map((reaction) => (
         <button
           onClick={() => {
@@ -95,8 +95,8 @@ function PublicReactions({
           key={reaction.id}
           className={`text-2xl h-full p-1 ${
             findReaction?.reactionEmoji === reaction.emoji
-              ? "bg-[#171717]"
-              : "hover:bg-[#171717]"
+              ? "bg-[#171717]/50"
+              : "hover:bg-[#171717]/50"
           }`}
         >
           {reaction.emoji}

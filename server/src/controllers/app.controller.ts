@@ -161,11 +161,17 @@ export const getMailDetails = asyncHandler(
             groupName: 1,
             groupPhoto: 1,
             total_members: {
-              $size: {
-                $filter: {
-                  input: "$group_details.members",
-                  cond: { $eq: ["$$this.status", "active"] },
+              $cond: {
+                if: { $ifNull: ["$group_details", null] },
+                then: {
+                  $size: {
+                    $filter: {
+                      input: "$group_details.members",
+                      cond: { $eq: ["$$this.status", "active"] },
+                    },
+                  },
                 },
+                else: 0,
               },
             },
           },
@@ -176,7 +182,6 @@ export const getMailDetails = asyncHandler(
         },
       },
     ]);
-
     if (!getMailContent) {
       res.status(404);
       throw new Error("Mail does not exist");

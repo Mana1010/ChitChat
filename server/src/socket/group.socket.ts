@@ -97,23 +97,6 @@ export async function handleGroupSocket(io: Server) {
         });
       });
     });
-    socket.on("invitation-accepted", async ({ groupId }) => {
-      const result = await Group.create({
-        sender: userId,
-        groupId,
-        type: "system",
-        message: "joined the group",
-      }).then((doc) =>
-        doc.populate({
-          path: "sender",
-          select: ["name", "profilePic", "status", "_id"],
-        })
-      );
-
-      socket.to(groupId).emit("user-joined-group", {
-        messageDetails: result,
-      });
-    });
     socket.on(
       "send-message",
       async ({ message, groupId }: { message: string; groupId: string }) => {

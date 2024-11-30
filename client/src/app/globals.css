@@ -68,13 +68,13 @@
   }
 }
 /* Style for the entire scrollbar */
-.chat-div::-webkit-scrollbar {
+::-webkit-scrollbar {
   width: 10px; /* Width of the scrollbar */
   background-color: transparent; /* Background color of the scrollbar track */
 }
 
-.chat-div::-webkit-scrollbar-thumb {
-  background-color: #6486ff; /* Color of the scrollbar thumb */
+::-webkit-scrollbar-thumb {
+  background-color: #414141; /* Color of the scrollbar thumb */
   border-radius: 4px;
   opacity: 0.5;
 }
@@ -89,6 +89,22 @@
 
 .mail-div {
   background: url("./../assets/images/svg/mail-background.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+}
+
+.background-div {
+  background: linear-gradient(to left, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)),
+    url("./../assets/images/piltover-tower.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+}
+
+.public-background {
+  background: linear-gradient(to left, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)),
+    url("./../assets/images/arcane-public-background.png");
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;

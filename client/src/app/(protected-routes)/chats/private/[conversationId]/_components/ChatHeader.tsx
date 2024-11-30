@@ -1,10 +1,10 @@
 "use client";
 import React, { Dispatch, SetStateAction } from "react";
-import { useQuery, UseQueryResult } from "react-query";
 import ChatBoardHeaderSkeleton from "../../../_components/ChatBoardHeaderSkeleton";
 import Image from "next/image";
-import { GetParticipantInfo, FullInfoUser } from "@/types/UserTypes";
+import { FullInfoUser } from "@/types/UserTypes";
 import { HiOutlineDotsCircleHorizontal } from "react-icons/hi";
+import { formatDistanceToNow } from "date-fns";
 function ChatHeader({
   participantInfo,
   isLoading,
@@ -15,7 +15,7 @@ function ChatHeader({
   setOpenProfileModal: Dispatch<SetStateAction<boolean>>;
 }) {
   return (
-    <header className="w-full shadow-md py-3 px-4 flex items-center justify-between">
+    <header className="w-full shadow-lg py-3 px-4 flex items-center justify-between ">
       {isLoading || !participantInfo ? (
         <ChatBoardHeaderSkeleton />
       ) : (
@@ -39,10 +39,15 @@ function ChatHeader({
           </div>
           <div>
             <h3 className="text-white text-sm">{participantInfo.name}</h3>
-            <small className="text-slate-300">
+            <small className="text-slate-300 text-[0.8rem]">
               {participantInfo.status.type === "online"
                 ? "Active Now"
-                : "Offline"}
+                : `Active ${formatDistanceToNow(
+                    participantInfo.status.lastActiveAt,
+                    {
+                      addSuffix: true,
+                    }
+                  )}`}
             </small>
           </div>
         </div>

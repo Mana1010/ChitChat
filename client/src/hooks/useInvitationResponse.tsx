@@ -12,7 +12,7 @@ import { GetParticipantInfo } from "@/types/UserTypes";
 
 function useInvitationResponse(optimisticUpdate: (groupId: string) => void) {
   const router = useRouter();
-  const { groupSocket } = useSocketStore();
+  const { groupSocket, mailSocket } = useSocketStore();
   const queryClient = useQueryClient();
   const acceptInvitation = useMutation({
     mutationFn: async ({
@@ -28,7 +28,7 @@ function useInvitationResponse(optimisticUpdate: (groupId: string) => void) {
       return response.data;
     },
     onSuccess: ({ message, groupId }) => {
-      groupSocket?.emit("invitation-accepted", { groupId });
+      mailSocket?.emit("invitation-accepted", { groupId });
       queryClient.invalidateQueries("groupchat-list");
       toast.success(message);
       router.push(`/chats/group/${groupId}?type=chats`);

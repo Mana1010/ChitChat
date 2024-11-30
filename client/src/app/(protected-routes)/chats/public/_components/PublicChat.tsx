@@ -8,18 +8,18 @@ import axios from "axios";
 import { User, Reaction } from "@/types/shared.types";
 import { initializePublicChatSocket } from "@/utils/socket";
 import Image from "next/image";
-import themeImg from "../../../../../assets/images/theme-img.png";
 import { IoIosArrowRoundDown } from "react-icons/io";
 import { Message } from "@/types/shared.types";
 import { nanoid } from "nanoid";
 import LoadingChat from "@/components/LoadingChat";
 import { useInView } from "react-intersection-observer";
 import { motion, AnimatePresence } from "framer-motion";
-import PublicChatBubbles from "./ChatBubbles";
+import PublicChatBubbles from "./PublicChatBubbles";
 import PublicMessageField from "./PublicMessageField";
 import PublicReactionList from "./PublicReactionList";
 import typingAnimate from "../../../../../assets/images/gif-animation/typing-animation-ver-2.gif";
 import { useSocketStore } from "@/utils/store/socket.store";
+import { MdOutlineFileCopy } from "react-icons/md";
 function PublicChat() {
   const [message, setMessage] = useState("");
   const { publicSocket, setPublicSocket, statusSocket } = useSocketStore();
@@ -223,7 +223,7 @@ function PublicChat() {
   }
   return (
     <div className="h-full relative" onClick={() => setOpenEmoji(false)}>
-      <div className="h-[440px] bg-[#222222] w-full rounded-md relative">
+      <div className="public-background h-[440px] w-full rounded-md relative">
         {isLoading ? (
           <LoadingChat />
         ) : (
@@ -322,16 +322,6 @@ function PublicChat() {
             </AnimatePresence>
           </div>
         )}
-
-        <div className="absolute bottom-3 right-2 opacity-60">
-          <Image
-            src={themeImg}
-            alt="chat-bot-img"
-            width={200}
-            height={200}
-            priority
-          />
-        </div>
       </div>
       <PublicMessageField
         openEmoji={openEmoji}

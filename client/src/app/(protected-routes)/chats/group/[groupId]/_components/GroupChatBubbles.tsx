@@ -10,6 +10,9 @@ import { useSocketStore } from "@/utils/store/socket.store";
 import { Message } from "@/types/shared.types";
 import { User } from "@/types/shared.types";
 import { Reaction } from "@/types/shared.types";
+import handleClipboard from "@/utils/clipboard";
+import { toast } from "sonner";
+import { MdOutlineContentCopy } from "react-icons/md";
 function GroupChatBubbles({
   messageDetails,
   session,
@@ -113,7 +116,7 @@ function GroupChatBubbles({
                 </div>
 
                 {/* Reactions */}
-                <div className={`px-2 relative`}>
+                <div className={`relative flex justify-center space-x-1`}>
                   {messageDetails.sender._id !== session?.user.userId && (
                     <button
                       onClick={() => {
@@ -143,6 +146,23 @@ function GroupChatBubbles({
                       setOpenReaction={setOpenReaction}
                     />
                   )}
+                  <button
+                    onClick={async () => {
+                      const { message, type } = await handleClipboard(
+                        messageDetails.message
+                      );
+
+                      toast[type as "success" | "error"](message);
+                    }}
+                    className={`w-5 h-5 items-center justify-center flex `}
+                  >
+                    {messageDetails._id === hoveredMessage && (
+                      <span className={`text-slate-300 font-bold text-sm`}>
+                        {" "}
+                        <MdOutlineContentCopy />
+                      </span>
+                    )}
+                  </button>
                 </div>
               </div>
             </div>

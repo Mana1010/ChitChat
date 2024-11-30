@@ -74,7 +74,7 @@ function PrivateMessageField({
       }}
       className="px-3 py-2.5 flex items-center space-x-2 bg-[#171717]"
     >
-      <input
+      <textarea
         onFocus={() => {
           socket?.emit("read-message", {
             conversationId,
@@ -83,12 +83,12 @@ function PrivateMessageField({
           socket?.emit("during-typing", conversationId);
           handleUnreadMessageSign(queryClient, conversationId, true); //This will update the conversation read sign
         }}
+        rows={1}
         onBlur={() => socket?.emit("stop-typing", conversationId)}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
-        type="text"
         placeholder="Send a message"
-        className="rounded-md bg-[#414141] flex-grow px-3 py-2.5 text-white"
+        className="rounded-md bg-[#414141] flex-grow px-3 py-2.5 text-white resize-none"
       />
       <div className="relative">
         <button

@@ -27,8 +27,9 @@ function PrivateReactions({
       conversationId,
     });
   }
+  console.log(messageDetails);
   return (
-    <div className=" absolute -top-10 -left-25 rounded-md bg-[#414141] flex items-center justify-center h-[40px] z-[99999]">
+    <div className=" absolute -top-10 -left-10 rounded-md bg-[#414141] flex items-center justify-center h-[40px] z-[99999]">
       {reactions.map((reaction) => (
         <button
           onClick={() => {
@@ -38,7 +39,7 @@ function PrivateReactions({
                   const newReaction =
                     reaction.emoji === message.reactions ? "" : reaction.emoji;
                   sendReaction(newReaction);
-                  return { ...message, reaction: newReaction };
+                  return { ...message, reactions: newReaction };
                 } else {
                   return message;
                 }
@@ -49,8 +50,8 @@ function PrivateReactions({
           key={reaction.id}
           className={`text-2xl h-full p-1 ${
             messageDetails.reactions === reaction.emoji
-              ? "bg-[#171717]"
-              : "hover:bg-[#171717]"
+              ? "bg-[#171717]/50"
+              : "hover:bg-[#171717]/50"
           }`}
         >
           {reaction.emoji}

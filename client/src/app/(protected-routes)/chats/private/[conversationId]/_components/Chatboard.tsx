@@ -15,14 +15,13 @@ import { useSession } from "next-auth/react";
 import { PRIVATE_SERVER_URL } from "@/utils/serverUrl";
 import NewUser from "./NewUser";
 import UserNotFound from "./UserNotFound";
-import { GetParticipantInfo } from "@/types/UserTypes";
 import { Message, User } from "@/types/shared.types";
 import { useSocketStore } from "@/utils/store/socket.store";
 import { nanoid } from "nanoid";
 import LoadingChat from "@/components/LoadingChat";
 import { useInView } from "react-intersection-observer";
 import ChatHeader from "./ChatHeader";
-import ChatBubbles from "./ChatBubbles";
+import PrivateChatBubbles from "./PrivateChatBubbles";
 import { IoIosArrowRoundDown } from "react-icons/io";
 import { AnimatePresence, motion } from "framer-motion";
 import ProfileCard from "../../../_components/ProfileCard";
@@ -44,7 +43,7 @@ function ParentDiv({
 }) {
   return (
     <div
-      className="flex flex-grow w-full h-full flex-col relative"
+      className="flex flex-grow w-full h-full flex-col relative background-div"
       onClick={() => {
         setOpenEmoji(false);
       }}
@@ -218,13 +217,13 @@ function Chatboard({ conversationId }: { conversationId: string }) {
         isLoading={participantInfoLoading}
         setOpenProfileModal={setOpenProfileModal}
       />
-      <div className="flex-grow w-full p-3">
+      <div className="flex-grow w-full px-3">
         {isLoading || !data ? (
           <LoadingChat />
         ) : (
           <div className="h-full w-full relative">
             {allMessages.length === 0 ? (
-              <div className="flex items-center flex-col justify-end h-full w-full pb-5 space-y-2">
+              <div className=" flex items-center flex-col justify-end h-full w-full pb-5 space-y-2">
                 <h3 className="text-zinc-300 text-[0.78rem]">
                   Wave to {participantInfo?.receiver_details.name}
                 </h3>
@@ -275,7 +274,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                   </div>
                 )}
                 {allMessages?.map((data: Message<User>) => (
-                  <ChatBubbles
+                  <PrivateChatBubbles
                     key={data._id}
                     messageDetails={data}
                     session={session}

@@ -16,6 +16,7 @@ import useSearchUser from "@/hooks/useSearchUser.hook";
 import { useInView } from "react-intersection-observer";
 import NoItemFound from "@/components/NoItemFound";
 import { useSocketStore } from "@/utils/store/socket.store";
+import Skeleton from "../../../_components/Skeleton";
 function UserList({ searchUser }: { searchUser: string }) {
   const router = useRouter();
   const { privateSocket, statusSocket } = useSocketStore();
@@ -27,7 +28,7 @@ function UserList({ searchUser }: { searchUser: string }) {
   const debouncedValue = useDebounce(searchUser);
   const { searchUser: debouncedSearchUser, isLoading: loadingSearchUser } =
     useSearchUser(debouncedValue);
-  const { fetchNextPage, error, isLoading, isError } = useInfiniteQuery({
+  const { data, fetchNextPage, error, isLoading, isError } = useInfiniteQuery({
     queryKey: ["user-list"],
     queryFn: async ({ pageParam = 0 }) => {
       const response = await axios.get(
@@ -114,7 +115,11 @@ function UserList({ searchUser }: { searchUser: string }) {
     return <LoadingChat />;
   }
 
-  if (searchUser.length !== 0 && allUserList.length === 0) {
+  if (isLoading) {
+    return <Skeleton />;
+  }
+
+  if (data?.pages[0].getAllUsers.length === 0 && searchUser === "") {
     return (
       <div className="flex-grow w-full flex h-[200px]">
         <NoItemFound>No User Found</NoItemFound>

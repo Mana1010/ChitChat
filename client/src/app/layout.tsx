@@ -22,12 +22,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <Toaster
+        position="top-right"
         toastOptions={{
           duration: 2000,
           style: {
-            backgroundColor: "#3A3B3C",
+            backgroundColor: "#ffff",
             border: "none",
-            color: "#60A5FA",
+            color: "#171717",
           },
         }}
       />

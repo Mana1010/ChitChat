@@ -31,14 +31,4 @@ export const reactions: ReactionSchema[] = [
     name: "angry",
     id: nanoid(),
   },
-  {
-    emoji: "🤡",
-    name: "clown",
-    id: nanoid(),
-  },
-  {
-    emoji: "💀",
-    name: "skull",
-    id: nanoid(),
-  },
 ];

@@ -13,7 +13,7 @@ import { useSocketStore } from "@/utils/store/socket.store";
 import { nanoid } from "nanoid";
 import LoadingChat from "@/components/LoadingChat";
 import { useInView } from "react-intersection-observer";
-import ChatHeader from "./ChatHeader";
+import GroupChatHeader from "./GroupChatHeader";
 import { IoIosArrowRoundDown } from "react-icons/io";
 import { AnimatePresence, motion } from "framer-motion";
 import ProfileCard from "../../../_components/ProfileCard";
@@ -21,9 +21,8 @@ import typingAnimation from "../../../../../../assets/images/gif-animation/typin
 import SendAttachment from "@/components/SendAttachment";
 import useGroupInfo from "@/hooks/useGroupInfo.hook";
 import { User, Reaction } from "@/types/shared.types";
-import MessageField from "./MessageField";
+import GroupMessageField from "./GroupMessageField";
 import GroupChatBubbles from "./GroupChatBubbles";
-import { updateConversationList } from "@/utils/sharedUpdateFunction";
 import { GroupChatInfo } from "@/types/group.types";
 function GroupChatboard({ groupId }: { groupId: string }) {
   const { groupSocket } = useSocketStore();
@@ -206,7 +205,7 @@ function GroupChatboard({ groupId }: { groupId: string }) {
       }}
       className="flex flex-grow w-full h-full flex-col relative"
     >
-      <ChatHeader
+      <GroupChatHeader
         groupInfo={groupInfo as any}
         isLoading={groupInfoLoading}
         setOpenProfileModal={setOpenProfileModal}
@@ -305,7 +304,7 @@ function GroupChatboard({ groupId }: { groupId: string }) {
           </div>
         )}
       </div>
-      <MessageField
+      <GroupMessageField
         socket={groupSocket}
         groupId={groupId}
         message={message}
