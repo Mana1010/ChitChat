@@ -136,7 +136,7 @@ function MailList({ mailId }: { mailId: string }) {
   function selectAllMail() {
     const newSelectedMails: string[] = [];
 
-    getAllMail.data?.forEach((mail, index) => {
+    getAllMail.data?.forEach((mail) => {
       if (!selectedMailSet.has(mail._id)) {
         newSelectedMails.push(mail._id);
       }

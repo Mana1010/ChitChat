@@ -1,32 +1,36 @@
 "use client";
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  Dispatch,
+  SetStateAction,
+} from "react";
 import { useSession } from "next-auth/react";
 import { Socket } from "socket.io-client";
 import { useInfiniteQuery, useQueryClient } from "react-query";
 import { PUBLIC_SERVER_URL } from "@/utils/serverUrl";
 import axios from "axios";
 import { User, Reaction } from "@/types/shared.types";
-import { initializePublicChatSocket } from "@/utils/socket";
 import Image from "next/image";
-import { IoIosArrowRoundDown } from "react-icons/io";
 import { Message } from "@/types/shared.types";
-import { nanoid } from "nanoid";
 import LoadingChat from "@/components/LoadingChat";
 import { useInView } from "react-intersection-observer";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import PublicChatBubbles from "./PublicChatBubbles";
 import PublicMessageField from "./PublicMessageField";
 import PublicReactionList from "./PublicReactionList";
 import typingAnimate from "../../../../../assets/images/gif-animation/typing-animation-ver-2.gif";
 import { useSocketStore } from "@/utils/store/socket.store";
-import { MdOutlineFileCopy } from "react-icons/md";
+import BackToBottomArrow from "../../_components/BackToBottomArrow";
+import { Session } from "next-auth";
 function PublicChat() {
   const [message, setMessage] = useState("");
   const { publicSocket, setPublicSocket, statusSocket } = useSocketStore();
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const { ref, inView } = useInView();
   const [openEmoji, setOpenEmoji] = useState(false);
-  const inputRef = useRef<HTMLInputElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const scrollDivRef = useRef<HTMLDivElement | null>(null);
   const scrollPositionRef = useRef(0);
@@ -84,15 +88,6 @@ function PublicChat() {
       fetchNextPage();
     }
   }, [fetchNextPage, hasNextPage, inView]);
-
-  useEffect(() => {
-    if (!publicSocket && session?.user) {
-      const socket = initializePublicChatSocket(session.user.userId as string);
-      setPublicSocket(socket);
-      socket.on("connect", () => console.log("Connected Successfully"));
-      socket.emit("stop-typing"); //To ensure that the typing animation will be remove or cancel once the user refresh the page
-    }
-  }, [publicSocket, session?.user, setPublicSocket]);
 
   useEffect(() => {
     if (statusSocket) {
@@ -192,35 +187,6 @@ function PublicChat() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [publicSocket]);
-
-  function sendMessage() {
-    if (status !== "authenticated" || !publicSocket) return;
-    publicSocket.emit("send-message", message);
-    const userData = {
-      name: session?.user?.name,
-      profilePic: session?.user.image,
-      status: {
-        type: "online" as "online",
-        lastActiveAt: new Date(),
-      },
-      _id: session?.user.userId,
-    };
-    setAllMessages((prevMessages: Message<User, Reaction[]>[]) => {
-      return [
-        ...prevMessages,
-        {
-          message,
-          sender: userData,
-          type: "text",
-          createdAt: new Date().toString(),
-          isMessageDeleted: false,
-          _id: nanoid(),
-          reactions: [],
-        },
-      ];
-    });
-    publicSocket?.emit("stop-typing");
-  }
   return (
     <div className="h-full relative" onClick={() => setOpenEmoji(false)}>
       <div className="public-background h-[440px] w-full rounded-md relative">
@@ -298,39 +264,26 @@ function PublicChat() {
             <div ref={scrollRef} className="relative top-5"></div>
             <AnimatePresence mode="wait">
               {showArrowDown && (
-                <motion.div
-                  initial={{ opacity: 0, bottom: "10px" }}
-                  animate={{ opacity: 1, bottom: "15px" }}
-                  transition={{ duration: 0.25, ease: "easeIn" }}
-                  exit={{ opacity: 0, bottom: "10px" }}
-                  className=" flex items-center justify-center z-[999] sticky bg-transparent w-12 h-12 left-[50%] right-[50%]"
-                >
-                  <button
-                    onClick={() => {
-                      setShowArrowDown(false);
-                      scrollRef.current?.scrollIntoView({
-                        block: "end",
-                        behavior: "smooth",
-                      });
-                    }}
-                    className="w-10 h-10 rounded-full flex items-center justify-center p-1 bg-[#414141] text-[#6486FF] text-2xl"
-                  >
-                    <IoIosArrowRoundDown />
-                  </button>
-                </motion.div>
+                <BackToBottomArrow
+                  setShowArrowDown={setShowArrowDown}
+                  scrollRef={scrollRef.current}
+                />
               )}
             </AnimatePresence>
           </div>
         )}
       </div>
       <PublicMessageField
+        publicSocket={publicSocket}
         openEmoji={openEmoji}
         message={message}
-        sendMessage={sendMessage}
-        sessionData={session?.user}
+        session={session as Session}
         scrollRef={scrollRef.current}
-        socketRef={publicSocket}
-        inputRef={inputRef}
+        setAllMessages={
+          setAllMessages as Dispatch<
+            SetStateAction<Message<User, Reaction[] | string>[]>
+          >
+        }
         setMessage={setMessage}
         setOpenEmoji={setOpenEmoji}
       />

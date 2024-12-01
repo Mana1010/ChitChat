@@ -34,6 +34,8 @@ import {
   updateConversationList,
 } from "@/utils/sharedUpdateFunction";
 import { handleSeenUpdate } from "@/utils/sharedUpdateFunction";
+import BackToBottomArrow from "../../../_components/BackToBottomArrow";
+import { userData } from "@/utils/userdata.function";
 function ParentDiv({
   children,
   setOpenEmoji,
@@ -105,6 +107,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       queryClient.resetQueries(["private-messages", conversationId]); //To reset the cached data whenever the user unmount the component
     };
   }, [conversationId, queryClient]);
+
   useLayoutEffect(() => {
     if (!scrollRef.current) return;
     if (currentPageRef.current <= 0) {
@@ -181,6 +184,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       return <UserNotFound errorMessage={errorMessage.response.data.message} />;
     }
   }
+
   function sendMessage(messageContent: string) {
     setAllMessages((prevMessages: Message<User>[]): Message<User>[] => {
       return [
@@ -189,16 +193,8 @@ function Chatboard({ conversationId }: { conversationId: string }) {
           message: messageContent,
           type: "text",
           reactions: "",
-          createdAt: new Date().toString(),
-          sender: {
-            name: session?.user.name.split(" ")[0] as string,
-            status: {
-              type: "online",
-              lastActiveAt: new Date(),
-            },
-            profilePic: session?.user.image as string,
-            _id: session?.user.userId as string,
-          },
+          createdAt: new Date(),
+          sender: userData(session) as User,
           _id: nanoid(), //As temporary data
         },
       ];
@@ -314,26 +310,10 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                 <div ref={scrollRef} className="relative w-full"></div>
                 <AnimatePresence mode="wait">
                   {showArrowDown && (
-                    <motion.div
-                      initial={{ opacity: 0, bottom: "10px" }}
-                      animate={{ opacity: 1, bottom: "15px" }}
-                      transition={{ duration: 0.25, ease: "easeIn" }}
-                      exit={{ opacity: 0, bottom: "10px" }}
-                      className="flex items-center justify-center z-[999] sticky bg-transparent w-12 h-12 left-[50%] right-[50%]"
-                    >
-                      <button
-                        onClick={() => {
-                          setShowArrowDown(false);
-                          scrollRef.current?.scrollIntoView({
-                            block: "end",
-                            behavior: "smooth",
-                          });
-                        }}
-                        className="w-10 h-10 rounded-full flex items-center justify-center p-1 bg-[#414141] text-[#6486FF]  text-2xl"
-                      >
-                        <IoIosArrowRoundDown />
-                      </button>
-                    </motion.div>
+                    <BackToBottomArrow
+                      setShowArrowDown={setShowArrowDown}
+                      scrollRef={scrollRef.current}
+                    />
                   )}
                 </AnimatePresence>
               </div>

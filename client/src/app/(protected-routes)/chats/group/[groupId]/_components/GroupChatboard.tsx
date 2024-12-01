@@ -24,6 +24,8 @@ import { User, Reaction } from "@/types/shared.types";
 import GroupMessageField from "./GroupMessageField";
 import GroupChatBubbles from "./GroupChatBubbles";
 import { GroupChatInfo } from "@/types/group.types";
+import BackToBottomArrow from "../../../_components/BackToBottomArrow";
+import { userData } from "@/utils/userdata.function";
 function GroupChatboard({ groupId }: { groupId: string }) {
   const { groupSocket } = useSocketStore();
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -174,19 +176,17 @@ function GroupChatboard({ groupId }: { groupId: string }) {
       return <UserNotFound errorMessage={errorMessage.response.data.message} />;
     }
   }
-  function sendMessage(messageContent: string) {
-    setAllMessages((prevMessages: any) => {
+  function sendMessage() {
+    setAllMessages((prevMessages: Message<User, Reaction[]>[]) => {
       return [
         ...prevMessages,
         {
-          message: messageContent,
-          sender: {
-            name: session?.user.name.split(" ")[0],
-            status: "Online",
-            profilePic: session?.user.image,
-            _id: session?.user.userId,
-          },
+          message,
+          sender: userData(session) as User,
           type: "text",
+          isMessageDeleted: false,
+          createdAt: new Date(),
+          reactions: [],
           _id: nanoid(), //As temporary data
         },
       ];
@@ -278,26 +278,10 @@ function GroupChatboard({ groupId }: { groupId: string }) {
               <div ref={scrollRef} className="relative w-full"></div>
               <AnimatePresence mode="wait">
                 {showArrowDown && (
-                  <motion.div
-                    initial={{ opacity: 0, bottom: "10px" }}
-                    animate={{ opacity: 1, bottom: "15px" }}
-                    transition={{ duration: 0.25, ease: "easeIn" }}
-                    exit={{ opacity: 0, bottom: "10px" }}
-                    className=" flex items-center justify-center z-[999] sticky bg-transparent w-12 h-12 left-[50%] right-[50%]"
-                  >
-                    <button
-                      onClick={() => {
-                        setShowArrowDown(false);
-                        scrollRef.current?.scrollIntoView({
-                          block: "end",
-                          behavior: "smooth",
-                        });
-                      }}
-                      className="w-10 h-10 rounded-full flex items-center justify-center p-1 bg-[#414141] text-[#6486FF]  text-2xl"
-                    >
-                      <IoIosArrowRoundDown />
-                    </button>
-                  </motion.div>
+                  <BackToBottomArrow
+                    setShowArrowDown={setShowArrowDown}
+                    scrollRef={scrollRef.current}
+                  />
                 )}
               </AnimatePresence>
             </div>

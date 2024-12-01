@@ -1,5 +1,5 @@
 import { Server } from "socket.io";
-import { Invitation } from "../model/mail.model";
+import { Invitation, Mail, Request } from "../model/mail.model";
 import { GroupConversation } from "../model/groupConversation.model";
 import { Group } from "../model/group.model";
 import { GROUP_NAMESPACE, MAIL_NAMESPACE } from "../utils/namespaces.utils";
@@ -30,6 +30,13 @@ export async function handleGroupSocket(io: Server) {
             status: "pending",
           });
         }
+        await GroupConversation.updateOne(
+          { _id: groupId },
+          {
+            $push: { members: { $each: requestedMembers } },
+          }
+        );
+        membersWhoReadMessage.set(groupId, []); //add the group in map
         await Promise.all(
           requestedUsers.map(async (requestedUser: RequestedUsers) => {
             await Invitation.create({
@@ -38,20 +45,15 @@ export async function handleGroupSocket(io: Server) {
               body: groupId,
               type: "invitation",
             });
+
+            requestedUsers.map((user) => {
+              MAIL_NAMESPACE(io).to(user.id).emit("update-mail", {
+                sentAt: new Date(),
+                isAlreadyRead: false,
+              });
+            });
           })
         );
-        await GroupConversation.updateOne(
-          { _id: groupId },
-          {
-            $push: { members: { $each: requestedMembers } },
-          }
-        );
-        membersWhoReadMessage.set(groupId, []); //add the group in map
-        requestedUsers.forEach((user) => {
-          MAIL_NAMESPACE(io)
-            .to(user.id)
-            .emit("update-mail", { sentAt: new Date(), isAlreadyRead: false });
-        });
       }
     );
     socket.on("send-group-request", async ({ groupId }) => {
@@ -89,7 +91,18 @@ export async function handleGroupSocket(io: Server) {
         },
       ]);
       const getAllAdmin: string[] = getAdmins[0].get_all_admin;
-      getAllAdmin.forEach((admin) => {
+
+      await Promise.all(
+        getAllAdmin.map(async (adminId) => {
+          await Request.create({
+            from: userId,
+            to: adminId,
+            type: "request",
+          });
+        })
+      );
+
+      getAllAdmin.map((admin) => {
         const convertStr = admin.toString();
         MAIL_NAMESPACE(io).to(convertStr).emit("update-mail", {
           sentAt: new Date(),

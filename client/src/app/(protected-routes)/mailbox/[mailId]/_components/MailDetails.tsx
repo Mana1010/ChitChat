@@ -1,5 +1,5 @@
 "use client";
-import React, { ReactNode, useEffect } from "react";
+import React, { ReactNode } from "react";
 import Image from "next/image";
 import emailIcon from "../../../../../assets/images/svg/mailbox.svg";
 import InvitationText from "./InvitationText";
@@ -11,6 +11,7 @@ import { MailDetailsSchema } from "@/types/app.types";
 import MessageText from "./MessageText";
 import LoadingChat from "@/components/LoadingChat";
 import { useSocketStore } from "@/utils/store/socket.store";
+import RequestText from "./RequestText";
 function ParentDiv({ children }: { children: ReactNode }) {
   return <div className="flex w-full h-full mail-div">{children}</div>;
 }
@@ -53,7 +54,6 @@ function MailDetails({ mailId }: { mailId: string }) {
       </ParentDiv>
     );
   }
-  console.log(getMailContent.data);
   return (
     <ParentDiv>
       {(() => {
@@ -68,7 +68,12 @@ function MailDetails({ mailId }: { mailId: string }) {
           case "message":
             return <MessageText />;
           case "request":
-            return <h1>Request</h1>;
+            return (
+              <RequestText
+                getMailContent={getMailContent.data}
+                mailId={mailId}
+              />
+            );
           default:
             return <h1>No Mail created</h1>;
         }

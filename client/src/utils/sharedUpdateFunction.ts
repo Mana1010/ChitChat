@@ -1,6 +1,12 @@
 import { QueryClient } from "react-query";
-import { ConversationSchema } from "@/types/shared.types";
+import { ConversationSchema, Message, Reaction } from "@/types/shared.types";
 import { Conversation } from "@/types/private.types";
+import { MailDetailsSchema } from "@/types/app.types";
+import React, { Dispatch, SetStateAction } from "react";
+import { GroupChatList } from "@/types/group.types";
+import { User } from "@/types/shared.types";
+import { Session } from "next-auth";
+import { nanoid } from "nanoid";
 export function updateConversationList<
   ConversationType extends ConversationSchema
 >(
@@ -83,4 +89,69 @@ export function handleSeenUpdate<
       }
     }
   );
+}
+
+export function updateMailDetails(
+  queryClient: QueryClient,
+  mailId: string,
+  status: "accepted" | "declined" | "cancelled"
+) {
+  queryClient.setQueryData<MailDetailsSchema | undefined>(
+    ["mail-details", mailId],
+    (cachedData) => {
+      if (cachedData) {
+        return { ...cachedData, status };
+      } else {
+        return cachedData;
+      }
+    }
+  );
+}
+
+export function updateGrouplist(
+  groupId: string,
+  setAllGroupChatList: Dispatch<SetStateAction<GroupChatList[]>>
+) {
+  setAllGroupChatList((groupChatList) =>
+    groupChatList.map((groupchat) => {
+      if (groupchat._id === groupId) {
+        return { ...groupchat, this_group_inviting_you: false };
+      } else {
+        return groupchat;
+      }
+    })
+  );
+}
+
+export function optimisticUpdateMessage(
+  message: string,
+  setAllMessages: Dispatch<
+    SetStateAction<Message<User, Reaction[] | string>[]>
+  >,
+  session: Session | null,
+  reactionDefault: string | Reaction[]
+) {
+  const userData = {
+    name: session?.user.name.split(" ")[0],
+    profilePic: session?.user.image,
+    status: {
+      type: "online" as "online",
+      lastActiveAt: new Date(),
+    },
+    _id: session?.user.userId,
+  };
+  setAllMessages((prevMessages) => {
+    return [
+      ...prevMessages,
+      {
+        message,
+        sender: userData as User,
+        type: "text",
+        createdAt: new Date(),
+        isMessageDeleted: false,
+        _id: nanoid(),
+        reactions: reactionDefault,
+      },
+    ];
+  });
 }

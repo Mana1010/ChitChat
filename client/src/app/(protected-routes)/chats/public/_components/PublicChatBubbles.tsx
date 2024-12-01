@@ -62,7 +62,7 @@ function PublicChatBubbles({
                   messageDetails.sender?._id === userData.userId && "text-end"
                 }`}
               >
-                {messageDetails.sender?.name.split(" ")[0] ?? ""}
+                {messageDetails.sender?.name}
               </small>
               {/* ChatBox */}
 

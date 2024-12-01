@@ -1,41 +1,35 @@
-"use client";
-import React, {
-  SetStateAction,
-  Dispatch,
-  RefObject,
-  useState,
-  useRef,
-  useEffect,
-} from "react";
+import React, { SetStateAction, Dispatch, useState, useEffect } from "react";
 import { LuSend, LuTimer } from "react-icons/lu";
 import { Socket } from "socket.io-client";
 import Picker from "emoji-picker-react";
 import { MdEmojiEmotions } from "react-icons/md";
-import { User } from "next-auth";
-
+import { User } from "@/types/shared.types";
+import { optimisticUpdateMessage } from "@/utils/sharedUpdateFunction";
+import { Message, Reaction } from "@/types/shared.types";
+import { Session } from "next-auth";
 interface SocketSchema {
   scrollRef: HTMLDivElement | null;
-  socketRef: Socket | null;
-  inputRef: RefObject<HTMLInputElement>;
 }
 interface PublicMessageFieldSchema extends SocketSchema {
+  publicSocket: Socket | null;
   openEmoji: boolean;
   message: string;
-  sessionData: User | undefined;
+  session: Session | undefined;
+  setAllMessages: Dispatch<
+    SetStateAction<Message<User, Reaction[] | string>[]>
+  >;
   setOpenEmoji: Dispatch<SetStateAction<boolean>>;
-  sendMessage: () => void;
   setMessage: Dispatch<SetStateAction<string>>;
 }
 function PublicMessageField({
+  publicSocket,
   openEmoji,
   message,
-  sessionData,
-  sendMessage,
+  session,
+  setAllMessages,
   setOpenEmoji,
   setMessage,
   scrollRef,
-  socketRef,
-  inputRef,
 }: PublicMessageFieldSchema) {
   const [timer, setTimer] = useState(0);
 
@@ -51,8 +45,15 @@ function PublicMessageField({
     <form
       onSubmit={(e) => {
         if (!scrollRef) return;
+        if (!publicSocket) return;
+        publicSocket.emit("send-message", message);
+        optimisticUpdateMessage(
+          message,
+          setAllMessages,
+          session as Session,
+          []
+        );
         e.preventDefault();
-        sendMessage(); //To send a message to database
         setTimer(3);
         setMessage("");
         setTimeout(() => {
@@ -66,12 +67,12 @@ function PublicMessageField({
           setMessage(e.target.value);
         }}
         onFocus={() => {
-          socketRef?.emit("during-typing", {
-            userImg: sessionData?.image,
+          publicSocket?.emit("during-typing", {
+            userImg: session?.user.image,
           });
         }}
         onBlur={() => {
-          socketRef?.emit("stop-typing");
+          publicSocket?.emit("stop-typing");
         }}
         value={
           timer > 0

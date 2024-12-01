@@ -151,11 +151,11 @@ export function handlePublicSocket(io: Server) {
     });
     stopTyping(socket, typingUsers, userId);
 
-    socket.on("user-disconnect", async () => {
-      const disconnectUser = await User.findById(userId).select([
-        "name",
-        "status",
-      ]);
+    socket.on("join-room", ({ userId }) => {
+      socket.join(userId);
+    });
+    socket.off("leave-room", ({ userId }) => {
+      socket.leave(userId);
     });
   });
 }

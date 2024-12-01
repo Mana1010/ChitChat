@@ -4,7 +4,7 @@ import { referenceModel } from "../utils/referenceModel";
 const messageSchema = new mongoose.Schema(
   {
     sender: referenceModel("User"),
-    message: { type: String },
+    message: { type: String, required: true },
     isMessageDeleted: { type: Boolean, default: false },
     reactions: [
       {

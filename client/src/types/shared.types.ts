@@ -20,7 +20,7 @@ export interface Message<UserType = string, ReactionType = string> {
   message: string;
   type: string;
   reactions: ReactionType;
-  createdAt: string;
+  createdAt: Date;
 }
 
 export interface InfiniteScrollingMessageSchema {

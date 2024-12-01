@@ -46,8 +46,10 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
   const debouncedValue = useDebounce(searchGroup);
   const { groupSocket } = useSocketStore();
 
-  const { acceptInvitation, declineInvitation } =
-    useInvitationResponse(updateGrouplist);
+  const { acceptInvitation, declineInvitation } = useInvitationResponse(
+    null,
+    setAllGroupChatList
+  );
 
   const { searchGroup: debouncedSearchGroup, isLoading: loadingSearchGroup } =
     useSearchGroup(debouncedValue);
@@ -112,18 +114,6 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
       fetchNextPage();
     }
   }, [fetchNextPage, hasNextPage, inView]);
-
-  function updateGrouplist(groupId: string) {
-    setAllGroupChatList((groupChatList) =>
-      groupChatList.map((groupchat) => {
-        if (groupchat._id === groupId) {
-          return { ...groupchat, this_group_inviting_you: false };
-        } else {
-          return groupchat;
-        }
-      })
-    );
-  }
   if (isLoading) {
     return <ConversationListSkeleton />;
   }
@@ -209,7 +199,7 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
                       aria-label="Accept Request"
                       className={`bg-[#6486FF] p-2 rounded-full text-white text-lg`}
                       onClick={() =>
-                        acceptInvitation.mutate({
+                        acceptInvitation({
                           groupId: group._id,
                           userId: session?.user.userId as string,
                         })
@@ -228,7 +218,7 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
                       aria-label="Decline Request"
                       className={`bg-[#6486FF] p-2 rounded-full text-white text-lg`}
                       onClick={() =>
-                        declineInvitation.mutate({
+                        declineInvitation({
                           groupId: group._id,
                           userId: session?.user.userId as string,
                         })

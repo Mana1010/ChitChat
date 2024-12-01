@@ -2,6 +2,7 @@ import React from "react";
 import PublicChat from "./_components/PublicChat";
 import { TbMessages } from "react-icons/tb";
 import { Metadata } from "next";
+import PublicProvider from "@/context/PublicProvider";
 export const metadata: Metadata = {
   title: "Public Chat",
 };
@@ -23,8 +24,9 @@ async function Page() {
           </small>
         </div>
       </header>
-
-      <PublicChat />
+      <PublicProvider>
+        <PublicChat />
+      </PublicProvider>
     </div>
   );
 }

@@ -8,8 +8,8 @@ import { useSession } from "next-auth/react";
 import { useSocketStore } from "@/utils/store/socket.store";
 import { capitalizeFirstLetter } from "@/utils/capitalizeFirstLetter";
 import loadingIcon from "../../../../../assets/images/gif-animation/chat-loading.gif";
-import useInvitationResponse from "@/hooks/useInvitationResponse";
 import { GoTrash } from "react-icons/go";
+import useRequestResponse from "@/hooks/useRequestResponse";
 function InvitationText({
   getMailContent,
   mailId,
@@ -19,12 +19,14 @@ function InvitationText({
 }) {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const { data: session } = useSession();
+
   const {
-    acceptInvitation,
-    declineInvitation,
-    acceptInvitationLoading,
-    declineInvitationLoading,
-  } = useInvitationResponse(mailId);
+    acceptRequest,
+    declineRequest,
+    acceptRequestLoading,
+    declineRequestLoading,
+  } = useRequestResponse(mailId);
+
   return (
     <div className="w-full flex flex-col relative text-white justify-center items-center">
       <div className="flex flex-col space-y-1 items-center">
@@ -63,16 +65,16 @@ function InvitationText({
             {getMailContent?.status === "pending" ? (
               <div className="flex space-x-2">
                 <button
-                  disabled={acceptInvitationLoading}
+                  disabled={acceptRequestLoading}
                   onClick={() =>
-                    acceptInvitation({
+                    acceptRequest({
                       groupId: getMailContent.group_details._id as string,
                       userId: session?.user.userId as string,
                     })
                   }
                   className="bg-[#6486FF] w-[80px] py-2 flex items-center justify-center rounded-sm text-white text-[0.9rem] disabled:bg-[#6486FF]/50"
                 >
-                  {acceptInvitationLoading ? (
+                  {acceptRequestLoading ? (
                     <Image
                       src={loadingIcon}
                       alt="loading-icon"
@@ -81,20 +83,20 @@ function InvitationText({
                       priority
                     />
                   ) : (
-                    "Accept Invitation"
+                    "Accept"
                   )}
                 </button>
                 <button
-                  disabled={declineInvitationLoading}
+                  disabled={declineRequestLoading}
                   onClick={() =>
-                    declineInvitation({
+                    declineRequest({
                       groupId: getMailContent.group_details._id as string,
                       userId: session?.user.userId as string,
                     })
                   }
                   className="bg-[#414141] w-[80px] py-2 rounded-sm text-white text-[0.9rem] disabled:bg-[#6486FF]/50"
                 >
-                  {declineInvitationLoading ? (
+                  {declineRequestLoading ? (
                     <Image
                       src={loadingIcon}
                       alt="loading-icon"
@@ -103,7 +105,7 @@ function InvitationText({
                       priority
                     />
                   ) : (
-                    "Decline Invitation"
+                    "Decline"
                   )}
                 </button>
               </div>
@@ -113,9 +115,7 @@ function InvitationText({
                   disabled
                   className="bg-[#414141] px-3 py-2 rounded-sm text-white text-[0.9rem]"
                 >
-                  {`${capitalizeFirstLetter(
-                    getMailContent?.status
-                  )} invitation`}
+                  {capitalizeFirstLetter(getMailContent?.status)}
                 </button>
                 <button className="bg-red-500 px-3 py-2 rounded-sm text-white text-[0.9rem]">
                   <GoTrash />
