@@ -1,6 +1,13 @@
 "use client";
 import axios, { AxiosError } from "axios";
-import React, { useEffect, useRef, useState, useLayoutEffect } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useLayoutEffect,
+  Dispatch,
+  SetStateAction,
+} from "react";
 import { useInfiniteQuery, useQueryClient } from "react-query";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
@@ -176,26 +183,6 @@ function GroupChatboard({ groupId }: { groupId: string }) {
       return <UserNotFound errorMessage={errorMessage.response.data.message} />;
     }
   }
-  function sendMessage() {
-    setAllMessages((prevMessages: Message<User, Reaction[]>[]) => {
-      return [
-        ...prevMessages,
-        {
-          message,
-          sender: userData(session) as User,
-          type: "text",
-          isMessageDeleted: false,
-          createdAt: new Date(),
-          reactions: [],
-          _id: nanoid(), //As temporary data
-        },
-      ];
-    });
-    groupSocket?.emit("stop-typing", groupId);
-    setTimeout(() => {
-      scrollRef.current?.scrollIntoView({ block: "end" }); //To bypass the closure nature of react :)
-    }, 0);
-  }
 
   return (
     <div
@@ -289,12 +276,18 @@ function GroupChatboard({ groupId }: { groupId: string }) {
         )}
       </div>
       <GroupMessageField
-        socket={groupSocket}
+        groupSocket={groupSocket}
         groupId={groupId}
         message={message}
         openEmoji={openEmoji}
-        sendMessage={sendMessage}
         senderId={session?.user.userId}
+        scrollRef={scrollRef.current}
+        session={session}
+        setAllMessages={
+          setAllMessages as Dispatch<
+            SetStateAction<Message<User, Reaction[] | string>[]>
+          >
+        }
         setMessage={setMessage}
         setOpenEmoji={setOpenEmoji}
         setOpenAttachmentModal={setOpenAttachmentModal}

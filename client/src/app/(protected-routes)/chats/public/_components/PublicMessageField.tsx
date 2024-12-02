@@ -1,26 +1,15 @@
-import React, { SetStateAction, Dispatch, useState, useEffect } from "react";
+import React, { useState, useEffect, FormEvent } from "react";
 import { LuSend, LuTimer } from "react-icons/lu";
 import { Socket } from "socket.io-client";
 import Picker from "emoji-picker-react";
 import { MdEmojiEmotions } from "react-icons/md";
-import { User } from "@/types/shared.types";
 import { optimisticUpdateMessage } from "@/utils/sharedUpdateFunction";
-import { Message, Reaction } from "@/types/shared.types";
-import { Session } from "next-auth";
-interface SocketSchema {
-  scrollRef: HTMLDivElement | null;
-}
-interface PublicMessageFieldSchema extends SocketSchema {
+import { MessageFieldPropsSchema } from "@/types/shared.types";
+
+type PublicMessageFieldSchema = MessageFieldPropsSchema & {
   publicSocket: Socket | null;
-  openEmoji: boolean;
-  message: string;
-  session: Session | undefined;
-  setAllMessages: Dispatch<
-    SetStateAction<Message<User, Reaction[] | string>[]>
-  >;
-  setOpenEmoji: Dispatch<SetStateAction<boolean>>;
-  setMessage: Dispatch<SetStateAction<string>>;
-}
+};
+
 function PublicMessageField({
   publicSocket,
   openEmoji,
@@ -41,25 +30,22 @@ function PublicMessageField({
 
     return () => clearInterval(timerInterval); //To avoid stacking the interval so lets clear the previous interval for every dependency changes
   }, [timer]);
+
+  const handleFormSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!publicSocket || !scrollRef) return;
+    publicSocket.emit("send-message", message);
+    optimisticUpdateMessage(message, setAllMessages, session, []);
+    setTimer(3);
+    setMessage("");
+    setTimeout(() => {
+      scrollRef.scrollIntoView({ block: "end" }); //To bypass the closure nature of react :)
+    }, 0);
+  };
+
   return (
     <form
-      onSubmit={(e) => {
-        if (!scrollRef) return;
-        if (!publicSocket) return;
-        publicSocket.emit("send-message", message);
-        optimisticUpdateMessage(
-          message,
-          setAllMessages,
-          session as Session,
-          []
-        );
-        e.preventDefault();
-        setTimer(3);
-        setMessage("");
-        setTimeout(() => {
-          scrollRef.scrollIntoView({ block: "end" }); //To bypass the closure nature of react :)
-        }, 0);
-      }}
+      onSubmit={handleFormSubmit}
       className="flex-grow flex space-x-2 items-center pt-3 justify-between"
     >
       <textarea

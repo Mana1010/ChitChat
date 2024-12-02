@@ -34,7 +34,7 @@ export function handlePrivateSocket(io: Server) {
     const { userId } = socket.handshake.auth;
     socket.on(
       "send-message",
-      async ({ message, messageType, conversationId, receiverId }) => {
+      async ({ message, messageType, conversationId, participantId }) => {
         try {
           if (conversationId) {
             const createMessage = await Private.create({
@@ -58,14 +58,14 @@ export function handlePrivateSocket(io: Server) {
               userId,
               message,
               messageType,
-              participantId: receiverId,
+              participantId: participantId,
             });
             socket.broadcast
-              .to(receiverId)
+              .to(participantId)
               .emit("display-unread-message", conversationId);
 
             socket.broadcast
-              .to(receiverId) //To emit only to the receiver to avoid unnecessary emitting from the other connection
+              .to(participantId) //To emit only to the receiver to avoid unnecessary emitting from the other connection
               .emit("display-updated-chatlist", {
                 newMessage: message,
                 conversationId,

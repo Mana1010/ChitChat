@@ -15,14 +15,12 @@ import { useSession } from "next-auth/react";
 import { PRIVATE_SERVER_URL } from "@/utils/serverUrl";
 import NewUser from "./NewUser";
 import UserNotFound from "./UserNotFound";
-import { Message, User } from "@/types/shared.types";
+import { Message, Reaction, User } from "@/types/shared.types";
 import { useSocketStore } from "@/utils/store/socket.store";
-import { nanoid } from "nanoid";
 import LoadingChat from "@/components/LoadingChat";
 import { useInView } from "react-intersection-observer";
 import ChatHeader from "./ChatHeader";
 import PrivateChatBubbles from "./PrivateChatBubbles";
-import { IoIosArrowRoundDown } from "react-icons/io";
 import { AnimatePresence, motion } from "framer-motion";
 import ProfileCard from "../../../_components/ProfileCard";
 import typingAnimation from "../../../../../../assets/images/gif-animation/typing-animation-ver-2.gif";
@@ -35,7 +33,7 @@ import {
 } from "@/utils/sharedUpdateFunction";
 import { handleSeenUpdate } from "@/utils/sharedUpdateFunction";
 import BackToBottomArrow from "../../../_components/BackToBottomArrow";
-import { userData } from "@/utils/userdata.function";
+import { Session } from "next-auth";
 function ParentDiv({
   children,
   setOpenEmoji,
@@ -185,27 +183,6 @@ function Chatboard({ conversationId }: { conversationId: string }) {
     }
   }
 
-  function sendMessage(messageContent: string) {
-    setAllMessages((prevMessages: Message<User>[]): Message<User>[] => {
-      return [
-        ...prevMessages,
-        {
-          message: messageContent,
-          type: "text",
-          reactions: "",
-          createdAt: new Date(),
-          sender: userData(session) as User,
-          _id: nanoid(), //As temporary data
-        },
-      ];
-    });
-
-    privateSocket?.emit("stop-typing", conversationId);
-    setTimeout(() => {
-      scrollRef.current?.scrollIntoView({ block: "end" }); //To bypass the closure nature of react :)
-    }, 0);
-  }
-
   return (
     <ParentDiv setOpenEmoji={setOpenEmoji}>
       <ChatHeader
@@ -230,7 +207,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                       conversationId,
                       receiverId: participantInfo?.receiver_details._id,
                     });
-                    sendMessage("👋");
+                    // sendMessage("👋");
                     updateConversationList(
                       queryClient,
                       "👋",
@@ -322,13 +299,19 @@ function Chatboard({ conversationId }: { conversationId: string }) {
         )}
       </div>
       <PrivateMessageField
-        socket={privateSocket}
+        privateSocket={privateSocket}
         conversationId={conversationId}
-        participant={participantInfo?.receiver_details._id}
+        participantId={participantInfo?.receiver_details._id}
         message={message}
         openEmoji={openEmoji}
         senderId={session?.user.userId}
-        sendMessage={sendMessage}
+        scrollRef={scrollRef.current}
+        session={session as Session}
+        setAllMessages={
+          setAllMessages as Dispatch<
+            SetStateAction<Message<User, Reaction[] | string>[]>
+          >
+        }
         setMessage={setMessage}
         setOpenEmoji={setOpenEmoji}
         setOpenAttachmentModal={setOpenAttachmentModal}

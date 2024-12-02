@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction } from "react";
+import React, { Dispatch, FormEvent, SetStateAction } from "react";
 import Picker from "emoji-picker-react";
 import { MdEmojiEmotions } from "react-icons/md";
 import { LuSend } from "react-icons/lu";
@@ -6,67 +6,66 @@ import { Socket } from "socket.io-client";
 import { updateConversationList } from "@/utils/sharedUpdateFunction";
 import { GrAttachment } from "react-icons/gr";
 import { useQueryClient } from "react-query";
-interface MessageFieldProps {
-  socket: Socket | null;
+import { MessageFieldPropsSchema } from "@/types/shared.types";
+import { optimisticUpdateMessage } from "@/utils/sharedUpdateFunction";
+
+interface GroupMessageFieldSchema extends MessageFieldPropsSchema {
+  groupSocket: Socket | null;
   groupId: string;
   senderId: string | undefined;
-  message: string;
-  openEmoji: boolean;
-  sendMessage: (messageContent: string) => void;
-  setMessage: Dispatch<SetStateAction<string>>;
-  setOpenEmoji: Dispatch<SetStateAction<boolean>>;
   setOpenAttachmentModal: Dispatch<SetStateAction<boolean>>;
 }
+
 function GroupMessageField({
-  socket,
+  groupSocket,
   groupId,
   senderId,
   message,
   openEmoji,
-  sendMessage,
+  scrollRef,
+  session,
+  setAllMessages,
   setMessage,
   setOpenEmoji,
   setOpenAttachmentModal,
-}: MessageFieldProps) {
+}: GroupMessageFieldSchema) {
   const queryClient = useQueryClient();
+
+  const handleFormSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!groupSocket || !scrollRef) return;
+    groupSocket.emit("send-message", {
+      message,
+      groupId,
+    });
+    optimisticUpdateMessage(message, setAllMessages, session, []);
+    groupSocket.emit("stop-typing", groupId);
+    setTimeout(() => {
+      scrollRef.scrollIntoView({ block: "end" }); //To bypass the closure nature of react :)
+    }, 0);
+    updateConversationList(
+      queryClient,
+      message,
+      groupId,
+      senderId,
+      "text",
+      "groupchat-list",
+      false
+    );
+    setMessage("");
+  };
 
   return (
     <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (!socket) return;
-        socket.emit(
-          "send-message",
-          {
-            message,
-            groupId,
-          },
-          (cb: { success: boolean }) => {
-            if (cb.success) {
-              alert("Your message successfully delivered!");
-            }
-          }
-        );
-        sendMessage(message);
-        updateConversationList(
-          queryClient,
-          message,
-          groupId,
-          senderId,
-          "text",
-          "groupchat-list",
-          false
-        );
-        setMessage("");
-      }}
+      onSubmit={handleFormSubmit}
       className="px-3 py-2.5 flex items-center space-x-2 bg-[#171717]"
     >
       <input
         onFocus={() => {
-          socket?.emit("read-message", { groupId });
-          socket?.emit("during-typing", { groupId });
+          groupSocket?.emit("read-message", { groupId });
+          groupSocket?.emit("during-typing", { groupId });
         }}
-        onBlur={() => socket?.emit("stop-typing", groupId)}
+        onBlur={() => groupSocket?.emit("stop-typing", groupId)}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         type="text"

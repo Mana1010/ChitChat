@@ -54,6 +54,7 @@ export function handlePublicSocket(io: Server) {
         sender: userId,
         isMessageDeleted: false,
       });
+
       const getUser = await Public.findById(getId._id) //Retrieving the Public messages
         .populate({
           path: "sender",
@@ -62,9 +63,6 @@ export function handlePublicSocket(io: Server) {
         .select(["-updatedAt", "-__v"])
         .lean();
       socket.broadcast.emit("get-message", getUser);
-      socket.on("send-status", (data) => {
-        socket.broadcast.emit("display-status", data);
-      });
     });
     socket.on(
       "send-reaction",

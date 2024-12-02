@@ -1,3 +1,7 @@
+import { Session } from "next-auth";
+import { Dispatch, SetStateAction } from "react";
+import { Socket } from "socket.io-client";
+
 export interface User {
   name: string;
   profilePic: string;
@@ -53,4 +57,19 @@ export interface BaseGroupChatSchema<
     photoUrl: string;
   };
   createdAt: string;
+}
+
+interface MessageFieldRefSchema {
+  scrollRef: HTMLDivElement | null;
+}
+
+export interface MessageFieldPropsSchema extends MessageFieldRefSchema {
+  openEmoji: boolean;
+  message: string;
+  session: Session | null;
+  setAllMessages: Dispatch<
+    SetStateAction<Message<User, Reaction[] | string>[]>
+  >;
+  setOpenEmoji: Dispatch<SetStateAction<boolean>>;
+  setMessage: Dispatch<SetStateAction<string>>;
 }

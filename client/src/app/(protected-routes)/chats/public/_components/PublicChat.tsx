@@ -27,7 +27,7 @@ import BackToBottomArrow from "../../_components/BackToBottomArrow";
 import { Session } from "next-auth";
 function PublicChat() {
   const [message, setMessage] = useState("");
-  const { publicSocket, setPublicSocket, statusSocket } = useSocketStore();
+  const { publicSocket, statusSocket } = useSocketStore();
   const { data: session } = useSession();
   const { ref, inView } = useInView();
   const [openEmoji, setOpenEmoji] = useState(false);

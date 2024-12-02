@@ -1,6 +1,6 @@
 "use client";
 import React, { ReactNode, useEffect } from "react";
-import { initializePrivateChatSocket } from "@/utils/socket";
+import { initializePublicChatSocket } from "@/utils/socket";
 import { useSocketStore } from "@/utils/store/socket.store";
 import { useSession } from "next-auth/react";
 function PublicProvider({ children }: { children: ReactNode }) {
@@ -8,7 +8,7 @@ function PublicProvider({ children }: { children: ReactNode }) {
   const { setPublicSocket, publicSocket } = useSocketStore();
   useEffect(() => {
     if (!publicSocket && status === "authenticated") {
-      const socket = initializePrivateChatSocket(session.user.userId);
+      const socket = initializePublicChatSocket(session.user.userId);
       setPublicSocket(socket);
       socket.on("connect", () =>
         console.log("Connected Public Chat Successfully")
