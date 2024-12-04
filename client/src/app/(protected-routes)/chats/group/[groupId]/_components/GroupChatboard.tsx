@@ -190,14 +190,14 @@ function GroupChatboard({ groupId }: { groupId: string }) {
         setOpenEmoji(false);
         // setOpenAttachmentModal(false);
       }}
-      className="flex flex-grow w-full h-full flex-col relative"
+      className="flex flex-grow w-full h-full flex-col relative bg-transparent"
     >
-      <GroupChatHeader
-        groupInfo={groupInfo as any}
-        isLoading={groupInfoLoading}
-        setOpenProfileModal={setOpenProfileModal}
-      />
-      <div className="flex-grow w-full p-3">
+      <div className="flex-grow w-full background-div flex flex-col">
+        <GroupChatHeader
+          groupInfo={groupInfo as any}
+          isLoading={groupInfoLoading}
+          setOpenProfileModal={setOpenProfileModal}
+        />
         {isLoading || !data ? (
           <LoadingChat />
         ) : (
@@ -218,7 +218,7 @@ function GroupChatboard({ groupId }: { groupId: string }) {
                 }
               }}
               ref={scrollDivRef}
-              className="w-full max-h-[430px] overflow-y-auto flex flex-col space-y-3 relative pr-2"
+              className="w-full max-h-[450px] overflow-y-auto flex flex-col space-y-3 relative px-3"
             >
               {hasNextPage && (
                 <div ref={ref} className="w-full z-50">

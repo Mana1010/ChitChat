@@ -124,15 +124,13 @@ function PrivateChatBubbles({
                         );
                         setHoveredMessage(messageDetails._id);
                       }}
-                      className={`w-5 h-5 rounded-full items-center justify-center ${
-                        messageDetails._id === hoveredMessage
-                          ? "flex"
-                          : "hidden"
-                      }`}
+                      className={`w-5 h-5 items-center justify-center flex`}
                     >
-                      <span className={`text-slate-300 font-bold text-lg`}>
-                        <VscReactions />
-                      </span>
+                      {messageDetails._id === hoveredMessage && (
+                        <span className={`text-slate-300 font-bold text-lg`}>
+                          <VscReactions />
+                        </span>
+                      )}
                     </button>
                   )}
 

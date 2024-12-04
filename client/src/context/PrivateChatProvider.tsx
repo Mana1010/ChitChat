@@ -38,7 +38,7 @@ function PrivateChatProvider({ children }: { children: ReactNode }) {
   ]);
 
   return (
-    <div className="space-x-3 grid grid-cols-3 h-full w-full pr-5 overflow-y-auto">
+    <div className="space-x-3 grid grid-cols-3 w-full pr-5 overflow-y-auto h-full">
       {children}
     </div>
   );

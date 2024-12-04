@@ -76,7 +76,7 @@ function MailList({ mailId }: { mailId: string }) {
 
   useEffect(() => {
     if (!mailSocket) return;
-    mailSocket.on("update-mail", ({ sentAt, isAlreadyRead }) => {
+    mailSocket.on("update-mail", ({ sentAt, isAlreadyRead, kind }) => {
       queryClient.setQueryData<MailListSchema[] | undefined>(
         ["all-mail-list", filteredBy],
         (prevData) => {
@@ -85,7 +85,7 @@ function MailList({ mailId }: { mailId: string }) {
               {
                 _id: nanoid(), //As temporary id
                 isAlreadyRead,
-                kind: "invitation",
+                kind,
                 sentAt,
               },
               ...prevData,

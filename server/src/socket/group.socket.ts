@@ -23,6 +23,7 @@ export async function handleGroupSocket(io: Server) {
       }) => {
         if (!requestedUsers || !groupId) return;
         const requestedMembers = [];
+        const userIds = requestedUsers.map((user) => user.id);
 
         for (let i = 0; i < requestedUsers.length; i++) {
           requestedMembers.push({
@@ -45,15 +46,14 @@ export async function handleGroupSocket(io: Server) {
               body: groupId,
               type: "invitation",
             });
-
-            requestedUsers.map((user) => {
-              MAIL_NAMESPACE(io).to(user.id).emit("update-mail", {
-                sentAt: new Date(),
-                isAlreadyRead: false,
-              });
-            });
           })
         );
+
+        MAIL_NAMESPACE(io).to(userIds).emit("update-mail", {
+          sentAt: new Date(),
+          isAlreadyRead: false,
+          kind: "invitation",
+        });
       }
     );
     socket.on("send-group-request", async ({ groupId }) => {
@@ -91,23 +91,23 @@ export async function handleGroupSocket(io: Server) {
         },
       ]);
       const getAllAdmin: string[] = getAdmins[0].get_all_admin;
+      const getAdminIds = getAllAdmin.map((adminId) => adminId.toString());
 
       await Promise.all(
         getAllAdmin.map(async (adminId) => {
           await Request.create({
             from: userId,
+            body: groupId,
             to: adminId,
             type: "request",
           });
         })
       );
 
-      getAllAdmin.map((admin) => {
-        const convertStr = admin.toString();
-        MAIL_NAMESPACE(io).to(convertStr).emit("update-mail", {
-          sentAt: new Date(),
-          isAlreadyRead: false,
-        });
+      MAIL_NAMESPACE(io).to(getAdminIds).emit("update-mail", {
+        sentAt: new Date(),
+        isAlreadyRead: false,
+        kind: "request",
       });
     });
     socket.on(

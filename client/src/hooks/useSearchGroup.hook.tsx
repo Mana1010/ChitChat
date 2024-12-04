@@ -2,10 +2,10 @@
 import { GROUP_SERVER_URL } from "@/utils/serverUrl";
 import axios, { AxiosError } from "axios";
 import { useQuery, UseQueryResult } from "react-query";
-import { GroupChat, User } from "@/types/UserTypes";
+import { GroupChatList } from "@/types/group.types";
 function useSearchGroup(searchGroup: string) {
   const searchItemQuery: UseQueryResult<
-    GroupChat[],
+    GroupChatList[],
     AxiosError<{ message: string }>
   > = useQuery({
     queryKey: ["search-group", searchGroup],

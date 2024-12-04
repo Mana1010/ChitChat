@@ -43,7 +43,7 @@ function ParentDiv({
 }) {
   return (
     <div
-      className="flex flex-grow w-full h-full flex-col relative background-div"
+      className="flex w-full h-full flex-col relative"
       onClick={() => {
         setOpenEmoji(false);
       }}
@@ -185,12 +185,12 @@ function Chatboard({ conversationId }: { conversationId: string }) {
 
   return (
     <ParentDiv setOpenEmoji={setOpenEmoji}>
-      <ChatHeader
-        participantInfo={participantInfo?.receiver_details}
-        isLoading={participantInfoLoading}
-        setOpenProfileModal={setOpenProfileModal}
-      />
-      <div className="flex-grow w-full px-3">
+      <div className="flex-grow flex flex-col w-full background-div">
+        <ChatHeader
+          participantInfo={participantInfo?.receiver_details}
+          isLoading={participantInfoLoading}
+          setOpenProfileModal={setOpenProfileModal}
+        />
         {isLoading || !data ? (
           <LoadingChat />
         ) : (
@@ -239,7 +239,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                   }
                 }}
                 ref={scrollDivRef}
-                className="w-full max-h-[430px] overflow-y-auto flex flex-col space-y-3 relative pr-2"
+                className="w-full max-h-[460px] overflow-y-auto flex flex-col space-y-3 relative px-3"
               >
                 {hasNextPage && (
                   <div ref={ref} className="w-full z-50">

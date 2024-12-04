@@ -5,11 +5,12 @@ import invitationImg from "../../../../../assets/images/svg/invitation-img.svg";
 import GroupChatInfo from "./GroupChatInfo";
 import { AnimatePresence } from "framer-motion";
 import { useSession } from "next-auth/react";
-import { useSocketStore } from "@/utils/store/socket.store";
 import { capitalizeFirstLetter } from "@/utils/capitalizeFirstLetter";
 import loadingIcon from "../../../../../assets/images/gif-animation/chat-loading.gif";
 import useInvitationResponse from "@/hooks/useInvitationResponse";
 import { GoTrash } from "react-icons/go";
+import { useMutation } from "react-query";
+import axios from "axios";
 function InvitationText({
   getMailContent,
   mailId,
@@ -25,6 +26,13 @@ function InvitationText({
     acceptInvitationLoading,
     declineInvitationLoading,
   } = useInvitationResponse(mailId);
+
+  const deleteMail = useMutation({
+    mutationFn: async () => {
+      const response = await axios.delete("");
+      return response.data.message;
+    },
+  });
   return (
     <div className="w-full flex flex-col relative text-white justify-center items-center">
       <div className="flex flex-col space-y-1 items-center">

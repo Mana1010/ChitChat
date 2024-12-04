@@ -32,9 +32,7 @@ function StatusProvider({ children }: { children: ReactNode }) {
   }, [data?.user.userId, setStatusSocket, status, statusSocket]);
 
   return (
-    <div
-      className={`flex bg-[#171717] h-screen relative w-full py-5 overflow-y-hidden`}
-    >
+    <div className={`flex bg-[#171717] h-screen relative w-full py-5`}>
       {children}
     </div>
   );

@@ -137,7 +137,6 @@ function ChatList({
     );
   }
 
-  console.log(displayAllChats.data);
   return (
     <ParentDiv>
       <div className="pt-2 flex flex-col w-full overflow-y-auto h-full items-center px-1.5">

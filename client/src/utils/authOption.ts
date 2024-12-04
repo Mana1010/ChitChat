@@ -1,6 +1,6 @@
 import { type NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import GithubProvider from "next-auth/providers/github";
+import { checkUser } from "./checkUser";
 import axios from "axios";
 import { serverUrl, AUTH_SERVER_URL } from "./serverUrl";
 const authOptions: NextAuthOptions = {
@@ -19,18 +19,6 @@ const authOptions: NextAuthOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
-    GithubProvider({
-      profile(profile) {
-        return {
-          id: profile.id,
-          name: profile.name,
-          email: profile.email,
-          image: profile.image,
-        };
-      },
-      clientId: process.env.GITHUB_CLIENT_ID!,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-    }),
   ],
   secret: process.env.NEXTAUTH_SECRET!,
   callbacks: {
@@ -38,25 +26,21 @@ const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      const checkUser = await axios.get(
-        `${AUTH_SERVER_URL}/check/user/${token?.sub}`
-      );
-      const data = checkUser.data.message;
-      if (data) {
-        session.user.name = data.name;
+      const { user_data, status } = await checkUser(token?.sub);
+
+      if (status === "exist") {
+        session.user.name = user_data.name;
         session.user.id = token?.sub || "";
-        session.user.image = data.profilePic;
-        session.user.provider = data.provider;
-        session.user.userId = data._id;
+        session.user.image = user_data.profilePic;
+        session.user.provider = user_data.provider;
+        session.user.userId = user_data._id;
       }
       return session;
     },
     async signIn({ profile, account }) {
       try {
-        const checkUser = await axios.get(
-          `${AUTH_SERVER_URL}/check/user/${profile?.sub}`
-        );
-        if (!checkUser.data.message) {
+        const { status } = await checkUser(profile?.sub);
+        if (status === "not-exist") {
           const payload = {
             email: profile?.email,
             name: profile?.name,

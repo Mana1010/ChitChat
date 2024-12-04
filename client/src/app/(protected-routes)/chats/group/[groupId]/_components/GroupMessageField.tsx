@@ -58,7 +58,7 @@ function GroupMessageField({
   return (
     <form
       onSubmit={handleFormSubmit}
-      className="px-3 py-2.5 flex items-center space-x-2 bg-[#171717]"
+      className=" py-2.5 flex items-center space-x-2 bg-[#171717]"
     >
       <input
         onFocus={() => {

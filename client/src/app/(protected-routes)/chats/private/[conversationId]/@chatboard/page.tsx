@@ -3,7 +3,7 @@ import Chatboard from "../_components/Chatboard";
 
 function Page({ params }: { params: { conversationId: string } }) {
   return (
-    <div className="bg-[rgb(34,34,34)] rounded-md col-span-2">
+    <div className="bg-[rgb(34,34,34)] rounded-md col-span-2 h-full">
       <Chatboard conversationId={params.conversationId} />
     </div>
   );
