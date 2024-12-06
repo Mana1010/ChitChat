@@ -2,7 +2,7 @@ import asyncHandler from "express-async-handler";
 import { Request, Response } from "express";
 import { User } from "../model/user.model";
 import { Message } from "../model/mail.model";
-import { groupLogger } from "../utils/loggers.utils";
+import { appLogger } from "../utils/loggers.utils";
 
 export const createUser = asyncHandler(async (req: Request, res: Response) => {
   const userId = await User.create(req.body);
@@ -11,7 +11,7 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const checkUser = asyncHandler(async (req, res) => {
-  groupLogger.log({
+  appLogger.log({
     message: "Refetching again in auth controller!",
     level: "info",
   });

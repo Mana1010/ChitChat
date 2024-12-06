@@ -2,7 +2,7 @@ import winston from "winston";
 
 const { errors, prettyPrint, combine, timestamp, colorize } = winston.format;
 
-export const groupLogger = winston.createLogger({
+export const appLogger = winston.createLogger({
   level: "info",
   format: combine(
     errors({ stack: true }),
@@ -12,6 +12,6 @@ export const groupLogger = winston.createLogger({
   ),
   transports: [
     new winston.transports.Console(),
-    new winston.transports.File({ filename: "group.log" }),
+    new winston.transports.File({ filename: "app.log" }),
   ],
 });

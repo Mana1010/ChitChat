@@ -17,7 +17,6 @@ function ParentDiv({ children }: { children: ReactNode }) {
 }
 function MailDetails({ mailId }: { mailId: string }) {
   const checkIfParamsValid = ["mail", "empty"].includes(mailId);
-  const { groupSocket } = useSocketStore();
   const { data: session, status } = useSession();
   const getMailContent: UseQueryResult<
     MailDetailsSchema,

@@ -1,5 +1,4 @@
-import mongoose, { Schema } from "mongoose";
-import { referenceModel } from "../utils/referenceModel";
+import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {

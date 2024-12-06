@@ -2,14 +2,14 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { MailDetailsSchema } from "@/types/app.types";
 import invitationImg from "../../../../../assets/images/svg/invitation-img.svg";
-import GroupChatInfo from "./GroupChatInfo";
+import GroupChatInfo from "./InvitationGroupChatInfo";
 import { AnimatePresence } from "framer-motion";
 import { useSession } from "next-auth/react";
-import { useSocketStore } from "@/utils/store/socket.store";
 import { capitalizeFirstLetter } from "@/utils/capitalizeFirstLetter";
 import loadingIcon from "../../../../../assets/images/gif-animation/chat-loading.gif";
-import { GoTrash } from "react-icons/go";
 import useRequestResponse from "@/hooks/useRequestResponse";
+import DeleteMailBtn from "./DeleteMailBtn";
+import requestingImg from "../../../../../assets/images/svg/requesting-img.svg";
 function InvitationText({
   getMailContent,
   mailId,
@@ -31,20 +31,25 @@ function InvitationText({
     <div className="w-full flex flex-col relative text-white justify-center items-center">
       <div className="flex flex-col space-y-1 items-center">
         <Image
-          src={invitationImg}
-          alt="invitation-image"
+          src={requestingImg}
+          alt="requesting-image"
           width={300}
           height={300}
           priority
         />
         <div className="w-1/2 space-y-2 flex flex-col relative">
           <div className="flex flex-col ">
-            <h3 className="text-[0.9rem] font-bold">Join Our Group Chat!</h3>
-            <span className="leading-6 text-[0.9rem] py-3">
-              Hey there! 👋 We&apos;d love to have you join our group chat.
-              It&apos;s a great place to connect, share ideas, and have some fun
-              together! See the info below:
-            </span>
+            <h3 className="text-[0.9rem] font-bold">
+              Someone wants to join in groupchat
+            </h3>
+            <div className="leading-6 text-[0.9rem] py-3 flex flex-col space-y-2">
+              <span> Hi! 👋 </span>
+              <span>
+                {" "}
+                I&apos;ve requested to join the group chat and am excited to
+                connect once accepted. Thanks for considering my request! 😊
+              </span>
+            </div>
             <button
               onMouseEnter={() => setShowInfoModal((prev) => !prev)}
               onMouseLeave={() => setShowInfoModal((prev) => !prev)}
@@ -72,7 +77,7 @@ function InvitationText({
                       userId: session?.user.userId as string,
                     })
                   }
-                  className="bg-[#6486FF] w-[80px] py-2 flex items-center justify-center rounded-sm text-white text-[0.9rem] disabled:bg-[#6486FF]/50"
+                  className="bg-[#6486FF] px-6 py-2 flex items-center justify-center rounded-sm text-white text-[0.9rem] disabled:bg-[#6486FF]/50"
                 >
                   {acceptRequestLoading ? (
                     <Image
@@ -83,7 +88,7 @@ function InvitationText({
                       priority
                     />
                   ) : (
-                    "Accept"
+                    "Accept Request"
                   )}
                 </button>
                 <button
@@ -94,7 +99,7 @@ function InvitationText({
                       userId: session?.user.userId as string,
                     })
                   }
-                  className="bg-[#414141] w-[80px] py-2 rounded-sm text-white text-[0.9rem] disabled:bg-[#6486FF]/50"
+                  className="bg-[#414141] px-6 py-2 rounded-sm text-white text-[0.9rem] disabled:bg-[#6486FF]/50"
                 >
                   {declineRequestLoading ? (
                     <Image
@@ -105,7 +110,7 @@ function InvitationText({
                       priority
                     />
                   ) : (
-                    "Decline"
+                    "Decline Request"
                   )}
                 </button>
               </div>
@@ -117,9 +122,7 @@ function InvitationText({
                 >
                   {capitalizeFirstLetter(getMailContent?.status)}
                 </button>
-                <button className="bg-red-500 px-3 py-2 rounded-sm text-white text-[0.9rem]">
-                  <GoTrash />
-                </button>
+                <DeleteMailBtn mailId={mailId} />
               </div>
             )}
           </div>

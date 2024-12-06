@@ -110,12 +110,27 @@ export const updateMailStatus = asyncHandler(
   }
 );
 
-export const deleteMail = asyncHandler(async (req: Request, res: Response) => {
-  const selectedMails: string[] = req.body;
-  await Mail.deleteMany({ _id: { $in: selectedMails } });
-  res.status(201).json({ message: "Deleted Successfully" });
-});
+export const deleteMultipleMail = asyncHandler(
+  async (req: Request, res: Response) => {
+    const selectedMails: string[] = req.body;
+    await Mail.deleteMany({ _id: { $in: selectedMails } });
+    res.status(201).json({ message: "Deleted Successfully" });
+  }
+);
 
+export const deleteSingleMail = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { mailId } = req.params;
+    try {
+      await Mail.deleteOne({ _id: mailId });
+      res.status(201).json({ message: "Email deleted successfully." });
+    } catch (err) {
+      res
+        .status(400)
+        .json({ message: "Something went wrong, please try again" });
+    }
+  }
+);
 export const getMailDetails = asyncHandler(
   async (req: Request, res: Response) => {
     const { userId, mailId } = req.params;

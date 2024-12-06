@@ -2,15 +2,14 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { MailDetailsSchema } from "@/types/app.types";
 import invitationImg from "../../../../../assets/images/svg/invitation-img.svg";
-import GroupChatInfo from "./GroupChatInfo";
+import GroupChatInfo from "./InvitationGroupChatInfo";
 import { AnimatePresence } from "framer-motion";
 import { useSession } from "next-auth/react";
 import { capitalizeFirstLetter } from "@/utils/capitalizeFirstLetter";
 import loadingIcon from "../../../../../assets/images/gif-animation/chat-loading.gif";
 import useInvitationResponse from "@/hooks/useInvitationResponse";
-import { GoTrash } from "react-icons/go";
-import { useMutation } from "react-query";
-import axios from "axios";
+import useDeleteMail from "@/hooks/useDeleteMail.hook";
+import DeleteMailBtn from "./DeleteMailBtn";
 function InvitationText({
   getMailContent,
   mailId,
@@ -26,13 +25,7 @@ function InvitationText({
     acceptInvitationLoading,
     declineInvitationLoading,
   } = useInvitationResponse(mailId);
-
-  const deleteMail = useMutation({
-    mutationFn: async () => {
-      const response = await axios.delete("");
-      return response.data.message;
-    },
-  });
+  const { deleteMail, deleteMailLoading } = useDeleteMail(mailId);
   return (
     <div className="w-full flex flex-col relative text-white justify-center items-center">
       <div className="flex flex-col space-y-1 items-center">
@@ -78,7 +71,7 @@ function InvitationText({
                       userId: session?.user.userId as string,
                     })
                   }
-                  className="bg-[#6486FF] w-[80px] py-2 flex items-center justify-center rounded-sm text-white text-[0.9rem] disabled:bg-[#6486FF]/50"
+                  className="bg-[#6486FF] px-6 py-2 flex items-center justify-center rounded-sm text-white text-[0.9rem] disabled:bg-[#6486FF]/50"
                 >
                   {acceptInvitationLoading ? (
                     <Image
@@ -100,7 +93,7 @@ function InvitationText({
                       userId: session?.user.userId as string,
                     })
                   }
-                  className="bg-[#414141] w-[80px] py-2 rounded-sm text-white text-[0.9rem] disabled:bg-[#6486FF]/50"
+                  className="bg-[#414141] px-6 py-2 rounded-sm text-white text-[0.9rem] disabled:bg-[#6486FF]/50"
                 >
                   {declineInvitationLoading ? (
                     <Image
@@ -121,13 +114,9 @@ function InvitationText({
                   disabled
                   className="bg-[#414141] px-3 py-2 rounded-sm text-white text-[0.9rem]"
                 >
-                  {`${capitalizeFirstLetter(
-                    getMailContent?.status
-                  )} invitation`}
+                  {`${capitalizeFirstLetter(getMailContent?.status)}`}
                 </button>
-                <button className="bg-red-500 px-3 py-2 rounded-sm text-white text-[0.9rem]">
-                  <GoTrash />
-                </button>
+                <DeleteMailBtn mailId={mailId} />
               </div>
             )}
           </div>

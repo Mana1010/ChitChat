@@ -4,7 +4,7 @@ import { User } from "../model/user.model";
 import { Private } from "../model/private.model";
 import { PrivateConversation } from "../model/privateConversation.model";
 import mongoose from "mongoose";
-import { groupLogger } from "../utils/loggers.utils";
+import { appLogger } from "../utils/loggers.utils";
 
 export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
   const { limit, page } = req.query;
@@ -79,7 +79,7 @@ export const getAllUsersConversation = asyncHandler(
       ]);
       res.status(200).json({ message: getAllConversation });
     } catch (err) {
-      groupLogger.error(err);
+      appLogger.error(err);
     }
   }
 );

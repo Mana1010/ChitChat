@@ -3,7 +3,7 @@ import { Invitation, Mail, Request } from "../model/mail.model";
 import { GroupConversation } from "../model/groupConversation.model";
 import { Group } from "../model/group.model";
 import { GROUP_NAMESPACE, MAIL_NAMESPACE } from "../utils/namespaces.utils";
-import { groupLogger } from "../utils/loggers.utils";
+import { appLogger } from "../utils/loggers.utils";
 import mongoose from "mongoose";
 
 type RequestedUsers = { id: string; name: string };
@@ -23,7 +23,6 @@ export async function handleGroupSocket(io: Server) {
       }) => {
         if (!requestedUsers || !groupId) return;
         const requestedMembers = [];
-        const userIds = requestedUsers.map((user) => user.id);
 
         for (let i = 0; i < requestedUsers.length; i++) {
           requestedMembers.push({
@@ -49,10 +48,12 @@ export async function handleGroupSocket(io: Server) {
           })
         );
 
-        MAIL_NAMESPACE(io).to(userIds).emit("update-mail", {
-          sentAt: new Date(),
-          isAlreadyRead: false,
-          kind: "invitation",
+        requestedUsers.forEach(({ id }) => {
+          MAIL_NAMESPACE(io).to(id).emit("update-mail", {
+            sentAt: new Date(),
+            isAlreadyRead: false,
+            kind: "invitation",
+          });
         });
       }
     );
@@ -91,8 +92,6 @@ export async function handleGroupSocket(io: Server) {
         },
       ]);
       const getAllAdmin: string[] = getAdmins[0].get_all_admin;
-      const getAdminIds = getAllAdmin.map((adminId) => adminId.toString());
-
       await Promise.all(
         getAllAdmin.map(async (adminId) => {
           await Request.create({
@@ -103,11 +102,12 @@ export async function handleGroupSocket(io: Server) {
           });
         })
       );
-
-      MAIL_NAMESPACE(io).to(getAdminIds).emit("update-mail", {
-        sentAt: new Date(),
-        isAlreadyRead: false,
-        kind: "request",
+      getAllAdmin.map((adminId) => {
+        MAIL_NAMESPACE(io).to(adminId.toString()).emit("update-mail", {
+          sentAt: new Date(),
+          isAlreadyRead: false,
+          kind: "request",
+        });
       });
     });
     socket.on(
@@ -201,7 +201,7 @@ export async function handleGroupSocket(io: Server) {
             senderId: userId,
           });
         } catch (err) {
-          groupLogger.error(err);
+          appLogger.error(err);
         }
       }
     );

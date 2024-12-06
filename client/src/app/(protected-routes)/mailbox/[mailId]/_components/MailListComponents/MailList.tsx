@@ -61,7 +61,7 @@ function MailList({ mailId }: { mailId: string }) {
   });
   const deleteMail = useMutation({
     mutationFn: async () => {
-      const response = await axios.delete(`${APP_SERVER_URL}/delete/mail`, {
+      const response = await axios.delete(`${APP_SERVER_URL}/delete/multiple/mail`, {
         data: selectedMail,
       });
       return response.data.message;
