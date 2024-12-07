@@ -4,7 +4,6 @@ import { referenceModel } from "../utils/referenceModel";
 const groupSchema = new mongoose.Schema({
   creator: referenceModel("User"),
   groupName: { type: String, required: true },
-
   groupPhoto: {
     publicId: { type: String, required: true },
     photoUrl: { type: String, required: true },

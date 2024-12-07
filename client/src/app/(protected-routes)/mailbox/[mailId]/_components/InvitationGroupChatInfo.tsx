@@ -5,10 +5,10 @@ import Image from "next/image";
 import { MdGroups } from "react-icons/md";
 import { MdKeyboardDoubleArrowRight } from "react-icons/md";
 interface GroupChatInfoProps {
-  getGroupInfo: MailDetailsSchema["group_details"] | undefined;
-  invitedBy: MailDetailsSchema["inviter_details"] | undefined;
+  getGroupDetails: MailDetailsSchema["group_details"] | undefined;
+  inviterInfo: MailDetailsSchema["sender_details"] | undefined;
 }
-function GroupChatInfo({ getGroupInfo, invitedBy }: GroupChatInfoProps) {
+function GroupChatInfo({ getGroupDetails, inviterInfo }: GroupChatInfoProps) {
   return (
     <motion.div
       initial={{ opacity: 0.3, scale: 0.6 }}
@@ -21,8 +21,8 @@ function GroupChatInfo({ getGroupInfo, invitedBy }: GroupChatInfoProps) {
         <div className="flex items-center space-x-3">
           <div className="w-14 h-14 relative rounded-full border border-[#6486FF] flex items-center justify-center">
             <Image
-              src={getGroupInfo?.groupPhoto.photoUrl as string}
-              alt={`${getGroupInfo?.groupName}'s groupchat profile`}
+              src={getGroupDetails?.groupPhoto.photoUrl as string}
+              alt={`${getGroupDetails?.groupName}'s groupchat profile`}
               priority
               width={50}
               height={50}
@@ -30,13 +30,15 @@ function GroupChatInfo({ getGroupInfo, invitedBy }: GroupChatInfoProps) {
             />
           </div>
           <div>
-            <h1 className="text-white font-bold">{getGroupInfo?.groupName}</h1>
+            <h1 className="text-white font-bold">
+              {getGroupDetails?.groupName}
+            </h1>
             <div className="flex space-x-1 items-center">
               <span className="text-[#6486FF] text-md">
                 <MdGroups />
               </span>
               <span className="text-[0.8rem]">
-                {getGroupInfo?.total_members}
+                {getGroupDetails?.total_members}
               </span>
             </div>
           </div>
@@ -47,7 +49,7 @@ function GroupChatInfo({ getGroupInfo, invitedBy }: GroupChatInfoProps) {
       </div>
       <div className="flex space-x-1 items-center self-end justify-end pb-2">
         <Image
-          src={invitedBy?.profilePic as string}
+          src={inviterInfo?.profilePic as string}
           width={15}
           height={15}
           priority
@@ -55,7 +57,7 @@ function GroupChatInfo({ getGroupInfo, invitedBy }: GroupChatInfoProps) {
           className="rounded-full"
         />
         <span className="text-[0.65rem]">
-          {invitedBy?.name} is inviting you
+          {inviterInfo?.name} is inviting you
         </span>
       </div>
     </motion.div>

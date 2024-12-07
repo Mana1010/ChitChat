@@ -6,31 +6,29 @@ import InvitationText from "./InvitationText";
 import { useSession } from "next-auth/react";
 import { APP_SERVER_URL } from "@/utils/serverUrl";
 import { UseQueryResult, useQuery } from "react-query";
-import axios, { AxiosError } from "axios";
+import axios, { Axios, AxiosError } from "axios";
 import { MailDetailsSchema } from "@/types/app.types";
 import MessageText from "./MessageText";
 import LoadingChat from "@/components/LoadingChat";
-import { useSocketStore } from "@/utils/store/socket.store";
 import RequestText from "./RequestText";
 function ParentDiv({ children }: { children: ReactNode }) {
   return <div className="flex w-full h-full mail-div">{children}</div>;
 }
 function MailDetails({ mailId }: { mailId: string }) {
   const checkIfParamsValid = ["mail", "empty"].includes(mailId);
-  const { data: session, status } = useSession();
-  const getMailContent: UseQueryResult<
-    MailDetailsSchema,
+  const { status } = useSession();
+  const getMailType: UseQueryResult<
+    string,
     AxiosError<{ message: string }>
   > = useQuery({
-    queryKey: ["mail-details", mailId],
+    queryKey: ["mail-type", mailId],
     queryFn: async () => {
-      const response = await axios.get(
-        `${APP_SERVER_URL}/mail/details/${session?.user.userId}/${mailId}`
-      );
-      return response.data.message;
+      const response = await axios.get(`${APP_SERVER_URL}/mail/type/${mailId}`);
+      return response.data;
     },
     enabled: status === "authenticated" || !checkIfParamsValid,
   });
+  console.log(getMailType);
 
   if (checkIfParamsValid) {
     return (
@@ -46,33 +44,16 @@ function MailDetails({ mailId }: { mailId: string }) {
       </ParentDiv>
     );
   }
-  if (getMailContent.isLoading) {
-    return (
-      <ParentDiv>
-        <LoadingChat />
-      </ParentDiv>
-    );
-  }
   return (
     <ParentDiv>
       {(() => {
-        switch (getMailContent.data?.kind) {
+        switch (getMailType.data) {
           case "invitation":
-            return (
-              <InvitationText
-                getMailContent={getMailContent.data}
-                mailId={mailId}
-              />
-            );
+            return <InvitationText mailId={mailId} />;
           case "message":
             return <MessageText />;
           case "request":
-            return (
-              <RequestText
-                getMailContent={getMailContent.data}
-                mailId={mailId}
-              />
-            );
+            return <RequestText mailId={mailId} />;
           default:
             return <h1>No Mail created</h1>;
         }

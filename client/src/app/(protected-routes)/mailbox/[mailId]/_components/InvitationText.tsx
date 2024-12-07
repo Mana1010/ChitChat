@@ -8,24 +8,44 @@ import { useSession } from "next-auth/react";
 import { capitalizeFirstLetter } from "@/utils/capitalizeFirstLetter";
 import loadingIcon from "../../../../../assets/images/gif-animation/chat-loading.gif";
 import useInvitationResponse from "@/hooks/useInvitationResponse";
-import useDeleteMail from "@/hooks/useDeleteMail.hook";
 import DeleteMailBtn from "./DeleteMailBtn";
-function InvitationText({
-  getMailContent,
-  mailId,
-}: {
-  getMailContent: MailDetailsSchema | undefined;
-  mailId: string;
-}) {
+import axios, { AxiosError } from "axios";
+import { useQuery, UseQueryResult } from "react-query";
+import { APP_SERVER_URL } from "@/utils/serverUrl";
+import LoadingChat from "@/components/LoadingChat";
+function InvitationText({ mailId }: { mailId: string }) {
   const [showInfoModal, setShowInfoModal] = useState(false);
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const {
     acceptInvitation,
     declineInvitation,
     acceptInvitationLoading,
     declineInvitationLoading,
   } = useInvitationResponse(mailId);
-  const { deleteMail, deleteMailLoading } = useDeleteMail(mailId);
+
+  const getMailContent: UseQueryResult<
+    MailDetailsSchema,
+    AxiosError<{ message: string }>
+  > = useQuery({
+    queryKey: ["mail-details", mailId],
+    queryFn: async () => {
+      const response = await axios.get(
+        `${APP_SERVER_URL}/mail/details/${session?.user.userId}/${mailId}`
+      );
+      return response.data.message;
+    },
+    enabled: status === "authenticated",
+  });
+  if (getMailContent.isLoading) {
+    return (
+      <div className="w-full flex flex-col relative text-white justify-center items-center">
+        <LoadingChat />
+      </div>
+    );
+  }
+  const getGroupDetails = getMailContent.data?.group_details;
+  const inviterInfo = getMailContent.data?.sender_details;
+
   return (
     <div className="w-full flex flex-col relative text-white justify-center items-center">
       <div className="flex flex-col space-y-1 items-center">
@@ -55,19 +75,19 @@ function InvitationText({
           <AnimatePresence mode="wait">
             {showInfoModal && (
               <GroupChatInfo
-                getGroupInfo={getMailContent?.group_details}
-                invitedBy={getMailContent?.inviter_details}
+                getGroupDetails={getGroupDetails}
+                inviterInfo={inviterInfo}
               />
             )}
           </AnimatePresence>
           <div className="self-center md:self-end">
-            {getMailContent?.status === "pending" ? (
+            {getMailContent.data?.status === "pending" ? (
               <div className="flex space-x-2">
                 <button
                   disabled={acceptInvitationLoading}
                   onClick={() =>
                     acceptInvitation({
-                      groupId: getMailContent.group_details._id as string,
+                      groupId: getGroupDetails?._id as string,
                       userId: session?.user.userId as string,
                     })
                   }
@@ -89,7 +109,7 @@ function InvitationText({
                   disabled={declineInvitationLoading}
                   onClick={() =>
                     declineInvitation({
-                      groupId: getMailContent.group_details._id as string,
+                      groupId: getGroupDetails?._id as string,
                       userId: session?.user.userId as string,
                     })
                   }
@@ -114,7 +134,7 @@ function InvitationText({
                   disabled
                   className="bg-[#414141] px-3 py-2 rounded-sm text-white text-[0.9rem]"
                 >
-                  {`${capitalizeFirstLetter(getMailContent?.status)}`}
+                  {`${capitalizeFirstLetter(getMailContent.data?.status)}`}
                 </button>
                 <DeleteMailBtn mailId={mailId} />
               </div>

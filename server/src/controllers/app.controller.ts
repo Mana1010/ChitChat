@@ -5,6 +5,7 @@ import { GroupConversation } from "../model/groupConversation.model";
 import mongoose from "mongoose";
 import { User } from "../model/user.model";
 import { Invitation, Mail } from "../model/mail.model";
+import { appLogger } from "../utils/loggers.utils";
 
 interface UserChatStatusObjSchema {
   privateConversationStatus: string | null;
@@ -157,13 +158,13 @@ export const getMailDetails = asyncHandler(
           from: "users",
           localField: "from",
           foreignField: "_id",
-          as: "inviter_details",
+          as: "sender_details",
         },
       },
       {
         $addFields: {
           group_details: { $first: "$group_details" },
-          inviter_details: { $first: "$inviter_details" },
+          sender_details: { $first: "$sender_details" },
         },
       },
       {
@@ -190,7 +191,7 @@ export const getMailDetails = asyncHandler(
               },
             },
           },
-          inviter_details: {
+          sender_details: {
             name: 1,
             profilePic: 1,
           },
@@ -201,6 +202,17 @@ export const getMailDetails = asyncHandler(
       res.status(404);
       throw new Error("Mail does not exist");
     }
+    appLogger.info({ message: getMailContent });
     res.status(200).json({ message: getMailContent[0] });
   }
 );
+export const getMailType = asyncHandler(async (req: Request, res: Response) => {
+  const { mailId } = req.params;
+  const getMail = await Mail.findById(mailId).select("kind");
+  if (!getMail) {
+    res.status(404);
+    throw new Error("Mail not found!");
+  }
+
+  res.status(200).send(getMail.kind);
+});
