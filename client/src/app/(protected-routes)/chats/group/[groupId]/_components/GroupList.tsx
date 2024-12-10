@@ -53,7 +53,7 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
 
   const { searchGroup: debouncedSearchGroup, isLoading: loadingSearchGroup } =
     useSearchGroup(debouncedValue);
-  const { data, fetchNextPage, error, isLoading, isError } = useInfiniteQuery({
+  const { data, fetchNextPage, isLoading } = useInfiniteQuery({
     queryKey: ["explore-group-list"],
     queryFn: async ({ pageParam = 0 }) => {
       const response = await axios.get(

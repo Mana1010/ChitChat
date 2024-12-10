@@ -194,6 +194,7 @@ export const getMailDetails = asyncHandler(
           sender_details: {
             name: 1,
             profilePic: 1,
+            _id: 1,
           },
         },
       },

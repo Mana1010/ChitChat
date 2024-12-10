@@ -90,9 +90,6 @@ export const getAllGroups = asyncHandler(
         $limit: 10,
       },
       {
-        //ini nga pipeline, gumamit sang $size kag ging wrap ini ang filter, kag sa filter ipabilin lang ang
-        //group nga may ara invitation simo kay since mga 1 malang every member sa database, so possibility 1 or 0 lang ang result
-        //1 = exist, 0 = not yet exist
         $addFields: {
           user_group_status: {
             $arrayElemAt: [
@@ -132,8 +129,6 @@ export const getAllGroups = asyncHandler(
         },
       },
       {
-        //Lastly, we design our response data and in  this_group_inviting_you we are using $cond to make a conditional operator in size
-        //1 = exist, 0 = not yet exist
         $project: {
           groupName: 1,
           groupPhoto: 1,

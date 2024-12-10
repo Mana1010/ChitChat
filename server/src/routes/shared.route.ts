@@ -9,5 +9,5 @@ export const router = express.Router();
 
 router.patch("/accept/invitation/:groupId/:userId", acceptInvitation);
 router.patch("/decline/invitation/:groupId/:userId", declineInvitation);
-router.patch("/accept/request/:groupId/:userId", acceptRequest);
-router.patch("/decline/request/:groupId/:userId", declineRequest);
+router.patch("/accept/request/:requesterId/:groupId/:userId", acceptRequest);
+router.patch("/decline/request/:requesterId/:groupId/:userId", declineRequest);

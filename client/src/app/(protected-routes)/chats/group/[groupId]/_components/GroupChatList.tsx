@@ -13,6 +13,7 @@ import NoItemFound from "@/components/NoItemFound";
 import EmptyConversation from "@/components/EmptyConversation";
 import { GroupChatConversationList } from "@/types/group.types";
 import { updateConversationList } from "@/utils/sharedUpdateFunction";
+import { any } from "zod";
 function GroupChatList({
   searchChat,
   groupId,
@@ -38,9 +39,9 @@ function GroupChatList({
     enabled: status === "authenticated",
   });
   const queryClient = useQueryClient();
+
   useEffect(() => {
     if (!groupSocket) return;
-
     groupSocket.on(
       "update-chatlist",
       ({ groupId, lastMessage, lastMessageCreatedAt, type, senderId }) => {
@@ -55,6 +56,25 @@ function GroupChatList({
         );
       }
     );
+    groupSocket.on(
+      "user-joined-group",
+      ({
+        groupChatDetails,
+      }: {
+        groupChatDetails: GroupChatConversationList;
+      }) => {
+        queryClient.setQueryData<GroupChatConversationList[]>(
+          ["groupchat-list"],
+          (cachedData: GroupChatConversationList[] | undefined) => {
+            const data = cachedData || [];
+            return [groupChatDetails, ...data];
+          }
+        );
+      }
+    );
+    return () => {
+      groupSocket.off("update-chatlist");
+    };
   }, [groupSocket, queryClient]);
   if (displayAllGroupChat.isLoading) {
     return <ConversationListSkeleton />;

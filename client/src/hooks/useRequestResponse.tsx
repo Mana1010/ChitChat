@@ -4,19 +4,23 @@ import { SHARED_SERVER_URL } from "@/utils/serverUrl";
 import { useQueryClient } from "react-query";
 import { updateMailDetails } from "@/utils/sharedUpdateFunction";
 import { toast } from "sonner";
+import { useSocketStore } from "@/utils/store/socket.store";
 function useRequestResponse(mailId: string) {
   const queryClient = useQueryClient();
+  const { mailSocket } = useSocketStore();
   const { mutate: acceptRequest, isLoading: acceptRequestLoading } =
     useMutation({
       mutationFn: async ({
         groupId,
         userId,
+        requesterId,
       }: {
         groupId: string;
         userId: string;
+        requesterId: string;
       }) => {
         const response = await axios.patch(
-          `${SHARED_SERVER_URL}/accept/request/${groupId}/${userId}`
+          `${SHARED_SERVER_URL}/accept/request/${requesterId}/${groupId}/${userId}`
         );
         return response.data.message;
       },
@@ -31,17 +35,20 @@ function useRequestResponse(mailId: string) {
       mutationFn: async ({
         groupId,
         userId,
+        requesterId,
       }: {
         groupId: string;
         userId: string;
+        requesterId: string;
       }) => {
         const response = await axios.patch(
-          `${SHARED_SERVER_URL}/decline/request/${groupId}/${userId}`
+          `${SHARED_SERVER_URL}/decline/request/${requesterId}/${groupId}/${userId}`
         );
-        return response.data.message;
+        return response.data;
       },
-      onSuccess: (data) => {
-        toast.success(data);
+      onSuccess: ({ message, requesterId, groupId }) => {
+        toast.success(message);
+        mailSocket?.emit("request-accepted", { requesterId, groupId });
         updateMailDetails(queryClient, mailId, "declined");
       },
     });

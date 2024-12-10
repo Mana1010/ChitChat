@@ -3,8 +3,25 @@ import asyncHandler from "express-async-handler";
 import { Request, Response } from "express";
 import { Mail } from "../model/mail.model";
 import mongoose from "mongoose";
+import { string } from "zod";
 
-const handleAccept = async (groupId: string, userId: string) => {
+const handleMailUpdate = async (
+  groupId: string,
+  userId: string,
+  status: "accepted" | "declined"
+) => {
+  await Mail.updateOne(
+    {
+      body: new mongoose.Types.ObjectId(groupId),
+      to: new mongoose.Types.ObjectId(userId),
+      status: "pending",
+    },
+    {
+      $set: { status },
+    }
+  );
+};
+const handleAcceptInvitation = async (groupId: string, userId: string) => {
   await GroupConversation.updateOne(
     {
       _id: new mongoose.Types.ObjectId(groupId),
@@ -14,42 +31,52 @@ const handleAccept = async (groupId: string, userId: string) => {
       $set: { "members.$.status": "active" },
     }
   );
-  await Mail.updateOne(
-    {
-      body: new mongoose.Types.ObjectId(groupId),
-      to: new mongoose.Types.ObjectId(userId),
-      status: "pending",
-    },
-    {
-      $set: { status: "accepted" },
-    }
-  );
+  await handleMailUpdate(groupId, userId, "accepted");
 };
 
-const handleDecline = async (groupId: string, userId: string) => {
+const handleDeclineInvitation = async (groupId: string, userId: string) => {
   await GroupConversation.findByIdAndUpdate(groupId, {
     $pull: {
       members: { memberInfo: userId },
     },
   });
+};
 
-  await Mail.updateOne(
+const handleAcceptRequest = async (
+  groupId: string,
+  userId: string,
+  requesterId: string
+) => {
+  await GroupConversation.updateOne(
     {
-      body: new mongoose.Types.ObjectId(groupId),
-      to: new mongoose.Types.ObjectId(userId),
-      status: "pending",
+      _id: new mongoose.Types.ObjectId(groupId),
+      "members.memberInfo": new mongoose.Types.ObjectId(requesterId),
     },
     {
-      $set: { status: "declined" },
+      $set: { "members.$.status": "active" },
     }
   );
+  await handleMailUpdate(groupId, userId, "accepted");
+};
+
+const handleDeclineRequest = async (
+  groupId: string,
+  userId: string,
+  requesterId: string
+) => {
+  await GroupConversation.findByIdAndUpdate(groupId, {
+    $pull: {
+      members: { memberInfo: requesterId },
+    },
+  });
+  await handleMailUpdate(groupId, userId, "declined");
 };
 
 export const acceptInvitation = asyncHandler(
   async (req: Request, res: Response) => {
     const { groupId, userId } = req.params;
     try {
-      await handleAccept(groupId, userId);
+      await handleAcceptInvitation(groupId, userId);
       res.status(201).json({
         message: "Invitation accepted successfully",
         groupId,
@@ -66,7 +93,7 @@ export const declineInvitation = asyncHandler(
   async (req: Request, res: Response) => {
     const { groupId, userId } = req.params;
     try {
-      await handleDecline(groupId, userId);
+      await handleDeclineInvitation(groupId, userId);
       res.status(201).json({
         message: "Invitation declined successfully",
         groupId,
@@ -81,12 +108,13 @@ export const declineInvitation = asyncHandler(
 
 export const acceptRequest = asyncHandler(
   async (req: Request, res: Response) => {
-    const { groupId, userId } = req.params;
+    const { groupId, userId, requesterId } = req.params;
     try {
-      await handleAccept(groupId, userId);
+      await handleAcceptRequest(groupId, userId, requesterId);
       res.status(201).json({
         message: "Request accepted successfully",
         groupId,
+        requesterId,
       });
     } catch (err) {
       res.status(400).json({
@@ -98,9 +126,9 @@ export const acceptRequest = asyncHandler(
 
 export const declineRequest = asyncHandler(
   async (req: Request, res: Response) => {
-    const { groupId, userId } = req.params;
+    const { groupId, userId, requesterId } = req.params;
     try {
-      await handleDecline(groupId, userId);
+      await handleDeclineRequest(groupId, userId, requesterId);
       res.status(201).json({
         message: "Request declined successfully",
         groupId,

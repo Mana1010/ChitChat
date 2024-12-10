@@ -6,11 +6,10 @@ import InvitationText from "./InvitationText";
 import { useSession } from "next-auth/react";
 import { APP_SERVER_URL } from "@/utils/serverUrl";
 import { UseQueryResult, useQuery } from "react-query";
-import axios, { Axios, AxiosError } from "axios";
-import { MailDetailsSchema } from "@/types/app.types";
+import axios, { AxiosError } from "axios";
 import MessageText from "./MessageText";
-import LoadingChat from "@/components/LoadingChat";
 import RequestText from "./RequestText";
+import LoadingChat from "@/components/LoadingChat";
 function ParentDiv({ children }: { children: ReactNode }) {
   return <div className="flex w-full h-full mail-div">{children}</div>;
 }
@@ -28,7 +27,6 @@ function MailDetails({ mailId }: { mailId: string }) {
     },
     enabled: status === "authenticated" || !checkIfParamsValid,
   });
-  console.log(getMailType);
 
   if (checkIfParamsValid) {
     return (
@@ -43,6 +41,10 @@ function MailDetails({ mailId }: { mailId: string }) {
         />
       </ParentDiv>
     );
+  }
+
+  if (getMailType.isLoading) {
+    return <LoadingChat />;
   }
   return (
     <ParentDiv>

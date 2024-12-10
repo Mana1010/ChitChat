@@ -46,7 +46,6 @@ function InvitationText({ mailId }: { mailId: string }) {
     );
   }
   const getGroupDetails = getMailContent.data?.group_details;
-  console.log(getMailContent);
   const requester = getMailContent.data?.sender_details;
   return (
     <div className="w-full flex flex-col relative text-white justify-center items-center">
@@ -96,6 +95,8 @@ function InvitationText({ mailId }: { mailId: string }) {
                     acceptRequest({
                       groupId: getGroupDetails?._id as string,
                       userId: session?.user.userId as string,
+                      requesterId: getMailContent.data?.sender_details
+                        ._id as string,
                     })
                   }
                   className="bg-[#6486FF] px-6 py-2 flex items-center justify-center rounded-sm text-white text-[0.9rem] disabled:bg-[#6486FF]/50"
@@ -118,6 +119,8 @@ function InvitationText({ mailId }: { mailId: string }) {
                     declineRequest({
                       groupId: getGroupDetails?._id as string,
                       userId: session?.user.userId as string,
+                      requesterId: getMailContent.data?.sender_details
+                        ._id as string,
                     })
                   }
                   className="bg-[#414141] px-6 py-2 rounded-sm text-white text-[0.9rem] disabled:bg-[#6486FF]/50"

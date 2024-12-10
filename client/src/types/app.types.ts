@@ -20,7 +20,7 @@ export interface MailDetailsSchema {
     total_members: number;
   };
   kind: "invitation" | "request" | "message";
-  sender_details: Pick<User, "name" | "profilePic">;
+  sender_details: Pick<User, "name" | "profilePic" | "_id">;
   _id: string;
 }
 

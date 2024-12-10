@@ -115,7 +115,7 @@ export function updateGrouplist(
   setAllGroupChatList((groupChatList) =>
     groupChatList.map((groupchat) => {
       if (groupchat._id === groupId) {
-        return { ...groupchat, this_group_inviting_you: false };
+        return { ...groupchat, user_group_status: "no-status" };
       } else {
         return groupchat;
       }
