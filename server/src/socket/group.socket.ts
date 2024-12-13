@@ -132,6 +132,7 @@ export async function handleGroupSocket(io: Server) {
                 $set: {
                   "lastMessage.text": message,
                   "lastMessage.sender": userId,
+                  "lastMessage.type": "text",
                   memberReadMessage: [userId],
                 },
                 $currentDate: { "lastMessage.lastMessageCreatedAt": true },

@@ -17,11 +17,9 @@ import UserNotFound from "./UserNotFound";
 import { GetParticipantInfo } from "@/types/UserTypes";
 import { Message } from "@/types/shared.types";
 import { useSocketStore } from "@/utils/store/socket.store";
-import { nanoid } from "nanoid";
 import LoadingChat from "@/components/LoadingChat";
 import { useInView } from "react-intersection-observer";
 import GroupChatHeader from "./GroupChatHeader";
-import { IoIosArrowRoundDown } from "react-icons/io";
 import { AnimatePresence, motion } from "framer-motion";
 import ProfileCard from "../../../_components/ProfileCard";
 import typingAnimation from "../../../../../../assets/images/gif-animation/typing-animation-ver-2.gif";
@@ -32,7 +30,6 @@ import GroupMessageField from "./GroupMessageField";
 import GroupChatBubbles from "./GroupChatBubbles";
 import { GroupChatInfo } from "@/types/group.types";
 import BackToBottomArrow from "../../../_components/BackToBottomArrow";
-import { userData } from "@/utils/userdata.function";
 function GroupChatboard({ groupId }: { groupId: string }) {
   const { groupSocket } = useSocketStore();
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -146,6 +143,7 @@ function GroupChatboard({ groupId }: { groupId: string }) {
     });
 
     groupSocket.on("user-joined-group", ({ messageDetails }) => {
+      alert("Running the user-joined-group");
       setAllMessages((prevMessages) => [...prevMessages, messageDetails]);
       queryClient.setQueryData<GroupChatInfo | undefined>(
         ["group-info", groupId],

@@ -1,7 +1,8 @@
 "use client";
+
 import { GROUP_SERVER_URL } from "@/utils/serverUrl";
 import axios, { AxiosError } from "axios";
-import React from "react";
+import React, { useRef } from "react";
 import { useEffect } from "react";
 import { useQuery, UseQueryResult, useQueryClient } from "react-query";
 import { useSession } from "next-auth/react";
@@ -13,7 +14,9 @@ import NoItemFound from "@/components/NoItemFound";
 import EmptyConversation from "@/components/EmptyConversation";
 import { GroupChatConversationList } from "@/types/group.types";
 import { updateConversationList } from "@/utils/sharedUpdateFunction";
-import { any } from "zod";
+import { retrieveFirstName } from "@/utils/retrieveFirstName";
+import debounceScroll from "@/hooks/debounceScroll";
+import { DEFAULT_SCROLL_VALUE, GROUP_CHATLIST_KEY } from "@/utils/storageKey";
 function GroupChatList({
   searchChat,
   groupId,
@@ -24,6 +27,8 @@ function GroupChatList({
   const { groupSocket } = useSocketStore();
   const { data: session, status } = useSession();
   const router = useRouter();
+  const chatListRef = useRef<HTMLDivElement | null>(null);
+  const debounce = debounceScroll(GROUP_CHATLIST_KEY);
   const displayAllGroupChat: UseQueryResult<
     GroupChatConversationList[],
     AxiosError<{ message: string }>
@@ -76,12 +81,34 @@ function GroupChatList({
       groupSocket.off("update-chatlist");
     };
   }, [groupSocket, queryClient]);
+
+  useEffect(() => {
+    if (chatListRef.current) {
+      const scrollPosition = sessionStorage.getItem(GROUP_CHATLIST_KEY)
+        ? JSON.parse(sessionStorage.getItem(GROUP_CHATLIST_KEY) || "")
+        : sessionStorage.setItem(GROUP_CHATLIST_KEY, DEFAULT_SCROLL_VALUE);
+      chatListRef.current.scrollTop = scrollPosition;
+    }
+  }, []);
   if (displayAllGroupChat.isLoading) {
     return <ConversationListSkeleton />;
   }
   const searchResult = displayAllGroupChat.data?.filter((groupchat) =>
     new RegExp(searchChat, "i").test(groupchat.groupName as string)
   );
+
+  const handleLastMessage = (
+    senderId: string,
+    senderName: string,
+    messageType: "file" | "system" | "text"
+  ) => {
+    const isUserSentThis = session?.user.userId === senderId;
+    if (messageType === "text") {
+      return isUserSentThis ? "You:" : "";
+    } else if (messageType === "system") {
+      return isUserSentThis ? "You" : retrieveFirstName(senderName);
+    }
+  };
   return (
     <div className="flex-grow flex h-[200px]">
       {displayAllGroupChat.data?.length === 0 && searchChat === "" ? (
@@ -97,7 +124,16 @@ function GroupChatList({
           &quot; group found
         </NoItemFound>
       ) : (
-        <div className="pt-2 flex flex-col w-full overflow-y-auto h-full flex-grow items-center px-1.5">
+        <div
+          ref={chatListRef}
+          onScroll={(e) => {
+            if (chatListRef.current) {
+              const scroll = chatListRef.current.scrollTop;
+              debounce(scroll, 200);
+            }
+          }}
+          className="pt-2 flex flex-col w-full overflow-y-auto h-full flex-grow items-center px-1.5"
+        >
           {searchResult?.map(
             (groupchat: GroupChatConversationList, index: number) => (
               <button
@@ -109,8 +145,8 @@ function GroupChatList({
                   groupchat._id === groupId && "bg-[#414141]"
                 }`}
               >
-                <div className="flex items-center space-x-2">
-                  <div className="w-[40px] h-[40px] relative rounded-full pr-2">
+                <div className="flex items-center space-x-2 w-full">
+                  <div className="md:w-[40px] md:h-[40px] w-[30px] h-[30px] relative rounded-full pr-2 shrink-0">
                     <Image
                       src={groupchat.groupPhoto.photoUrl}
                       alt="profile-pic"
@@ -119,28 +155,19 @@ function GroupChatList({
                       priority
                       className="rounded-full absolute"
                     />
-                    {/* <span
-                      className={`${
-                        user.receiver_details.status === "Online"
-                          ? "bg-green-500"
-                          : "bg-zinc-500"
-                      } absolute bottom-[3px] right-[2px] w-2 h-2 rounded-full`}
-                    ></span> */}
                   </div>{" "}
-                  <div className="flex justify-start flex-col items-start">
-                    <h1 className="text-white font-bold text-sm break-all">
+                  <div className="flex justify-start flex-col items-start w-full overflow-hidden">
+                    <h1 className="text-white font-bold text-sm truncate w-[90%] text-start">
                       {groupchat.groupName}
                     </h1>
-                    <small className={`text-[0.75rem] break-all text-white`}>
-                      {`${
-                        groupchat.lastMessage.sender === session?.user.userId
-                          ? "You:"
-                          : ""
-                      } ${
-                        groupchat.lastMessage.text.length >= 30
-                          ? `${groupchat.lastMessage?.text?.slice(0, 30)}...`
-                          : groupchat.lastMessage?.text
-                      }`}
+                    <small
+                      className={`text-[0.75rem] text-white truncate w-[90%] text-start`}
+                    >
+                      {`${handleLastMessage(
+                        groupchat.lastMessage.sender,
+                        groupchat.sender_name,
+                        groupchat.lastMessage.type
+                      )} ${groupchat.lastMessage.text}`}
                     </small>
                   </div>
                 </div>

@@ -82,7 +82,7 @@ function SearchUser({
                 className={`${
                   userDetails.status.type === "online"
                     ? "bg-green-500"
-                    : "bg-red-500"
+                    : "bg-zinc-500"
                 } w-2 h-2 rounded-full absolute bottom-[1px] right-1`}
               ></span>
             </div>

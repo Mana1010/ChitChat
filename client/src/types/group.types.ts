@@ -9,6 +9,7 @@ export interface GroupChatList
 
 export interface GroupChatConversationList<SenderType = string>
   extends Pick<BaseGroupChatSchema, "_id" | "groupName" | "groupPhoto"> {
+  sender_name: string;
   lastMessage: {
     sender: SenderType;
     text: string;

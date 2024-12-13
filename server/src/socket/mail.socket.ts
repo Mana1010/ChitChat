@@ -1,5 +1,3 @@
-import { GroupConversation } from "../model/groupConversation.model";
-import { Request } from "../model/mail.model";
 import { MAIL_NAMESPACE } from "../utils/namespaces.utils";
 import { Server } from "socket.io";
 import { Group } from "../model/group.model";
@@ -22,6 +20,7 @@ const handleUserJoinedGroup = async (senderId: string, groupId: string) => {
         select: ["groupPhoto", "groupName", "_id", "lastMessage"],
       })
   );
+
   return result;
 };
 export async function handleMailSocket(io: Server) {
@@ -29,17 +28,22 @@ export async function handleMailSocket(io: Server) {
     const { userId } = socket.handshake.auth;
     socket.on("invitation-accepted", async ({ groupId }) => {
       const result = await handleUserJoinedGroup(userId, groupId);
+
       GROUP_NAMESPACE(io).to(groupId).emit("user-joined-group", {
         messageDetails: result,
+      });
+
+      GROUP_NAMESPACE(io).to(groupId).emit("user-joined-group", {
+        groupChatDetails: result.groupId,
       });
     });
-
     socket.on("request-accepted", async ({ requesterId, groupId }) => {
       const result = await handleUserJoinedGroup(requesterId, groupId);
+
       GROUP_NAMESPACE(io).to(groupId).emit("user-joined-group", {
         messageDetails: result,
       });
-      GROUP_NAMESPACE(io).to(requesterId).emit("display-new-groupchat", {
+      GROUP_NAMESPACE(io).to(requesterId).emit("user-joined-group", {
         groupChatDetails: result.groupId,
       });
     });

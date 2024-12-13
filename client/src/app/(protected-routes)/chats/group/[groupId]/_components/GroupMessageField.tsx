@@ -60,17 +60,17 @@ function GroupMessageField({
       onSubmit={handleFormSubmit}
       className=" py-2.5 flex items-center space-x-2 bg-[#171717]"
     >
-      <input
+      <textarea
         onFocus={() => {
           groupSocket?.emit("read-message", { groupId });
           groupSocket?.emit("during-typing", { groupId });
         }}
+        rows={1}
         onBlur={() => groupSocket?.emit("stop-typing", groupId)}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
-        type="text"
         placeholder="Send a message"
-        className="rounded-md bg-[#414141] flex-grow px-3 py-2.5 text-white"
+        className="rounded-md bg-[#414141] flex-grow px-3 py-2.5 text-white resize-none"
       />
       <div className="relative">
         <button

@@ -28,7 +28,14 @@ const handleAcceptInvitation = async (groupId: string, userId: string) => {
       "members.memberInfo": new mongoose.Types.ObjectId(userId),
     },
     {
-      $set: { "members.$.status": "active" },
+      $set: {
+        "members.$.status": "active",
+        "members.$.joinedAt": new Date(),
+        "lastMessage.sender": userId,
+        "lastMessage.text": "joined the group",
+        "lastMessage.type": "system",
+        "lastMessage.lastMessageCreatedAt": new Date(),
+      },
     }
   );
   await handleMailUpdate(groupId, userId, "accepted");
@@ -53,7 +60,14 @@ const handleAcceptRequest = async (
       "members.memberInfo": new mongoose.Types.ObjectId(requesterId),
     },
     {
-      $set: { "members.$.status": "active" },
+      $set: {
+        "members.$.status": "active",
+        "members.$.joinedAt": new Date(),
+        "lastMessage.sender": requesterId,
+        "lastMessage.text": "joined the group",
+        "lastMessage.type": "system",
+        "lastMessage.lastMessageCreatedAt": new Date(),
+      },
     }
   );
   await handleMailUpdate(groupId, userId, "accepted");

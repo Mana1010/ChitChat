@@ -3,6 +3,12 @@ import React, { ReactNode, useEffect } from "react";
 import { useSocketStore } from "@/utils/store/socket.store";
 import { useSession } from "next-auth/react";
 import { initializeStatusSocket } from "@/utils/socket";
+import {
+  GROUP_CHATLIST_KEY,
+  PRIVATE_CHATLIST_SESSION_KEY,
+  MAIL_LIST_SESSION_KEY,
+  DEFAULT_SESSION_VALUE,
+} from "@/utils/storageKey";
 function StatusProvider({ children }: { children: ReactNode }) {
   const { data, status } = useSession();
   const {
@@ -15,6 +21,10 @@ function StatusProvider({ children }: { children: ReactNode }) {
     setStatusSocket,
   } = useSocketStore();
   useEffect(() => {
+    sessionStorage.setItem(PRIVATE_CHATLIST_SESSION_KEY, "0");
+    sessionStorage.setItem(GROUP_CHATLIST_KEY, "0");
+    sessionStorage.setItem("mail_scroll_position", "0");
+
     if (!statusSocket && status === "authenticated") {
       const socket = initializeStatusSocket(data.user.userId);
       setStatusSocket(socket);
@@ -25,6 +35,7 @@ function StatusProvider({ children }: { children: ReactNode }) {
     }
     return () => {
       if (status === "authenticated" && statusSocket) {
+        localStorage.removeItem("chatlist_scroll_position");
         statusSocket.disconnect();
       }
     };

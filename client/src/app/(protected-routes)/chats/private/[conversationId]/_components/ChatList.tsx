@@ -1,7 +1,7 @@
 "use client";
 import { PRIVATE_SERVER_URL } from "@/utils/serverUrl";
 import axios, { AxiosError } from "axios";
-import React, { ReactNode, useCallback } from "react";
+import React, { ReactNode, useRef } from "react";
 import { useEffect } from "react";
 import { useQuery, UseQueryResult, useQueryClient } from "react-query";
 import { useSession } from "next-auth/react";
@@ -13,6 +13,11 @@ import { useSocketStore } from "@/utils/store/socket.store";
 import ConversationListSkeleton from "../../../_components/ConversationListSkeleton";
 import NoItemFound from "@/components/NoItemFound";
 import { updateConversationList } from "@/utils/sharedUpdateFunction";
+import debounceScroll from "@/hooks/debounceScroll";
+import {
+  PRIVATE_CHATLIST_SESSION_KEY,
+  DEFAULT_SCROLL_VALUE,
+} from "@/utils/storageKey";
 function ParentDiv({ children }: { children: ReactNode }) {
   return <div className="w-full flex-grow flex h-[200px]">{children}</div>;
 }
@@ -25,7 +30,9 @@ function ChatList({
 }) {
   const { privateSocket, statusSocket } = useSocketStore();
   const { data: session, status } = useSession();
+  const chatListRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
+  const debounce = debounceScroll(PRIVATE_CHATLIST_SESSION_KEY);
   const displayAllChats: UseQueryResult<
     Conversation[],
     AxiosError<{ message: string }>
@@ -40,6 +47,21 @@ function ChatList({
     enabled: status === "authenticated",
   });
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (chatListRef.current) {
+      const scrollPosition = sessionStorage.getItem(
+        PRIVATE_CHATLIST_SESSION_KEY
+      )
+        ? JSON.parse(sessionStorage.getItem(PRIVATE_CHATLIST_SESSION_KEY) || "")
+        : sessionStorage.setItem(
+            PRIVATE_CHATLIST_SESSION_KEY,
+            DEFAULT_SCROLL_VALUE
+          );
+      chatListRef.current.scrollTop = scrollPosition;
+    }
+  }, []);
+
   useEffect(() => {
     if (!privateSocket || status === "unauthenticated") return;
     privateSocket.on(
@@ -63,7 +85,6 @@ function ChatList({
         );
       }
     );
-
     return () => {
       privateSocket.off("display-updated-chatlist");
       privateSocket.off("seen-message");
@@ -139,7 +160,16 @@ function ChatList({
 
   return (
     <ParentDiv>
-      <div className="pt-2 flex flex-col w-full overflow-y-auto h-full items-center px-1.5">
+      <div
+        ref={chatListRef}
+        onScroll={(e) => {
+          if (chatListRef.current) {
+            const scroll = chatListRef.current.scrollTop;
+            debounce(scroll, 200);
+          }
+        }}
+        className="pt-2 flex flex-col w-full overflow-y-auto h-full items-center px-1.5"
+      >
         {searchResult?.map((user: Conversation, index: number) => (
           <button
             onClick={() => router.push(`/chats/private/${user._id}?type=chats`)}
@@ -148,8 +178,8 @@ function ChatList({
               user._id === conversationId && "bg-[#414141]"
             }`}
           >
-            <div className="flex items-center space-x-2">
-              <div className="w-[40px] h-[40px] relative rounded-full pr-2">
+            <div className="flex items-center space-x-2 w-full overflow-hidden">
+              <div className="w-[40px] h-[40px] relative rounded-full pr-2 shrink-0">
                 <Image
                   src={user.receiver_details.profilePic}
                   alt="profile-pic"
@@ -166,12 +196,12 @@ function ChatList({
                   } absolute bottom-[3px] right-[2px] w-2 h-2 rounded-full`}
                 ></span>
               </div>{" "}
-              <div className="flex justify-start flex-col items-start">
-                <h1 className="text-white font-bold text-sm break-all">
+              <div className="flex justify-start flex-col items-start w-full">
+                <h1 className="text-white font-bold text-sm truncate w-[90%] text-start">
                   {user.receiver_details.name}
                 </h1>
                 <small
-                  className={`text-[0.75rem] break-all ${
+                  className={`text-[0.75rem] truncate w-[90%] text-start ${
                     !user.already_read_message
                       ? "text-white font-bold"
                       : "text-zinc-300"
@@ -182,11 +212,7 @@ function ChatList({
                     user.lastMessage.type === "text"
                       ? "You:"
                       : ""
-                  } ${
-                    user.lastMessage.text.length >= 30
-                      ? `${user.lastMessage?.text?.slice(0, 30)}...`
-                      : user.lastMessage?.text
-                  }`}
+                  } ${user.lastMessage?.text}`}
                 </small>
               </div>
             </div>

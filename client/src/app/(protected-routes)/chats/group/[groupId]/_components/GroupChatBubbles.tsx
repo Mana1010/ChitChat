@@ -95,7 +95,7 @@ function GroupChatBubbles({
                 }`}
               >
                 <div
-                  className={`p-2 rounded-md flex items-center justify-center break-all relative ${
+                  className={`p-2 rounded-md flex items-center justify-center whitespace-pre-wrap relative ${
                     messageDetails.sender._id === session?.user.userId
                       ? "bg-[#6486FF]"
                       : "bg-[#171717]"

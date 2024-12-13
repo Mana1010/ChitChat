@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { HiMail } from "react-icons/hi";
 import { HiMailOpen } from "react-icons/hi";
 import {
@@ -33,6 +33,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useSocketStore } from "@/utils/store/socket.store";
 import { nanoid } from "nanoid";
+import debounceScroll from "@/hooks/debounceScroll";
+import {
+  DEFAULT_SCROLL_VALUE,
+  MAIL_LIST_SESSION_KEY,
+} from "@/utils/storageKey";
 function MailList({ mailId }: { mailId: string }) {
   const router = useRouter();
   const [filteredBy, setFilteredBy] = useState("all");
@@ -40,6 +45,8 @@ function MailList({ mailId }: { mailId: string }) {
   const { mailSocket } = useSocketStore();
   const [selectedMail, setSelectedMail] = useState<string[]>([]);
   const [selectOptionActivated, setSelectOptionActivated] = useState(false);
+  const mailListRef = useRef<HTMLDivElement | null>(null);
+  const debounce = debounceScroll(MAIL_LIST_SESSION_KEY);
   const selectedMailSet = new Set(selectedMail);
   const getAllMail: UseQueryResult<
     MailListSchema[],
@@ -61,9 +68,12 @@ function MailList({ mailId }: { mailId: string }) {
   });
   const deleteMail = useMutation({
     mutationFn: async () => {
-      const response = await axios.delete(`${APP_SERVER_URL}/delete/multiple/mail`, {
-        data: selectedMail,
-      });
+      const response = await axios.delete(
+        `${APP_SERVER_URL}/delete/multiple/mail`,
+        {
+          data: selectedMail,
+        }
+      );
       return response.data.message;
     },
     onSuccess: () => {
@@ -74,6 +84,14 @@ function MailList({ mailId }: { mailId: string }) {
 
   const queryClient = useQueryClient();
 
+  useEffect(() => {
+    if (mailListRef.current) {
+      const scrollPosition = sessionStorage.getItem(MAIL_LIST_SESSION_KEY)
+        ? JSON.parse(sessionStorage.getItem(MAIL_LIST_SESSION_KEY) || "")
+        : sessionStorage.setItem(MAIL_LIST_SESSION_KEY, DEFAULT_SCROLL_VALUE);
+      mailListRef.current.scrollTop = scrollPosition;
+    }
+  }, []);
   useEffect(() => {
     if (!mailSocket) return;
     mailSocket.on("update-mail", ({ sentAt, isAlreadyRead, kind }) => {
@@ -160,7 +178,16 @@ function MailList({ mailId }: { mailId: string }) {
       ) : (
         <div className="flex-grow w-full h-[200px]">
           {(getAllMail.data?.length as number) > 0 ? (
-            <div className="pt-2 flex flex-col w-full h-full overflow-y-auto items-center px-1.5">
+            <div
+              ref={mailListRef}
+              onScroll={(e) => {
+                if (mailListRef.current) {
+                  const scroll = mailListRef.current.scrollTop;
+                  debounce(scroll, 200);
+                }
+              }}
+              className="pt-2 flex flex-col w-full h-full overflow-y-auto items-center px-1.5"
+            >
               {getAllMail.data?.map((mail) => (
                 <motion.label
                   htmlFor={`delete-mail-${mail._id}`}

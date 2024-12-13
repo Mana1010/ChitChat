@@ -3,8 +3,6 @@ import { Request, Response } from "express";
 import { Group } from "../model/group.model";
 import { GroupConversation } from "../model/groupConversation.model";
 import mongoose from "mongoose";
-import { getAllUsersConversation } from "./private.message.controller";
-import express from "express";
 import {
   CreateGroupSchema,
   createGroupSchemaValidation,
@@ -34,7 +32,7 @@ export const getUserGroupChatStatus = asyncHandler(
 
 export const getAllGroups = asyncHandler(
   async (req: Request, res: Response) => {
-    const { limit, page, sort } = req.query;
+    const { limit, page } = req.query;
     const { userId } = req.params;
     if (!page || !limit) {
       res.status(403);
@@ -175,12 +173,26 @@ export const getAllGroupChatConversation = asyncHandler(
         },
       },
       {
+        $lookup: {
+          from: "users",
+          localField: "lastMessage.sender",
+          foreignField: "_id",
+          as: "sender_details",
+        },
+      },
+      {
+        $addFields: {
+          sender_details: { $first: "$sender_details" },
+        },
+      },
+      {
         $sort: { "lastMessage.lastMessageCreatedAt": -1 },
       },
       {
         $project: {
           groupName: 1,
           groupPhoto: 1,
+          sender_name: "$sender_details.name",
           _id: 1,
           lastMessage: 1,
           updatedAt: 1,
