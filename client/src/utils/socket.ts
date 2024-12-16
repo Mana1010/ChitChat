@@ -17,7 +17,6 @@ export const initializePrivateChatSocket = (userId: string): Socket => {
 };
 export const initializeNotificationSocket = (userId: string): Socket => {
   return io(`${URL}/notification`, {
-    autoConnect: false,
     auth: {
       userId,
     },

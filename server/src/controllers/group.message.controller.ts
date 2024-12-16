@@ -88,8 +88,16 @@ export const getAllGroups = asyncHandler(
         $limit: 10,
       },
       {
+        $lookup: {
+          from: "users",
+          localField: "members.memberInfo",
+          foreignField: "_id",
+          as: "member_details",
+        },
+      },
+      {
         $addFields: {
-          user_group_status: {
+          filter_member_status: {
             $arrayElemAt: [
               {
                 $filter: {
@@ -113,15 +121,31 @@ export const getAllGroups = asyncHandler(
               0,
             ],
           },
+          filter_out_you: {
+            $filter: {
+              input: "$member_details",
+              cond: {
+                $ne: ["$$this._id", new mongoose.Types.ObjectId(userId)],
+              },
+            },
+          },
         },
       },
       {
         $addFields: {
           user_group_status: {
             $cond: {
-              if: { $ne: [{ $ifNull: ["$user_group_status", null] }, null] },
+              if: { $ne: [{ $ifNull: ["$filter_member_status", null] }, null] },
               then: "$user_group_status.status",
               else: "no-status",
+            },
+          },
+          is_group_active: {
+            $anyElementTrue: {
+              $map: {
+                input: "$filter_out_you",
+                in: { $eq: ["$$this.status.type", "online"] },
+              },
             },
           },
         },
@@ -132,10 +156,11 @@ export const getAllGroups = asyncHandler(
           groupPhoto: 1,
           totalMember: 1,
           user_group_status: 1,
+          is_group_active: 1,
         },
       },
     ]);
-
+    console.log(getAllGroups);
     const hasNextPage = getAllGroups.length === LIMIT;
     const nextPage = hasNextPage ? PAGE + 1 : null;
     res.status(200).json({
@@ -182,7 +207,46 @@ export const getAllGroupChatConversation = asyncHandler(
       },
       {
         $addFields: {
+          only_active_member: {
+            $filter: {
+              input: "$members",
+              cond: { $eq: ["$$this.status", "active"] },
+            },
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "only_active_member.memberInfo",
+          foreignField: "_id",
+          as: "member_details",
+        },
+      },
+      {
+        $addFields: {
           sender_details: { $first: "$sender_details" },
+          filter_out_you: {
+            $filter: {
+              input: "$member_details",
+              cond: {
+                $ne: ["$$this._id", new mongoose.Types.ObjectId(id)],
+              },
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          is_group_active: {
+            //This will check if there is atleast one user (excluded you) is online to be able to return true else false
+            $anyElementTrue: {
+              $map: {
+                input: "$filter_out_you",
+                in: { $eq: ["$$this.status.type", "online"] },
+              },
+            },
+          },
         },
       },
       {
@@ -196,9 +260,12 @@ export const getAllGroupChatConversation = asyncHandler(
           _id: 1,
           lastMessage: 1,
           updatedAt: 1,
+          member_details: { $first: "$member_details" },
+          is_group_active: 1,
         },
       },
     ]);
+    console.log(getAllGroupChat);
     res.status(200).json({ message: getAllGroupChat });
   }
 );
@@ -267,7 +334,7 @@ export const createGroupChat = asyncHandler(
 
 export const getGroupChatInfo = asyncHandler(
   async (req: Request, res: Response) => {
-    const { groupId } = req.params;
+    const { groupId, userId } = req.params;
     if (!mongoose.Types.ObjectId.isValid(groupId)) {
       res.status(404);
       throw new Error("User not found");
@@ -279,11 +346,37 @@ export const getGroupChatInfo = asyncHandler(
       },
       {
         $addFields: {
+          only_active_member: {
+            $filter: {
+              input: "$members",
+              cond: { $eq: ["$$this.status", "active"] },
+            },
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "only_active_member.memberInfo",
+          foreignField: "_id",
+          as: "member_details",
+        },
+      },
+      {
+        $addFields: {
           total_member: {
             $size: {
               $filter: {
                 input: "$members",
                 cond: { $eq: ["$$this.status", "active"] }, //Retrieve the active member only.
+              },
+            },
+          },
+          filter_out_you: {
+            $filter: {
+              input: "$member_details",
+              cond: {
+                $ne: ["$$this._id", new mongoose.Types.ObjectId(userId)],
               },
             },
           },
@@ -295,6 +388,14 @@ export const getGroupChatInfo = asyncHandler(
           groupPhoto: 1,
           total_member: 1,
           createdAt: 1,
+          is_group_active: {
+            $anyElementTrue: {
+              $map: {
+                input: "$filter_out_you",
+                in: { $eq: ["$$this.status.type", "online"] },
+              },
+            },
+          },
         },
       },
     ]);

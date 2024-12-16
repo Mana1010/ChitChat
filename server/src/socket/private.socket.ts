@@ -1,7 +1,10 @@
 import { Server } from "socket.io";
 import { Private } from "../model/private.model";
 import { PrivateConversation } from "../model/privateConversation.model";
-import { PRIVATE_NAMESPACE } from "../utils/namespaces.utils";
+import {
+  NOTIFICATION_NAMESPACE,
+  PRIVATE_NAMESPACE,
+} from "../utils/namespaces.utils";
 
 interface Payload {
   conversationId: string;
@@ -77,6 +80,12 @@ export function handlePrivateSocket(io: Server) {
           socket.broadcast.to(conversationId).emit("display-seen-user", {
             display_seen: false, //This will reset or remove the seen user icon.
           });
+          NOTIFICATION_NAMESPACE(io)
+            .to(participantId)
+            .emit("trigger-notification", {
+              sidebarKey: "privateNotificationCount",
+              notificationId: conversationId,
+            });
         } catch (err) {
           console.log(err);
         }
@@ -85,10 +94,8 @@ export function handlePrivateSocket(io: Server) {
 
     socket.on("read-message", async ({ conversationId, participantId }) => {
       try {
-        if (!conversationId || !participantId) {
-          console.log("Empty Payload");
-          return;
-        }
+        if (!conversationId || !participantId) return;
+
         const checkIfUserNotSeenMessage = await PrivateConversation.findById(
           conversationId
         ).select(["userReadMessage", "lastMessage.sender"]);

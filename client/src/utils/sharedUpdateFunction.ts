@@ -7,6 +7,7 @@ import { GroupChatList } from "@/types/group.types";
 import { User } from "@/types/shared.types";
 import { Session } from "next-auth";
 import { nanoid } from "nanoid";
+import { SidebarSchema } from "@/types/app.types";
 export function updateConversationList<
   ConversationType extends ConversationSchema
 >(
@@ -154,4 +155,39 @@ export function optimisticUpdateMessage(
       },
     ];
   });
+}
+
+export function decrementNotificationCount(
+  queryClient: QueryClient,
+  sidebarKey:
+    | "privateNotificationCount"
+    | "groupNotificationCount"
+    | "mailboxNotificationCount",
+  senderId: string
+) {
+  queryClient.setQueryData<SidebarSchema | undefined>(
+    ["sidebar"],
+    (cachedData) => {
+      const notificationCountIds = new Set(
+        cachedData?.userNotificationObj[sidebarKey]
+      );
+
+      if (cachedData) {
+        if (notificationCountIds.has(senderId)) {
+          notificationCountIds.delete(senderId);
+          return {
+            ...cachedData,
+            userNotificationObj: {
+              ...cachedData.userNotificationObj,
+              [sidebarKey]: Array.from(notificationCountIds),
+            },
+          };
+        } else {
+          return cachedData;
+        }
+      } else {
+        return cachedData;
+      }
+    }
+  );
 }

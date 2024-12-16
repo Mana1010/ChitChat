@@ -21,19 +21,21 @@ import LoadingChat from "@/components/LoadingChat";
 import { useInView } from "react-intersection-observer";
 import ChatHeader from "./ChatHeader";
 import PrivateChatBubbles from "./PrivateChatBubbles";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import ProfileCard from "../../../_components/ProfileCard";
 import typingAnimation from "../../../../../../assets/images/gif-animation/typing-animation-ver-2.gif";
 import SendAttachment from "@/components/SendAttachment";
 import useParticipantInfo from "@/hooks/useParticipantInfo.hook";
 import PrivateMessageField from "./PrivateMessageField";
 import {
+  decrementNotificationCount,
   handleUnreadMessageSign,
   updateConversationList,
 } from "@/utils/sharedUpdateFunction";
 import { handleSeenUpdate } from "@/utils/sharedUpdateFunction";
 import BackToBottomArrow from "../../../_components/BackToBottomArrow";
 import { Session } from "next-auth";
+import { GetParticipantInfo } from "@/types/UserTypes";
 function ParentDiv({
   children,
   setOpenEmoji,
@@ -54,7 +56,7 @@ function ParentDiv({
 }
 
 function Chatboard({ conversationId }: { conversationId: string }) {
-  const { privateSocket } = useSocketStore();
+  const { privateSocket, statusSocket } = useSocketStore();
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const currentPageRef = useRef(0);
   const scrollDivRef = useRef<HTMLDivElement | null>(null);
@@ -69,6 +71,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
   const [openAttachmentModal, setOpenAttachmentModal] = useState(false);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const { ref, inView } = useInView();
+
   const { participantInfo, isLoading: participantInfoLoading } =
     useParticipantInfo(conversationId, status, session);
   const { data, fetchNextPage, error, isLoading, isError } = useInfiniteQuery({
@@ -111,13 +114,8 @@ function Chatboard({ conversationId }: { conversationId: string }) {
     if (currentPageRef.current <= 0) {
       scrollRef.current.scrollIntoView({ block: "end" });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    scrollRef.current,
-    allMessages.length,
-    currentPageRef.current,
-    participantInfo,
-  ]);
+  }, [allMessages.length]);
+
   useEffect(() => {
     if (inView && hasNextPage) {
       currentPageRef.current++;
@@ -132,6 +130,11 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       !participantInfo?.receiver_details._id
     )
       return;
+    decrementNotificationCount(
+      queryClient,
+      "privateNotificationCount",
+      conversationId
+    );
     privateSocket.emit("read-message", {
       conversationId,
       participantId: participantInfo.receiver_details._id,
@@ -144,6 +147,51 @@ function Chatboard({ conversationId }: { conversationId: string }) {
     status,
   ]);
 
+  useEffect(() => {
+    if (statusSocket) {
+      statusSocket.on(
+        "display-user-status",
+        ({ userId, status: { type, lastActiveAt } }) => {
+          setAllMessages((allMessage) => {
+            return allMessage.map((message) => {
+              if (message.sender._id === userId) {
+                return {
+                  ...message,
+                  sender: {
+                    ...message.sender,
+                    status: {
+                      type,
+                      lastActiveAt,
+                    },
+                  },
+                };
+              } else {
+                return message;
+              }
+            });
+          });
+
+          queryClient.setQueryData<GetParticipantInfo | undefined>(
+            ["participant-info", conversationId],
+            (cachedData) => {
+              if (cachedData) {
+                return {
+                  ...cachedData,
+                  receiver_details: {
+                    ...cachedData.receiver_details,
+                    status: {
+                      type,
+                      lastActiveAt,
+                    },
+                  },
+                };
+              }
+            }
+          );
+        }
+      );
+    }
+  }, [conversationId, queryClient, statusSocket]);
   useEffect(() => {
     if (!privateSocket) return;
     privateSocket.on("display-seen-user", ({ display_seen }) => {
@@ -207,7 +255,6 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                       conversationId,
                       receiverId: participantInfo?.receiver_details._id,
                     });
-                    // sendMessage("👋");
                     updateConversationList(
                       queryClient,
                       "👋",

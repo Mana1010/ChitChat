@@ -18,6 +18,7 @@ import { handlePrivateSocket } from "./socket/private.socket";
 import { handleGroupSocket } from "./socket/group.socket";
 import { handleMailSocket } from "./socket/mail.socket";
 import { handleStatusSocket } from "./socket/status.socket";
+import { handleNotificationSocket } from "./socket/notification.socket";
 import { v2 as cloudinary } from "cloudinary";
 import helmet from "helmet";
 
@@ -60,6 +61,7 @@ handlePrivateSocket(io as any);
 handleGroupSocket(io as any);
 handleMailSocket(io as any);
 handleStatusSocket(io as any);
+handleNotificationSocket(io as any);
 
 async function connectDb() {
   try {

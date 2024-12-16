@@ -13,7 +13,7 @@ type SocketStore = {
   setPrivateSocket: (socket: Socket | null) => void;
   setGroupSocket: (socket: Socket | null) => void;
   setMailSocket: (socket: Socket | null) => void;
-  setNoficationSocket: (socket: Socket | null) => void;
+  setNotificationSocket: (socket: Socket | null) => void;
   setStatusSocket: (socket: Socket | null) => void;
 };
 const store = (set: StoreApi<SocketStore>["setState"]) => ({
@@ -35,7 +35,7 @@ const store = (set: StoreApi<SocketStore>["setState"]) => ({
   setMailSocket: (socket: Socket | null) => {
     set({ mailSocket: socket });
   },
-  setNoficationSocket: (socket: Socket | null) => {
+  setNotificationSocket: (socket: Socket | null) => {
     set({ notificationSocket: socket });
   },
   setStatusSocket: (socket: Socket | null) => {

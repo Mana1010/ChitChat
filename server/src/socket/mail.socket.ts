@@ -4,23 +4,21 @@ import { Group } from "../model/group.model";
 import { GROUP_NAMESPACE } from "../utils/namespaces.utils";
 
 const handleUserJoinedGroup = async (senderId: string, groupId: string) => {
-  const result = await Group.create({
+  await Group.create({
     sender: senderId,
     groupId,
     type: "system",
     message: "joined the group",
-  }).then((doc) =>
-    doc
-      .populate({
-        path: "sender",
-        select: ["name", "profilePic", "status", "_id"],
-      })
-      .populate({
-        path: "groupId",
-        select: ["groupPhoto", "groupName", "_id", "lastMessage"],
-      })
-  );
-
+  });
+  const result = await Group.findOne({ groupId })
+    .populate({
+      path: "sender",
+      select: ["name", "profilePic", "status", "_id"],
+    })
+    .populate({
+      path: "groupId",
+      select: ["groupPhoto", "groupName", "_id", "lastMessage"],
+    });
   return result;
 };
 export async function handleMailSocket(io: Server) {

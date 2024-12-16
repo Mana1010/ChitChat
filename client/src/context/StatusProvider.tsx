@@ -7,7 +7,7 @@ import {
   GROUP_CHATLIST_KEY,
   PRIVATE_CHATLIST_SESSION_KEY,
   MAIL_LIST_SESSION_KEY,
-  DEFAULT_SESSION_VALUE,
+  DEFAULT_SCROLL_VALUE,
 } from "@/utils/storageKey";
 function StatusProvider({ children }: { children: ReactNode }) {
   const { data, status } = useSession();
@@ -21,9 +21,9 @@ function StatusProvider({ children }: { children: ReactNode }) {
     setStatusSocket,
   } = useSocketStore();
   useEffect(() => {
-    sessionStorage.setItem(PRIVATE_CHATLIST_SESSION_KEY, "0");
-    sessionStorage.setItem(GROUP_CHATLIST_KEY, "0");
-    sessionStorage.setItem("mail_scroll_position", "0");
+    sessionStorage.setItem(PRIVATE_CHATLIST_SESSION_KEY, DEFAULT_SCROLL_VALUE);
+    sessionStorage.setItem(GROUP_CHATLIST_KEY, DEFAULT_SCROLL_VALUE);
+    sessionStorage.setItem(MAIL_LIST_SESSION_KEY, DEFAULT_SCROLL_VALUE);
 
     if (!statusSocket && status === "authenticated") {
       const socket = initializeStatusSocket(data.user.userId);

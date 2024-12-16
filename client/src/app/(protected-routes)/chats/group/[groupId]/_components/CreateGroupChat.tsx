@@ -31,7 +31,8 @@ const groupFormValidation = z.object({
       name: z.string(),
     })
     .array()
-    .min(1, "At least one user must be added"),
+    .min(1, "At least one user must be added")
+    .max(10, "Invite limit reached! You can only invite up to 10 people."),
 });
 
 export type CreateGroupChatSchema = z.infer<typeof groupFormValidation>;
@@ -197,12 +198,23 @@ function CreateGroupChat() {
             )}
           </div>
           <div className="flex flex-col space-y-1 relative">
-            <label
-              htmlFor="search-user"
-              className="text-white text-[0.8rem] pl-1 font-bold"
-            >
-              Member
-            </label>
+            <div className="flex space-x-2">
+              <label
+                htmlFor="search-user"
+                className="text-white text-[0.8rem] pl-1 font-bold"
+              >
+                Member
+              </label>
+              <span
+                className={`text-[0.75rem] font-bold ${
+                  createGroupFormPayload.groupName.length <= 10
+                    ? "text-[#6486FF]"
+                    : "text-red-500"
+                }`}
+              >
+                {createGroupFormPayload.addedUsers.length}/10
+              </span>
+            </div>
             <div className="rounded-md bg-[#414141] px-2 py-2.5 flex items-center">
               <span className="text-[#6486FF] text-lg">
                 <TbUserSearch />

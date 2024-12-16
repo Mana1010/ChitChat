@@ -155,6 +155,13 @@ function GroupChatList({
                       priority
                       className="rounded-full absolute"
                     />
+                    <span
+                      className={`${
+                        groupchat.is_group_active
+                          ? "bg-green-500"
+                          : "bg-zinc-500"
+                      } absolute bottom-[3px] right-[2px] w-2 h-2 rounded-full`}
+                    ></span>
                   </div>{" "}
                   <div className="flex justify-start flex-col items-start w-full overflow-hidden">
                     <h1 className="text-white font-bold text-sm truncate w-[90%] text-start">

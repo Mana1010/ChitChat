@@ -29,13 +29,11 @@ function GroupChatHeader({
               priority
               className="rounded-full absolute"
             />
-            {/* <span
+            <span
               className={`${
-                participantInfo.status === "Online"
-                  ? "bg-green-500"
-                  : "bg-zinc-500"
+                groupInfo.is_group_active ? "bg-green-500" : "bg-zinc-500"
               } absolute bottom-[2px] right-[2px] w-2 h-2 rounded-full`}
-            ></span> */}
+            ></span>
           </div>
           <div>
             <h3 className="text-white text-sm">{groupInfo.groupName}</h3>

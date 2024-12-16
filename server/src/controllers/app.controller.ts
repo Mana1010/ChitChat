@@ -11,6 +11,11 @@ interface UserChatStatusObjSchema {
   privateConversationStatus: string | null;
   groupConversationStatus: string | null;
 }
+interface UserNotificationObjSchema {
+  privateNotificationCount: string[];
+  groupNotificationCount: string[];
+  mailboxNotificationCount: number;
+}
 export const getSidebarNotificationAndCurrentConversation = asyncHandler(
   async (req: Request, res: Response) => {
     const { senderId } = req.params;
@@ -19,9 +24,9 @@ export const getSidebarNotificationAndCurrentConversation = asyncHandler(
       groupConversationStatus: null,
     };
 
-    const userNotificationObj = {
-      privateNotificationCount: 0,
-      groupNotificationCount: 0,
+    const userNotificationObj: UserNotificationObjSchema = {
+      privateNotificationCount: [],
+      groupNotificationCount: [],
       mailboxNotificationCount: 0,
     };
 
@@ -30,6 +35,17 @@ export const getSidebarNotificationAndCurrentConversation = asyncHandler(
         participants: { $in: [senderId] },
       });
 
+      const getTotalPrivateNotification = (await PrivateConversation.find({
+        participants: { $in: [senderId] },
+        userReadMessage: { $nin: [senderId] },
+      })
+        .select(["_id"])
+        .lean()) as { _id: string }[];
+
+      const getTotalMailNotification = await Mail.find({
+        to: senderId,
+        isAlreadyRead: false,
+      }).countDocuments();
       if (checkIfNewUserPrivate?._id) {
         const getFirstPrivateConversationId = (await PrivateConversation.find({
           participants: { $in: [senderId] },
@@ -41,6 +57,12 @@ export const getSidebarNotificationAndCurrentConversation = asyncHandler(
 
         userChatStatusObj.privateConversationStatus =
           getFirstPrivateConversationId[0]._id;
+
+        for (let i = 0; i < getTotalPrivateNotification.length; i++) {
+          userNotificationObj.privateNotificationCount.push(
+            getTotalPrivateNotification[i]._id.toString()
+          );
+        }
       }
       const checkIfNewUserGroup = await GroupConversation.exists({
         members: { $elemMatch: { memberInfo: senderId, status: "active" } },
@@ -57,6 +79,10 @@ export const getSidebarNotificationAndCurrentConversation = asyncHandler(
 
         userChatStatusObj.groupConversationStatus =
           getFirstGroupConversationId[0]._id;
+      }
+
+      if (getTotalMailNotification > 0) {
+        userNotificationObj.mailboxNotificationCount = getTotalMailNotification;
       }
       res.status(200).json({
         message: {

@@ -4,6 +4,7 @@ import { MdEmojiEmotions } from "react-icons/md";
 import { LuSend } from "react-icons/lu";
 import { Socket } from "socket.io-client";
 import {
+  decrementNotificationCount,
   handleSeenUpdate,
   handleUnreadMessageSign,
 } from "@/utils/sharedUpdateFunction";
@@ -76,6 +77,11 @@ function PrivateMessageField({
             participantId,
           });
           privateSocket?.emit("during-typing", conversationId);
+          decrementNotificationCount(
+            queryClient,
+            "privateNotificationCount",
+            conversationId
+          );
           handleUnreadMessageSign(queryClient, conversationId, true); //This will update the conversation read sign
         }}
         rows={1}

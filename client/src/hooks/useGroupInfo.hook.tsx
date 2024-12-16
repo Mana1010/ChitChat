@@ -4,7 +4,7 @@ import { useQuery, UseQueryResult } from "react-query";
 import axios, { AxiosError } from "axios";
 import { GROUP_SERVER_URL } from "@/utils/serverUrl";
 import { GroupChatInfo } from "@/types/group.types";
-function useGroupInfo(groupId: string, status: string) {
+function useGroupInfo(groupId: string, status: string, userId: string) {
   const {
     data,
     isLoading,
@@ -12,7 +12,7 @@ function useGroupInfo(groupId: string, status: string) {
     queryKey: ["group-info", groupId],
     queryFn: async () => {
       const response = await axios.get(
-        `${GROUP_SERVER_URL}/group/info/${groupId}`
+        `${GROUP_SERVER_URL}/group/info/${groupId}/${userId}`
       );
 
       return response.data.message;

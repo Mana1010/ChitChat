@@ -51,7 +51,8 @@ function GroupChatboard({ groupId }: { groupId: string }) {
 
   const { groupInfo, isLoading: groupInfoLoading } = useGroupInfo(
     groupId,
-    status
+    status,
+    session?.user.userId as string
   );
   const { data, fetchNextPage, error, isLoading, isError } = useInfiniteQuery({
     queryKey: ["group-messages", groupId],
@@ -90,18 +91,13 @@ function GroupChatboard({ groupId }: { groupId: string }) {
   }, [groupId, queryClient]);
 
   //We use useLayoutEffect to run this before the content is display in the browser which is to not visible the scroll to down.
+
   useLayoutEffect(() => {
     if (!scrollRef.current) return;
     if (currentPageRef.current <= 0) {
       scrollRef.current.scrollIntoView({ block: "end" });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    scrollRef.current,
-    allMessages.length,
-    currentPageRef.current,
-    groupInfo,
-  ]);
+  }, [allMessages.length, groupInfo]);
 
   useEffect(() => {
     if (inView && hasNextPage) {
@@ -143,7 +139,6 @@ function GroupChatboard({ groupId }: { groupId: string }) {
     });
 
     groupSocket.on("user-joined-group", ({ messageDetails }) => {
-      alert("Running the user-joined-group");
       setAllMessages((prevMessages) => [...prevMessages, messageDetails]);
       queryClient.setQueryData<GroupChatInfo | undefined>(
         ["group-info", groupId],

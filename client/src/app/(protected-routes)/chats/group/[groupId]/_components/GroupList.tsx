@@ -178,6 +178,11 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
                   priority
                   className="rounded-full absolute"
                 />
+                <span
+                  className={`${
+                    group.is_group_active ? "bg-green-500" : "bg-zinc-500"
+                  } absolute bottom-[3px] right-[2px] w-2 h-2 rounded-full`}
+                ></span>
               </div>
               <div className="flex flex-col space-y-1">
                 <h3 className="text-white">{group.groupName}</h3>

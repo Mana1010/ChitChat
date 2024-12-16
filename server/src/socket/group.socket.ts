@@ -1,5 +1,5 @@
 import { Server } from "socket.io";
-import { Invitation, Mail, Request } from "../model/mail.model";
+import { Invitation, Request } from "../model/mail.model";
 import { GroupConversation } from "../model/groupConversation.model";
 import { Group } from "../model/group.model";
 import { GROUP_NAMESPACE, MAIL_NAMESPACE } from "../utils/namespaces.utils";
@@ -191,16 +191,17 @@ export async function handleGroupSocket(io: Server) {
 
           membersWhoReadMessage.set(groupId, [userId]);
           for (let i = 0; i < getAllMembers.length; i++) {
-            memberIdList.push(getAllMembers[i].member_details._id.toString());
+            socket.broadcast
+              .to(getAllMembers[i].member_details._id.toString())
+              .emit("update-chatlist", {
+                groupId,
+                lastMessage: groupConversationResult.lastMessage.text,
+                lastMessageCreatedAt:
+                  groupConversationResult.lastMessage.lastMessageCreatedAt,
+                type: "text",
+                senderId: userId,
+              });
           }
-          socket.broadcast.to(memberIdList).emit("update-chatlist", {
-            groupId,
-            lastMessage: groupConversationResult.lastMessage.text,
-            lastMessageCreatedAt:
-              groupConversationResult.lastMessage.lastMessageCreatedAt,
-            type: "text",
-            senderId: userId,
-          });
         } catch (err) {
           appLogger.error(err);
         }
@@ -223,11 +224,26 @@ export async function handleGroupSocket(io: Server) {
       }
     });
 
-    socket.on("join-room", ({ groupId, userId }) => {
-      console.log("SUCCESSFULLY JOINED THE ROOM FOR GROUP");
-      socket.join(groupId);
-      socket.join(userId);
-    });
+    socket.on(
+      "join-room",
+      async ({ groupId, userId }: { groupId: string; userId: string }) => {
+        console.log("SUCCESSFULLY JOINED THE ROOM FOR GROUP");
+        const allGroupJoinedIds = (await GroupConversation.find({
+          members: {
+            $elemMatch: {
+              status: "active",
+              memberInfo: new mongoose.Types.ObjectId(userId),
+            },
+          },
+        }).select("_id")) as { _id: string }[];
+
+        for (let i = 0; i < allGroupJoinedIds.length; i++) {
+          socket.join(allGroupJoinedIds[i]._id.toString());
+        }
+
+        socket.join(userId);
+      }
+    );
     socket.on("leave-room", ({ groupId, userId }) => {
       socket.leave(groupId);
       socket.leave(userId);
