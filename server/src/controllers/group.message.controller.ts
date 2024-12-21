@@ -136,7 +136,7 @@ export const getAllGroups = asyncHandler(
           user_group_status: {
             $cond: {
               if: { $ne: [{ $ifNull: ["$filter_member_status", null] }, null] },
-              then: "$user_group_status.status",
+              then: "$filter_member_status.status",
               else: "no-status",
             },
           },
@@ -225,7 +225,7 @@ export const getAllGroupChatConversation = asyncHandler(
       },
       {
         $addFields: {
-          sender_details: { $first: "$sender_details" },
+          sender: { $first: "$sender_details" },
           filter_out_you: {
             $filter: {
               input: "$member_details",
@@ -238,6 +238,7 @@ export const getAllGroupChatConversation = asyncHandler(
       },
       {
         $addFields: {
+          sender_name: { $first: "$sender_details.name" },
           is_group_active: {
             //This will check if there is atleast one user (excluded you) is online to be able to return true else false
             $anyElementTrue: {
@@ -256,9 +257,16 @@ export const getAllGroupChatConversation = asyncHandler(
         $project: {
           groupName: 1,
           groupPhoto: 1,
-          sender_name: "$sender_details.name",
           _id: 1,
-          lastMessage: 1,
+          lastMessage: {
+            sender: {
+              name: "$sender_name",
+            },
+            sender_name: 1,
+            text: 1,
+            type: 1,
+            lastMessageCreatedAt: 1,
+          },
           updatedAt: 1,
           member_details: { $first: "$member_details" },
           is_group_active: 1,
@@ -309,6 +317,10 @@ export const createGroupChat = asyncHandler(
             status: "active",
           },
         ],
+        lastMessage: {
+          sender: creatorId,
+          type: "system",
+        },
       });
       await Group.create({
         groupId: newGroupDetails._id,

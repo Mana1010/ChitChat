@@ -1,6 +1,5 @@
 import { Session } from "next-auth";
 import { Dispatch, SetStateAction } from "react";
-import { Socket } from "socket.io-client";
 
 export interface User {
   name: string;
@@ -22,7 +21,7 @@ export interface Message<UserType = string, ReactionType = string> {
   _id: string;
   sender: UserType;
   message: string;
-  type: string;
+  type: "system" | "file" | "text";
   reactions: ReactionType;
   createdAt: Date;
 }

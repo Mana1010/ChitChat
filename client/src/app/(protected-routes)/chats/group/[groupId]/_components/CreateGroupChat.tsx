@@ -72,6 +72,7 @@ function CreateGroupChat() {
     },
     onSuccess: (data) => {
       if (!groupSocket) return;
+      toast.success(data.content);
       groupSocket.emit("send-request", {
         requestedUsers: createGroupFormPayload.addedUsers,
         groupId: data.groupId,
@@ -92,7 +93,6 @@ function CreateGroupChat() {
     e.preventDefault();
     const validateForm = groupFormValidation.safeParse(createGroupFormPayload);
     if (validateForm.success) {
-      toast.success(data?.user.userId);
       const updatedPayload = {
         groupName: createGroupFormPayload.groupName,
         creatorId: data?.user.userId,
@@ -207,7 +207,7 @@ function CreateGroupChat() {
               </label>
               <span
                 className={`text-[0.75rem] font-bold ${
-                  createGroupFormPayload.groupName.length <= 10
+                  createGroupFormPayload.addedUsers.length <= 10
                     ? "text-[#6486FF]"
                     : "text-red-500"
                 }`}

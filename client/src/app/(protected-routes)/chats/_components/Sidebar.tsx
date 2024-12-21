@@ -65,20 +65,20 @@ function Sidebar() {
 
   useEffect(() => {
     if (!notificationSocket || status === "unauthenticated") return;
-    function addNotificationCount(
+    function handleNotificationCount(
       sidebarKey:
-        | "privateNotificationCount"
-        | "groupNotificationCount"
-        | "mailboxNotificationCount",
+        | "totalUnreadPrivateConversation"
+        | "totalUnreadGroupConversation"
+        | "totalUnreadMail",
       notificationId: string
     ) {
       queryClient.setQueryData<SidebarSchema | undefined>(
         ["sidebar"],
         (cachedData) => {
-          const notificationCountIds = new Set(
-            cachedData?.userNotificationObj[sidebarKey]
-          );
           if (cachedData) {
+            const notificationCountIds = new Set(
+              cachedData.userNotificationObj[sidebarKey]
+            );
             if (!notificationCountIds.has(notificationId)) {
               return {
                 ...cachedData,
@@ -99,10 +99,11 @@ function Sidebar() {
         }
       );
     }
+
     notificationSocket.on(
       "trigger-notification",
       ({ sidebarKey, notificationId }) => {
-        addNotificationCount(sidebarKey, notificationId);
+        handleNotificationCount(sidebarKey, notificationId);
       }
     );
   }, [notificationSocket, queryClient, status]);
@@ -126,19 +127,20 @@ function Sidebar() {
         pathname.startsWith("/chats/private") && "bg-[#3A3B3C]"
       }`,
       newMessage:
-        getUserStatus.data?.userNotificationObj.privateNotificationCount.length,
+        getUserStatus.data?.userNotificationObj.totalUnreadPrivateConversation
+          .length,
     },
     {
       btnSticker: <MdGroups />,
       path: `/chats/group/${
-        getUserStatus.data?.userChatStatusObj?.groupConversationStatus
-          ?.length || "new"
+        getUserStatus.data?.userChatStatusObj?.groupConversationStatus || "new"
       }?type=chats`,
       styling: `text-[#6486FF] text-2xl p-3 rounded-md relative ${
         pathname.startsWith("/chats/group") && "bg-[#3A3B3C]"
       }`,
       newMessage:
-        getUserStatus.data?.userNotificationObj.groupNotificationCount.length,
+        getUserStatus.data?.userNotificationObj.totalUnreadGroupConversation
+          .length,
     },
     {
       btnSticker: <PiMailboxFill />,
@@ -147,7 +149,7 @@ function Sidebar() {
         pathname.startsWith("/mailbox") && "bg-[#3A3B3C]"
       }`,
       newMessage:
-        getUserStatus.data?.userNotificationObj.mailboxNotificationCount.length,
+        getUserStatus.data?.userNotificationObj.totalUnreadMail.length,
     },
   ];
   return (

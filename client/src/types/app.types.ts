@@ -30,8 +30,8 @@ export interface SidebarSchema {
     groupConversationStatus: string | null;
   };
   userNotificationObj: {
-    privateNotificationCount: string[];
-    groupNotificationCount: string[];
-    mailboxNotificationCount: string[];
+    totalUnreadPrivateConversation: string[];
+    totalUnreadGroupConversation: string[];
+    totalUnreadMail: string[];
   };
 }

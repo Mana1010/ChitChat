@@ -16,10 +16,11 @@ import { GroupChatList } from "@/types/group.types";
 
 function useInvitationResponse(
   mailId: string | null,
-  setAllGroupChatList: Dispatch<SetStateAction<GroupChatList[]>> | null = null
+  setAllGroupChatList: Dispatch<SetStateAction<GroupChatList[]>> | null = null,
+  invitationType: "in-mail" | "in-group-list"
 ) {
   const router = useRouter();
-  const { mailSocket } = useSocketStore();
+  const { mailSocket, groupSocket } = useSocketStore();
   const queryClient = useQueryClient();
   const { mutate: acceptInvitation, isLoading: acceptInvitationLoading } =
     useMutation({
@@ -36,7 +37,11 @@ function useInvitationResponse(
         return response.data;
       },
       onSuccess: ({ message, groupId }) => {
-        mailSocket?.emit("invitation-accepted", { groupId });
+        if (invitationType === "in-mail" && mailSocket) {
+          mailSocket.emit("invitation-accepted", { groupId });
+        } else if (invitationType === "in-group-list" && groupSocket) {
+          groupSocket.emit("invitation-accepted", { groupId });
+        }
         queryClient.invalidateQueries(["groupchat-list"]);
         toast.success(message);
         router.push(`/chats/group/${groupId}?type=chats`);

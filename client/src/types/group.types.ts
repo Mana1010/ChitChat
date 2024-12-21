@@ -11,12 +11,11 @@ export interface GroupChatList
 export interface GroupChatConversationList<SenderType = string>
   extends Pick<BaseGroupChatSchema, "_id" | "groupName" | "groupPhoto"> {
   is_group_active: boolean;
-  sender_name: string;
   lastMessage: {
     sender: SenderType;
     text: string;
     type: "text" | "system" | "file";
-    lastMessageCreatedAt: string;
+    lastMessageCreatedAt: Date;
   };
 }
 

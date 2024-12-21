@@ -139,12 +139,15 @@ function GroupChatboard({ groupId }: { groupId: string }) {
     });
 
     groupSocket.on("user-joined-group", ({ messageDetails }) => {
+      console.log(messageDetails);
       setAllMessages((prevMessages) => [...prevMessages, messageDetails]);
       queryClient.setQueryData<GroupChatInfo | undefined>(
         ["group-info", groupId],
         (cachedData) => {
-          if (cachedData) {
+          if (cachedData && messageDetails) {
             return { ...cachedData, total_member: cachedData.total_member + 1 };
+          } else {
+            return cachedData;
           }
         }
       );
@@ -176,7 +179,6 @@ function GroupChatboard({ groupId }: { groupId: string }) {
       return <UserNotFound errorMessage={errorMessage.response.data.message} />;
     }
   }
-
   return (
     <div
       onClick={() => {

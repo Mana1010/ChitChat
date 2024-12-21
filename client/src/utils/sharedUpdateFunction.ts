@@ -157,13 +157,13 @@ export function optimisticUpdateMessage(
   });
 }
 
-export function decrementNotificationCount(
+export function handleNotificationDecrement(
   queryClient: QueryClient,
   sidebarKey:
-    | "privateNotificationCount"
-    | "groupNotificationCount"
-    | "mailboxNotificationCount",
-  senderId: string
+    | "totalUnreadPrivateConversation"
+    | "totalUnreadGroupConversation"
+    | "totalUnreadMail",
+  notificationId: string
 ) {
   queryClient.setQueryData<SidebarSchema | undefined>(
     ["sidebar"],
@@ -171,15 +171,14 @@ export function decrementNotificationCount(
       const notificationCountIds = new Set(
         cachedData?.userNotificationObj[sidebarKey]
       );
-
       if (cachedData) {
-        if (notificationCountIds.has(senderId)) {
-          notificationCountIds.delete(senderId);
+        if (notificationCountIds.has(notificationId)) {
+          notificationCountIds.delete(notificationId);
           return {
             ...cachedData,
             userNotificationObj: {
               ...cachedData.userNotificationObj,
-              [sidebarKey]: Array.from(notificationCountIds),
+              [sidebarKey]: Array.from(notificationCountIds), //Convert it from Set format to plain array
             },
           };
         } else {

@@ -2,7 +2,11 @@ import { Server } from "socket.io";
 import { Invitation, Request } from "../model/mail.model";
 import { GroupConversation } from "../model/groupConversation.model";
 import { Group } from "../model/group.model";
-import { GROUP_NAMESPACE, MAIL_NAMESPACE } from "../utils/namespaces.utils";
+import {
+  GROUP_NAMESPACE,
+  MAIL_NAMESPACE,
+  NOTIFICATION_NAMESPACE,
+} from "../utils/namespaces.utils";
 import { appLogger } from "../utils/loggers.utils";
 import mongoose from "mongoose";
 
@@ -54,6 +58,9 @@ export async function handleGroupSocket(io: Server) {
             isAlreadyRead: false,
             kind: "invitation",
           });
+          NOTIFICATION_NAMESPACE(io).to(id).emit("trigger-mail-notification", {
+            sidebarKey: "totalUnreadMail",
+          });
         });
       }
     );
@@ -94,12 +101,18 @@ export async function handleGroupSocket(io: Server) {
       const getAllAdmin: string[] = getAdmins[0].get_all_admin;
       await Promise.all(
         getAllAdmin.map(async (adminId) => {
-          await Request.create({
+          const result = await Request.create({
             from: userId,
             body: groupId,
             to: adminId,
             type: "request",
           });
+          NOTIFICATION_NAMESPACE(io)
+            .to(adminId.toString())
+            .emit("trigger-notification", {
+              sidebarKey: "totalUnreadMail",
+              notificationId: result._id,
+            });
         })
       );
       getAllAdmin.map((adminId) => {
@@ -110,6 +123,7 @@ export async function handleGroupSocket(io: Server) {
         });
       });
     });
+
     socket.on(
       "send-message",
       async ({ message, groupId }: { message: string; groupId: string }) => {
@@ -226,7 +240,7 @@ export async function handleGroupSocket(io: Server) {
 
     socket.on(
       "join-room",
-      async ({ groupId, userId }: { groupId: string; userId: string }) => {
+      async ({ userId }: { groupId: string; userId: string }) => {
         console.log("SUCCESSFULLY JOINED THE ROOM FOR GROUP");
         const allGroupJoinedIds = (await GroupConversation.find({
           members: {
@@ -244,9 +258,12 @@ export async function handleGroupSocket(io: Server) {
         socket.join(userId);
       }
     );
-    socket.on("leave-room", ({ groupId, userId }) => {
-      socket.leave(groupId);
-      socket.leave(userId);
-    });
+    socket.on(
+      "leave-room",
+      async ({ groupId, userId }: { groupId: string; userId: string }) => {
+        socket.leave(groupId);
+        socket.leave(userId);
+      }
+    );
   });
 }

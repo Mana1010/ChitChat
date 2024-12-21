@@ -13,6 +13,14 @@ import axios, { AxiosError } from "axios";
 import { useQuery, UseQueryResult } from "react-query";
 import { APP_SERVER_URL } from "@/utils/serverUrl";
 import LoadingChat from "@/components/LoadingChat";
+import { IoIosCheckmarkCircle, IoIosCloseCircle } from "react-icons/io";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
 function InvitationText({ mailId }: { mailId: string }) {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const { data: session, status } = useSession();
@@ -21,7 +29,7 @@ function InvitationText({ mailId }: { mailId: string }) {
     declineInvitation,
     acceptInvitationLoading,
     declineInvitationLoading,
-  } = useInvitationResponse(mailId);
+  } = useInvitationResponse(mailId, null, "in-mail");
 
   const getMailContent: UseQueryResult<
     MailDetailsSchema,
@@ -83,50 +91,65 @@ function InvitationText({ mailId }: { mailId: string }) {
           <div className="self-center md:self-end">
             {getMailContent.data?.status === "pending" ? (
               <div className="flex space-x-2">
-                <button
-                  disabled={acceptInvitationLoading}
-                  onClick={() =>
-                    acceptInvitation({
-                      groupId: getGroupDetails?._id as string,
-                      userId: session?.user.userId as string,
-                    })
-                  }
-                  className="bg-[#6486FF] px-6 py-2 flex items-center justify-center rounded-sm text-white text-[0.9rem] disabled:bg-[#6486FF]/50"
-                >
-                  {acceptInvitationLoading ? (
-                    <Image
-                      src={loadingIcon}
-                      alt="loading-icon"
-                      width={20}
-                      height={20}
-                      priority
-                    />
-                  ) : (
-                    "Accept Invitation"
-                  )}
-                </button>
-                <button
-                  disabled={declineInvitationLoading}
-                  onClick={() =>
-                    declineInvitation({
-                      groupId: getGroupDetails?._id as string,
-                      userId: session?.user.userId as string,
-                    })
-                  }
-                  className="bg-[#414141] px-6 py-2 rounded-sm text-white text-[0.9rem] disabled:bg-[#6486FF]/50"
-                >
-                  {declineInvitationLoading ? (
-                    <Image
-                      src={loadingIcon}
-                      alt="loading-icon"
-                      width={20}
-                      height={20}
-                      priority
-                    />
-                  ) : (
-                    "Decline Invitation"
-                  )}
-                </button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger
+                      disabled={acceptInvitationLoading}
+                      onClick={() =>
+                        acceptInvitation({
+                          groupId: getGroupDetails?._id as string,
+                          userId: session?.user.userId as string,
+                        })
+                      }
+                      className="bg-[#6486FF] px-6 py-2 flex items-center justify-center rounded-sm text-white text-[0.9rem] disabled:bg-[#6486FF]/50"
+                    >
+                      {" "}
+                      {acceptInvitationLoading ? (
+                        <Image
+                          src={loadingIcon}
+                          alt="loading-icon"
+                          width={20}
+                          height={20}
+                          priority
+                        />
+                      ) : (
+                        <IoIosCheckmarkCircle />
+                      )}
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-[#6486FF]">
+                      <p>Accept Invitation</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger
+                      disabled={declineInvitationLoading}
+                      onClick={() =>
+                        declineInvitation({
+                          groupId: getGroupDetails?._id as string,
+                          userId: session?.user.userId as string,
+                        })
+                      }
+                      className="bg-[#414141] px-6 py-2 rounded-sm text-white text-[0.9rem] disabled:bg-[#6486FF]/50"
+                    >
+                      {declineInvitationLoading ? (
+                        <Image
+                          src={loadingIcon}
+                          alt="loading-icon"
+                          width={20}
+                          height={20}
+                          priority
+                        />
+                      ) : (
+                        <IoIosCloseCircle />
+                      )}
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-[#6486FF]">
+                      <p>Decline Invitation</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             ) : (
               <div className="flex space-x-2">

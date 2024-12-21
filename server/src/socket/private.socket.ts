@@ -83,7 +83,7 @@ export function handlePrivateSocket(io: Server) {
           NOTIFICATION_NAMESPACE(io)
             .to(participantId)
             .emit("trigger-notification", {
-              sidebarKey: "privateNotificationCount",
+              sidebarKey: "totalUnreadPrivateConversation",
               notificationId: conversationId,
             });
         } catch (err) {

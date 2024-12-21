@@ -4,7 +4,7 @@ import { PrivateConversation } from "../model/privateConversation.model";
 import { GroupConversation } from "../model/groupConversation.model";
 import mongoose from "mongoose";
 import { User } from "../model/user.model";
-import { Invitation, Mail } from "../model/mail.model";
+import { Mail } from "../model/mail.model";
 import { appLogger } from "../utils/loggers.utils";
 
 interface UserChatStatusObjSchema {
@@ -16,6 +16,11 @@ interface UserNotificationObjSchema {
   groupNotificationCount: string[];
   mailboxNotificationCount: number;
 }
+interface NotificationObjSchema {
+  totalUnreadPrivateConversation: string[];
+  totalUnreadMail: string[];
+  totalUnreadGroupConversation: string[];
+}
 export const getSidebarNotificationAndCurrentConversation = asyncHandler(
   async (req: Request, res: Response) => {
     const { senderId } = req.params;
@@ -24,28 +29,107 @@ export const getSidebarNotificationAndCurrentConversation = asyncHandler(
       groupConversationStatus: null,
     };
 
-    const userNotificationObj: UserNotificationObjSchema = {
-      privateNotificationCount: [],
-      groupNotificationCount: [],
-      mailboxNotificationCount: 0,
-    };
-
     try {
       const checkIfNewUserPrivate = await PrivateConversation.exists({
         participants: { $in: [senderId] },
       });
 
-      const getTotalPrivateNotification = (await PrivateConversation.find({
-        participants: { $in: [senderId] },
-        userReadMessage: { $nin: [senderId] },
-      })
-        .select(["_id"])
-        .lean()) as { _id: string }[];
+      const handleNotificationQuery = await PrivateConversation.aggregate([
+        {
+          $match: {
+            participants: {
+              $in: [new mongoose.Types.ObjectId(senderId)],
+            },
+            userReadMessage: {
+              $nin: [new mongoose.Types.ObjectId(senderId)],
+            },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            totalUnreadPrivateConversation: { $push: "$_id" },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            totalUnreadPrivateConversation: 1,
+          },
+        },
+        {
+          $unionWith: {
+            coll: "mails",
+            pipeline: [
+              {
+                $match: {
+                  to: new mongoose.Types.ObjectId(senderId),
+                  isAlreadyRead: false,
+                },
+              },
+              {
+                $group: {
+                  _id: null,
+                  totalUnreadMail: { $push: "$_id" },
+                },
+              },
+              {
+                $project: {
+                  _id: 0,
+                  totalUnreadMail: 1,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $unionWith: {
+            coll: "groupconversations",
+            pipeline: [
+              {
+                $match: {
+                  member: {
+                    $elemMatch: {
+                      memberInfo: new mongoose.Types.ObjectId(senderId),
+                      status: "active",
+                    },
+                  },
+                  memberReadMessage: {
+                    $nin: [new mongoose.Types.ObjectId(senderId)],
+                  },
+                },
+              },
+              {
+                $group: {
+                  _id: null,
+                  totalUnreadGroupConversation: { $push: "$_id" },
+                },
+              },
+              {
+                $project: {
+                  _id: 0,
+                  totalUnreadGroupConversation: 1,
+                },
+              },
+            ],
+          },
+        },
+      ]);
+      const keywords = [
+        "totalUnreadPrivateConversation",
+        "totalUnreadMail",
+        "totalUnreadGroupConversation",
+      ];
+      let userNotificationObj: NotificationObjSchema = {
+        totalUnreadPrivateConversation: [],
+        totalUnreadGroupConversation: [],
+        totalUnreadMail: [],
+      };
+      const result = Object.assign({}, ...handleNotificationQuery); //Format the result from [{}, {}] to {key1: value1, ...}
 
-      const getTotalMailNotification = await Mail.find({
-        to: senderId,
-        isAlreadyRead: false,
-      }).countDocuments();
+      keywords.forEach((key: string) => {
+        userNotificationObj[key as keyof NotificationObjSchema] = result[key] ?? [];
+      });
       if (checkIfNewUserPrivate?._id) {
         const getFirstPrivateConversationId = (await PrivateConversation.find({
           participants: { $in: [senderId] },
@@ -57,12 +141,6 @@ export const getSidebarNotificationAndCurrentConversation = asyncHandler(
 
         userChatStatusObj.privateConversationStatus =
           getFirstPrivateConversationId[0]._id;
-
-        for (let i = 0; i < getTotalPrivateNotification.length; i++) {
-          userNotificationObj.privateNotificationCount.push(
-            getTotalPrivateNotification[i]._id.toString()
-          );
-        }
       }
       const checkIfNewUserGroup = await GroupConversation.exists({
         members: { $elemMatch: { memberInfo: senderId, status: "active" } },
@@ -81,9 +159,6 @@ export const getSidebarNotificationAndCurrentConversation = asyncHandler(
           getFirstGroupConversationId[0]._id;
       }
 
-      if (getTotalMailNotification > 0) {
-        userNotificationObj.mailboxNotificationCount = getTotalMailNotification;
-      }
       res.status(200).json({
         message: {
           userChatStatusObj,

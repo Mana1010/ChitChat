@@ -27,8 +27,8 @@ const groupSchema = new mongoose.Schema({
   },
 
   lastMessage: {
-    sender: referenceModel("User", false),
-    text: { type: String, default: "👋" },
+    sender: referenceModel("User"),
+    text: { type: String, default: "created this group" },
     type: {
       type: String,
       enum: ["text", "file", "system"],

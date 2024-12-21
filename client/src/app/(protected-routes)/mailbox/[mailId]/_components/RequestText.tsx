@@ -13,6 +13,13 @@ import { MailDetailsSchema } from "@/types/app.types";
 import axios, { AxiosError } from "axios";
 import { UseQueryResult, useQuery } from "react-query";
 import { APP_SERVER_URL } from "@/utils/serverUrl";
+import { IoIosCloseCircle, IoIosCheckmarkCircle } from "react-icons/io";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 function InvitationText({ mailId }: { mailId: string }) {
   const [showInfoModal, setShowInfoModal] = useState(false);
@@ -89,54 +96,69 @@ function InvitationText({ mailId }: { mailId: string }) {
           <div className="self-center md:self-end">
             {getMailContent.data?.status === "pending" ? (
               <div className="flex space-x-2">
-                <button
-                  disabled={acceptRequestLoading}
-                  onClick={() =>
-                    acceptRequest({
-                      groupId: getGroupDetails?._id as string,
-                      userId: session?.user.userId as string,
-                      requesterId: getMailContent.data?.sender_details
-                        ._id as string,
-                    })
-                  }
-                  className="bg-[#6486FF] px-6 py-2 flex items-center justify-center rounded-sm text-white text-[0.9rem] disabled:bg-[#6486FF]/50"
-                >
-                  {acceptRequestLoading ? (
-                    <Image
-                      src={loadingIcon}
-                      alt="loading-icon"
-                      width={20}
-                      height={20}
-                      priority
-                    />
-                  ) : (
-                    "Accept Request"
-                  )}
-                </button>
-                <button
-                  disabled={declineRequestLoading}
-                  onClick={() =>
-                    declineRequest({
-                      groupId: getGroupDetails?._id as string,
-                      userId: session?.user.userId as string,
-                      requesterId: getMailContent.data?.sender_details
-                        ._id as string,
-                    })
-                  }
-                  className="bg-[#414141] px-6 py-2 rounded-sm text-white text-[0.9rem] disabled:bg-[#6486FF]/50"
-                >
-                  {declineRequestLoading ? (
-                    <Image
-                      src={loadingIcon}
-                      alt="loading-icon"
-                      width={20}
-                      height={20}
-                      priority
-                    />
-                  ) : (
-                    "Decline Request"
-                  )}
-                </button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger
+                      disabled={acceptRequestLoading}
+                      onClick={() =>
+                        acceptRequest({
+                          groupId: getGroupDetails?._id as string,
+                          userId: session?.user.userId as string,
+                          requesterId: getMailContent.data?.sender_details
+                            ._id as string,
+                        })
+                      }
+                      className="bg-[#6486FF] px-6 py-2 flex items-center justify-center rounded-sm text-white text-[0.9rem] disabled:bg-[#6486FF]/50"
+                    >
+                      {" "}
+                      {acceptRequestLoading ? (
+                        <Image
+                          src={loadingIcon}
+                          alt="loading-icon"
+                          width={20}
+                          height={20}
+                          priority
+                        />
+                      ) : (
+                        <IoIosCheckmarkCircle />
+                      )}
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-[#6486FF]">
+                      <p>Accept Invitation</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger
+                      disabled={declineRequestLoading}
+                      onClick={() =>
+                        declineRequest({
+                          groupId: getGroupDetails?._id as string,
+                          userId: session?.user.userId as string,
+                          requesterId: getMailContent.data?.sender_details
+                            ._id as string,
+                        })
+                      }
+                      className="bg-[#414141] px-6 py-2 rounded-sm text-white text-[0.9rem] disabled:bg-[#6486FF]/50"
+                    >
+                      {declineRequestLoading ? (
+                        <Image
+                          src={loadingIcon}
+                          alt="loading-icon"
+                          width={20}
+                          height={20}
+                          priority
+                        />
+                      ) : (
+                        <IoIosCloseCircle />
+                      )}
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-[#6486FF]">
+                      <p>Decline Request</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             ) : (
               <div className="flex space-x-2">

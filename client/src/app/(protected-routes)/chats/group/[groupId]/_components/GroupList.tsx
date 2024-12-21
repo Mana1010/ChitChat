@@ -48,7 +48,8 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
 
   const { acceptInvitation, declineInvitation } = useInvitationResponse(
     null,
-    setAllGroupChatList
+    setAllGroupChatList,
+    "in-group-list"
   );
 
   const { searchGroup: debouncedSearchGroup, isLoading: loadingSearchGroup } =
@@ -61,7 +62,6 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
           session?.user.userId
         }?page=${pageParam}&limit=${10}`
       );
-
       return response.data.message;
     },
     enabled: status === "authenticated",
@@ -73,6 +73,7 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
     },
     refetchOnWindowFocus: false,
     onSuccess: (data) => {
+      console.log(data);
       setAllGroupChatList((prevData) => [
         ...prevData,
         ...data.pages[currentPageRef.current].getAllGroups,

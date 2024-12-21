@@ -17,6 +17,7 @@ import { updateConversationList } from "@/utils/sharedUpdateFunction";
 import { retrieveFirstName } from "@/utils/retrieveFirstName";
 import debounceScroll from "@/hooks/debounceScroll";
 import { DEFAULT_SCROLL_VALUE, GROUP_CHATLIST_KEY } from "@/utils/storageKey";
+import { User } from "@/types/shared.types";
 function GroupChatList({
   searchChat,
   groupId,
@@ -30,7 +31,7 @@ function GroupChatList({
   const chatListRef = useRef<HTMLDivElement | null>(null);
   const debounce = debounceScroll(GROUP_CHATLIST_KEY);
   const displayAllGroupChat: UseQueryResult<
-    GroupChatConversationList[],
+    GroupChatConversationList<User>[],
     AxiosError<{ message: string }>
   > = useQuery({
     queryKey: ["groupchat-list"],
@@ -68,11 +69,15 @@ function GroupChatList({
       }: {
         groupChatDetails: GroupChatConversationList;
       }) => {
-        queryClient.setQueryData<GroupChatConversationList[]>(
+        queryClient.setQueryData<GroupChatConversationList[] | undefined>(
           ["groupchat-list"],
-          (cachedData: GroupChatConversationList[] | undefined) => {
-            const data = cachedData || [];
-            return [groupChatDetails, ...data];
+          (cachedData) => {
+            if (cachedData && groupChatDetails) {
+              const data = cachedData || [];
+              return [groupChatDetails, ...data];
+            } else {
+              return cachedData;
+            }
           }
         );
       }
@@ -135,7 +140,7 @@ function GroupChatList({
           className="pt-2 flex flex-col w-full overflow-y-auto h-full flex-grow items-center px-1.5"
         >
           {searchResult?.map(
-            (groupchat: GroupChatConversationList, index: number) => (
+            (groupchat: GroupChatConversationList<User>, index: number) => (
               <button
                 onClick={() =>
                   router.push(`/chats/group/${groupchat._id}?type=chats`)
@@ -171,8 +176,8 @@ function GroupChatList({
                       className={`text-[0.75rem] text-white truncate w-[90%] text-start`}
                     >
                       {`${handleLastMessage(
-                        groupchat.lastMessage.sender,
-                        groupchat.sender_name,
+                        groupchat.lastMessage.sender._id,
+                        groupchat.lastMessage.sender.name,
                         groupchat.lastMessage.type
                       )} ${groupchat.lastMessage.text}`}
                     </small>

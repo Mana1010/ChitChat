@@ -12,7 +12,7 @@ import axios, { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
 import { APP_SERVER_URL } from "@/utils/serverUrl";
 import { useSession } from "next-auth/react";
-import { MailListSchema } from "@/types/app.types";
+import { MailListSchema, SidebarSchema } from "@/types/app.types";
 import { formatDistanceToNow } from "date-fns";
 import { AnimatePresence, motion } from "framer-motion";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -20,6 +20,7 @@ import { TbTrashX } from "react-icons/tb";
 import EmptyMail from "../EmptyMail";
 import ConversationListSkeleton from "@/app/(protected-routes)/chats/_components/ConversationListSkeleton";
 import MailListHeader from "./MailListHeader";
+import { handleNotificationDecrement } from "@/utils/sharedUpdateFunction";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -131,6 +132,7 @@ function MailList({ mailId }: { mailId: string }) {
         }
       }
     );
+    handleNotificationDecrement(queryClient, "totalUnreadMail", mailId);
   }
   function handleOpenMail(mailId: string, isAlreadyOpenMail: boolean) {
     if (!isAlreadyOpenMail) {

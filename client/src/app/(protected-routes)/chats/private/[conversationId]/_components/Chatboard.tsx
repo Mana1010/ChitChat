@@ -28,7 +28,7 @@ import SendAttachment from "@/components/SendAttachment";
 import useParticipantInfo from "@/hooks/useParticipantInfo.hook";
 import PrivateMessageField from "./PrivateMessageField";
 import {
-  decrementNotificationCount,
+  handleNotificationDecrement,
   handleUnreadMessageSign,
   updateConversationList,
 } from "@/utils/sharedUpdateFunction";
@@ -130,9 +130,9 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       !participantInfo?.receiver_details._id
     )
       return;
-    decrementNotificationCount(
+    handleNotificationDecrement(
       queryClient,
-      "privateNotificationCount",
+      "totalUnreadPrivateConversation",
       conversationId
     );
     privateSocket.emit("read-message", {

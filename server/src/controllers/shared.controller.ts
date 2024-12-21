@@ -3,14 +3,14 @@ import asyncHandler from "express-async-handler";
 import { Request, Response } from "express";
 import { Mail } from "../model/mail.model";
 import mongoose from "mongoose";
-import { string } from "zod";
 
 const handleMailUpdate = async (
   groupId: string,
   userId: string,
   status: "accepted" | "declined"
 ) => {
-  await Mail.updateOne(
+  console.log(`Status ${status}`);
+  const updated = await Mail.updateOne(
     {
       body: new mongoose.Types.ObjectId(groupId),
       to: new mongoose.Types.ObjectId(userId),
@@ -20,7 +20,9 @@ const handleMailUpdate = async (
       $set: { status },
     }
   );
+  console.log(updated);
 };
+
 const handleAcceptInvitation = async (groupId: string, userId: string) => {
   await GroupConversation.updateOne(
     {
@@ -47,6 +49,7 @@ const handleDeclineInvitation = async (groupId: string, userId: string) => {
       members: { memberInfo: userId },
     },
   });
+  await handleMailUpdate(groupId, userId, "declined");
 };
 
 const handleAcceptRequest = async (
