@@ -109,3 +109,7 @@
   background-position: center;
   background-size: cover;
 }
+
+.profile-container {
+  background: url("./../assets/images/svg/profile-background.svg");
+}

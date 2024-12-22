@@ -25,7 +25,29 @@ export interface Message<UserType = string, ReactionType = string> {
   reactions: ReactionType;
   createdAt: Date;
 }
-
+export interface ReactionSchema {
+  emoji: string;
+  name: string;
+  id: string;
+}
+export interface ReactionListSchema {
+  _id: string;
+  reactions: Reaction;
+  reactor_details: {
+    name: string;
+    profilePic: string;
+  };
+}
+interface ExtendUser extends User {
+  provider: string;
+  bio: string;
+  email: string;
+}
+export interface ProfileDetails {
+  participant_details: ExtendUser;
+  total_participant_joined_group: number;
+  total_participant_private_chat: number;
+}
 export interface InfiniteScrollingMessageSchema {
   pages: [{ getMessages: Message[]; nextPage: number | null }];
   pageParams: [undefined | number];

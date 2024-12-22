@@ -367,6 +367,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
         <ProfileCard
           conversationId={conversationId}
           setOpenProfileModal={setOpenProfileModal}
+          participantId={participantInfo?.receiver_details._id as string}
         />
       )}
       {openAttachmentModal && (

@@ -4,9 +4,11 @@ import {
   acceptRequest,
   declineInvitation,
   declineRequest,
+  participantProfile,
 } from "../controllers/shared.controller";
 export const router = express.Router();
 
+router.get("/participant/profile/:participantId", participantProfile);
 router.patch("/accept/invitation/:groupId/:userId", acceptInvitation);
 router.patch("/decline/invitation/:groupId/:userId", declineInvitation);
 router.patch("/accept/request/:requesterId/:groupId/:userId", acceptRequest);

@@ -220,8 +220,6 @@ export const getParticipantInfo = asyncHandler(
             _id: "$receiver_details._id",
             profilePic: "$receiver_details.profilePic",
             status: "$receiver_details.status",
-            provider: "$receiver_details.provider",
-            email: "$receiver_details.email",
           },
           is_user_already_seen_message: 1,
         },

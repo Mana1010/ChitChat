@@ -2,15 +2,15 @@
 import React, { Dispatch, SetStateAction } from "react";
 import ChatBoardHeaderSkeleton from "../../../_components/ChatBoardHeaderSkeleton";
 import Image from "next/image";
-import { FullInfoUser } from "@/types/UserTypes";
 import { HiOutlineDotsCircleHorizontal } from "react-icons/hi";
 import { formatDistanceToNow } from "date-fns";
+import { User } from "@/types/shared.types";
 function ChatHeader({
   participantInfo,
   isLoading,
   setOpenProfileModal,
 }: {
-  participantInfo: FullInfoUser | undefined;
+  participantInfo: User | undefined;
   isLoading: boolean;
   setOpenProfileModal: Dispatch<SetStateAction<boolean>>;
 }) {

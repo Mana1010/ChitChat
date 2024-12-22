@@ -16,20 +16,6 @@ export interface PublicMessages<UserType = string> {
 }
 export interface GetParticipantInfo {
   _id: string;
-  receiver_details: FullInfoUser;
+  receiver_details: User;
   is_user_already_seen_message: boolean;
-}
-
-export interface ReactionSchema {
-  emoji: string;
-  name: string;
-  id: string;
-}
-export interface ReactionListSchema {
-  _id: string;
-  reactions: Reaction;
-  reactor_details: {
-    name: string;
-    profilePic: string;
-  };
 }

@@ -1,5 +1,4 @@
 "use client";
-import React from "react";
 import { useQuery, UseQueryResult } from "react-query";
 import axios, { AxiosError } from "axios";
 import { PRIVATE_SERVER_URL } from "@/utils/serverUrl";

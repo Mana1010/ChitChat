@@ -3,6 +3,8 @@ import asyncHandler from "express-async-handler";
 import { Request, Response } from "express";
 import { Mail } from "../model/mail.model";
 import mongoose from "mongoose";
+import { User } from "../model/user.model";
+import { PrivateConversation } from "../model/privateConversation.model";
 
 const handleMailUpdate = async (
   groupId: string,
@@ -154,6 +156,44 @@ export const declineRequest = asyncHandler(
       res.status(400).json({
         message: "Failed to decline request",
       });
+    }
+  }
+);
+
+export const participantProfile = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { participantId } = req.params;
+    try {
+      const participant_details = await User.findById(participantId)
+        .select("-authId")
+        .lean();
+
+      const total_participant_joined_group = await GroupConversation.find({
+        members: {
+          $elemMatch: {
+            memberInfo: participantId,
+            status: "active",
+          },
+        },
+      }).countDocuments();
+
+      const total_participant_private_chat = await PrivateConversation.find({
+        participants: {
+          $in: [participantId],
+        },
+      }).countDocuments();
+      console.log("Done hehe");
+      const responseData = {
+        participant_details,
+        total_participant_joined_group,
+        total_participant_private_chat,
+      };
+
+      console.log(responseData);
+      res.status(200).json(responseData);
+    } catch (err) {
+      console.log(err);
+      res.status(400).json({ message: err });
     }
   }
 );

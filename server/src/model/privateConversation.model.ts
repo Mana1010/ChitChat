@@ -25,6 +25,7 @@ const privateConversationSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
+privateConversationSchema.index({ participants: 1 });
 type PrivateConversationSchema = mongoose.InferSchemaType<
   typeof privateConversationSchema
 >;

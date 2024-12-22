@@ -13,6 +13,8 @@ const messageSchema = new mongoose.Schema(
   }
 );
 
+messageSchema.index({ conversationId: 1, sender: 1 });
+
 type UserSchema = mongoose.InferSchemaType<typeof messageSchema>;
 export const Private =
   mongoose.models.Private ||

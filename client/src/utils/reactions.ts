@@ -1,5 +1,5 @@
 import { nanoid } from "nanoid";
-import { ReactionSchema } from "@/types/UserTypes";
+import { ReactionSchema } from "@/types/shared.types";
 export const reactions: ReactionSchema[] = [
   {
     emoji: "👍",

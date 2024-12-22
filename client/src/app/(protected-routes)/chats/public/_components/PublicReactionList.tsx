@@ -4,7 +4,7 @@ import { useQuery, useMutation, UseQueryResult } from "react-query";
 import { FaXmark } from "react-icons/fa6";
 import { PRIVATE_SERVER_URL, PUBLIC_SERVER_URL } from "@/utils/serverUrl";
 import axios, { AxiosError } from "axios";
-import { ReactionListSchema } from "@/types/UserTypes";
+import { ReactionListSchema } from "@/types/shared.types";
 import Image from "next/image";
 import { TbMessage2 } from "react-icons/tb";
 import { useRouter } from "next/navigation";
