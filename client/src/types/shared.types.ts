@@ -42,6 +42,7 @@ interface ExtendUser extends User {
   provider: string;
   bio: string;
   email: string;
+  createdAt: Date;
 }
 export interface ProfileDetails {
   participant_details: ExtendUser;
