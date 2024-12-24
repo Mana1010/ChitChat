@@ -21,7 +21,7 @@ export interface Message<UserType = string, ReactionType = string> {
   _id: string;
   sender: UserType;
   message: string;
-  type: "system" | "file" | "text";
+  type: "system" | "file" | "text" | "time";
   reactions: ReactionType;
   createdAt: Date;
 }

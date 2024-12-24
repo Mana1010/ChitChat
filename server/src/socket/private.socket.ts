@@ -49,7 +49,7 @@ export function handlePrivateSocket(io: Server) {
               .populate([
                 { path: "sender", select: ["profilePic", "name", "status"] },
               ])
-              .select(["message", "sender"]);
+              .select(["message", "sender", "type", "createdAt"]);
 
             socket.broadcast.to(conversationId).emit("display-message", {
               // To send a message and display to specific user only.

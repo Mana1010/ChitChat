@@ -30,6 +30,8 @@ import GroupMessageField from "./GroupMessageField";
 import GroupChatBubbles from "./GroupChatBubbles";
 import { GroupChatInfo } from "@/types/group.types";
 import BackToBottomArrow from "../../../_components/BackToBottomArrow";
+import SystemChatBubbles from "../../../_components/SystemChatBubbles";
+import SystemTimeChatBubbles from "../../../_components/SystemTimeChatBubbles";
 function GroupChatboard({ groupId }: { groupId: string }) {
   const { groupSocket } = useSocketStore();
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -229,19 +231,16 @@ function GroupChatboard({ groupId }: { groupId: string }) {
                     groupId={groupId}
                     setMessage={setAllMessages}
                   />
+                ) : data.type === "time" ? (
+                  <SystemTimeChatBubbles message={data.message} />
                 ) : (
-                  <div
+                  <SystemChatBubbles
                     key={data._id}
-                    className="w-full flex items-center justify-center"
-                  >
-                    <h1 className="text-zinc-300 text-[0.8rem]">
-                      {`${
-                        data.sender._id === session?.user.userId
-                          ? "You"
-                          : data.sender.name
-                      } ${data.message}`}
-                    </h1>
-                  </div>
+                    senderName={data.sender.name}
+                    senderId={data.sender._id}
+                    userId={session?.user.userId as string}
+                    message={data.message}
+                  />
                 )
               )}
               {typingUsers.find((user) => user === groupId) ? (

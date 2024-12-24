@@ -36,6 +36,9 @@ import { handleSeenUpdate } from "@/utils/sharedUpdateFunction";
 import BackToBottomArrow from "../../../_components/BackToBottomArrow";
 import { Session } from "next-auth";
 import { GetParticipantInfo } from "@/types/UserTypes";
+import SystemTimeChatBubbles from "../../../_components/SystemTimeChatBubbles";
+import SystemChatBubbles from "../../../_components/SystemChatBubbles";
+import { handleConvertUTCToLocal } from "@/utils/convertUTCToLocal";
 function ParentDiv({
   children,
   setOpenEmoji,
@@ -146,7 +149,6 @@ function Chatboard({ conversationId }: { conversationId: string }) {
     privateSocket,
     status,
   ]);
-
   useEffect(() => {
     if (statusSocket) {
       statusSocket.on(
@@ -293,15 +295,29 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                     <LoadingChat />
                   </div>
                 )}
-                {allMessages?.map((data: Message<User>) => (
-                  <PrivateChatBubbles
-                    key={data._id}
-                    messageDetails={data}
-                    session={session}
-                    conversationId={conversationId}
-                    setMessage={setAllMessages}
-                  />
-                ))}
+                {allMessages?.map((data: Message<User>) =>
+                  data.type === "text" ? (
+                    <PrivateChatBubbles
+                      key={data._id}
+                      messageDetails={data}
+                      session={session}
+                      conversationId={conversationId}
+                      setMessage={setAllMessages}
+                    />
+                  ) : data.type === "time" ? (
+                    <SystemTimeChatBubbles
+                      message={data.message}
+                      key={data._id}
+                    />
+                  ) : (
+                    <SystemChatBubbles
+                      senderName={data.sender.name}
+                      senderId={data.sender._id}
+                      userId={session?.user.userId as string}
+                      message={data.message}
+                    />
+                  )
+                )}
                 {typingUsers.find((user) => user === conversationId) ? (
                   <div className="flex space-x-1 items-center">
                     <div className="rounded-3xl bg-[#414141] py-1 px-2 ">
@@ -350,6 +366,10 @@ function Chatboard({ conversationId }: { conversationId: string }) {
         conversationId={conversationId}
         participantId={participantInfo?.receiver_details._id}
         message={message}
+        isChatEmpty={!allMessages.length}
+        lastMessageSentAt={
+          handleConvertUTCToLocal(allMessages[0]?.createdAt) ?? new Date()
+        }
         openEmoji={openEmoji}
         senderId={session?.user.userId}
         scrollRef={scrollRef.current}

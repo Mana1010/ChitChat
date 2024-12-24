@@ -51,7 +51,7 @@ function ProfileCard({
   if (getParticipantProfile.isLoading) {
     return (
       <ParentDiv>
-        <div className="flex items-center justify-center w-full h-full">
+        <div className="flex items-center justify-center w-full h-full bg-[#222222]">
           <Image
             src={loadingAnimation}
             alt="loading-animation"

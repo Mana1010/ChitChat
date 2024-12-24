@@ -5,7 +5,11 @@ const messageSchema = new mongoose.Schema(
     groupId: referenceModel("GroupConversation"),
     sender: referenceModel("User"),
     message: { type: String, required: true },
-    type: { type: String, enum: ["text", "file", "system"], default: "text" },
+    type: {
+      type: String,
+      enum: ["text", "file", "system", "time"],
+      default: "text",
+    },
     reactions: {
       type: [
         {
