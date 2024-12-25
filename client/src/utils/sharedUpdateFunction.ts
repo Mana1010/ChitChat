@@ -8,8 +8,6 @@ import { User } from "@/types/shared.types";
 import { Session } from "next-auth";
 import { nanoid } from "nanoid";
 import { SidebarSchema } from "@/types/app.types";
-import { differenceInMinutes } from "date-fns";
-import { handleDateFormat } from "./dateChatFormat";
 export function updateConversationList<
   ConversationType extends ConversationSchema
 >(
@@ -132,13 +130,8 @@ export function optimisticUpdateMessage(
     SetStateAction<Message<User, Reaction[] | string>[]>
   >,
   session: Session | null,
-  reactionDefault: string | Reaction[],
-  lastMessageSentAt: Date,
-  isChatEmpty: boolean
+  reactionDefault: string | Reaction[]
 ) {
-  const isCurrentChat15minutesAgo =
-    differenceInMinutes(new Date(), new Date(lastMessageSentAt)) >= 15;
-
   const userData = {
     name: session?.user.name.split(" ")[0],
     profilePic: session?.user.image,
@@ -148,47 +141,21 @@ export function optimisticUpdateMessage(
     },
     _id: session?.user.userId,
   };
-  alert(differenceInMinutes(new Date(), new Date(lastMessageSentAt)));
-  if (isCurrentChat15minutesAgo || isChatEmpty) {
-    alert(lastMessageSentAt);
-    setAllMessages((prevMessages) => {
-      return [
-        ...prevMessages,
-        {
-          message: handleDateFormat(new Date()),
-          sender: userData as User,
-          type: "time",
-          createdAt: new Date(),
-          _id: nanoid(),
-          reactions: reactionDefault,
-        },
-        {
-          message,
-          sender: userData as User,
-          type: "text",
-          createdAt: new Date(),
 
-          _id: nanoid(),
-          reactions: reactionDefault,
-        },
-      ];
-    });
-  } else {
-    setAllMessages((prevMessages) => {
-      return [
-        ...prevMessages,
-        {
-          message,
-          sender: userData as User,
-          type: "text",
-          createdAt: new Date(),
-          isMessageDeleted: false,
-          _id: nanoid(),
-          reactions: reactionDefault,
-        },
-      ];
-    });
-  }
+  setAllMessages((prevMessages) => {
+    return [
+      ...prevMessages,
+      {
+        message,
+        sender: userData as User,
+        type: "text",
+        createdAt: new Date(),
+        isMessageDeleted: false,
+        _id: nanoid(),
+        reactions: reactionDefault,
+      },
+    ];
+  });
 }
 
 export function handleNotificationDecrement(

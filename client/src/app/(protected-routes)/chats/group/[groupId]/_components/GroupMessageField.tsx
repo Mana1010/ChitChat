@@ -106,16 +106,6 @@ function GroupMessageField({
         </div>
       </div>
       <button
-        onClick={(e) => {
-          e.stopPropagation();
-          setOpenAttachmentModal((prev) => !prev);
-        }}
-        type="button"
-        className={`px-3 flex py-3 rounded-md items-center text-[#6486FF] text-xl bg-[#3A3B3C]`}
-      >
-        <GrAttachment />
-      </button>
-      <button
         type="submit"
         disabled={!message.trim()}
         className="px-5 flex space-x-2 bg-[#6486FF] py-3.5 md:py-2.5 rounded-md items-center text-zinc-200 disabled:bg-slate-700 disabled:text-zinc-400"

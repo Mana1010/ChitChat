@@ -3,7 +3,6 @@ import Picker from "emoji-picker-react";
 import { MdEmojiEmotions } from "react-icons/md";
 import { LuSend } from "react-icons/lu";
 import { Socket } from "socket.io-client";
-import { differenceInMinutes } from "date-fns";
 import {
   handleNotificationDecrement,
   handleSeenUpdate,
@@ -18,18 +17,14 @@ interface PrivateMessageFieldSchema extends MessageFieldPropsSchema {
   privateSocket: Socket | null;
   participantId: string | undefined;
   conversationId: string;
-  isChatEmpty: boolean;
   senderId: string | undefined;
-  lastMessageSentAt: Date;
   setOpenAttachmentModal: Dispatch<SetStateAction<boolean>>;
 }
 function PrivateMessageField({
   privateSocket,
   participantId,
   conversationId,
-  isChatEmpty,
   message,
-  lastMessageSentAt,
   openEmoji,
   senderId,
   scrollRef,
@@ -43,10 +38,6 @@ function PrivateMessageField({
 
   const handleFormSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const isCurrentChat15minutesAgo =
-      differenceInMinutes(new Date(), new Date(lastMessageSentAt)) >= 15
-        ? true
-        : false;
     if (!privateSocket || !scrollRef) return;
     const data = [
       { message, messageType: "text", conversationId, participantId },
@@ -58,18 +49,7 @@ function PrivateMessageField({
       participantId,
     });
 
-    if (isCurrentChat15minutesAgo)
-      // privateSocket.emit("send-message", {
-      //   data: [{ message, messageType: "text", conversationId, participantId }],
-      // });
-      optimisticUpdateMessage(
-        message,
-        setAllMessages,
-        session,
-        "",
-        lastMessageSentAt,
-        isChatEmpty
-      );
+    optimisticUpdateMessage(message, setAllMessages, session, "");
     privateSocket?.emit("stop-typing", conversationId);
     setTimeout(() => {
       scrollRef.scrollIntoView({ block: "end" }); //To bypass the closure nature of react :)
@@ -148,16 +128,6 @@ function PrivateMessageField({
           />
         </div>
       </div>
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          setOpenAttachmentModal((prev) => !prev);
-        }}
-        type="button"
-        className={`px-3 flex py-3 rounded-md items-center text-[#6486FF] text-xl bg-[#3A3B3C]`}
-      >
-        <GrAttachment />
-      </button>
       <button
         type="submit"
         disabled={!message.trim()}

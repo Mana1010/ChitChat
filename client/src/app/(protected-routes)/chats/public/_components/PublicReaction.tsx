@@ -1,7 +1,6 @@
 "use client";
-import React, { Dispatch, SetStateAction, useState } from "react";
-import { nanoid } from "nanoid";
-import { ReactionSchema } from "@/types/UserTypes";
+import React, { Dispatch, SetStateAction } from "react";
+import { ReactionSchema } from "@/types/shared.types";
 import { Message } from "@/types/shared.types";
 import { User } from "next-auth";
 import { Socket } from "socket.io-client";

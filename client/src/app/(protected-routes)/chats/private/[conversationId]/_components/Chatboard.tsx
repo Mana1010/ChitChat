@@ -38,7 +38,6 @@ import { Session } from "next-auth";
 import { GetParticipantInfo } from "@/types/UserTypes";
 import SystemTimeChatBubbles from "../../../_components/SystemTimeChatBubbles";
 import SystemChatBubbles from "../../../_components/SystemChatBubbles";
-import { handleConvertUTCToLocal } from "@/utils/convertUTCToLocal";
 function ParentDiv({
   children,
   setOpenEmoji,
@@ -254,6 +253,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                   onClick={() => {
                     privateSocket?.emit("send-message", {
                       message: "👋",
+                      messageType: "text",
                       conversationId,
                       receiverId: participantInfo?.receiver_details._id,
                     });
@@ -366,10 +366,6 @@ function Chatboard({ conversationId }: { conversationId: string }) {
         conversationId={conversationId}
         participantId={participantInfo?.receiver_details._id}
         message={message}
-        isChatEmpty={!allMessages.length}
-        lastMessageSentAt={
-          handleConvertUTCToLocal(allMessages[0]?.createdAt) ?? new Date()
-        }
         openEmoji={openEmoji}
         senderId={session?.user.userId}
         scrollRef={scrollRef.current}

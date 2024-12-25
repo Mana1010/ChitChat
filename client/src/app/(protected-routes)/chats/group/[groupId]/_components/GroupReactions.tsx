@@ -17,10 +17,10 @@ function GroupReactions({
   setMessage: Dispatch<SetStateAction<Message<User, Reaction[]>[]>>;
   setOpenReaction: Dispatch<SetStateAction<string | undefined>>;
 }) {
-  const { socket } = useSocketStore();
+  const { groupSocket } = useSocketStore();
   function sendReaction(content: string) {
-    if (!socket) return;
-    socket.emit("send-reaction", {
+    if (!groupSocket) return;
+    groupSocket.emit("send-reaction", {
       reaction: content,
       messageId,
       conversationId,
