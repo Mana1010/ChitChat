@@ -22,10 +22,16 @@ function useRequestResponse(mailId: string) {
         const response = await axios.patch(
           `${SHARED_SERVER_URL}/accept/request/${requesterId}/${groupId}/${userId}`
         );
-        return response.data.message;
+        return response.data;
       },
-      onSuccess: (data) => {
-        toast.success(data);
+      onSuccess: ({ groupId, requesterId, message, groupChatDetails }) => {
+        console.log(groupChatDetails);
+        toast.success(message);
+        mailSocket?.emit("request-accepted", {
+          requesterId,
+          groupId,
+          groupChatDetails,
+        });
         updateMailDetails(queryClient, mailId, "accepted");
       },
     });
@@ -46,9 +52,8 @@ function useRequestResponse(mailId: string) {
         );
         return response.data;
       },
-      onSuccess: ({ message, requesterId, groupId }) => {
+      onSuccess: ({ message }) => {
         toast.success(message);
-        mailSocket?.emit("request-accepted", { requesterId, groupId });
         updateMailDetails(queryClient, mailId, "declined");
       },
     });

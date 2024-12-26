@@ -51,11 +51,7 @@ function GroupChatboard({ groupId }: { groupId: string }) {
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const { ref, inView } = useInView();
 
-  const { groupInfo, isLoading: groupInfoLoading } = useGroupInfo(
-    groupId,
-    status,
-    session?.user.userId as string
-  );
+  const { groupInfo, isLoading: groupInfoLoading } = useGroupInfo(groupId);
   const { data, fetchNextPage, error, isLoading, isError } = useInfiniteQuery({
     queryKey: ["group-messages", groupId],
     queryFn: async ({ pageParam = 0 }): Promise<any> => {

@@ -63,7 +63,7 @@ function GroupChatList({
       }
     );
     groupSocket.on(
-      "user-joined-group",
+      "update-chatlist",
       ({
         groupChatDetails,
       }: {
@@ -86,7 +86,7 @@ function GroupChatList({
       groupSocket.off("update-chatlist");
     };
   }, [groupSocket, queryClient]);
-
+  console.log(displayAllGroupChat.data);
   useEffect(() => {
     if (chatListRef.current) {
       const scrollPosition = sessionStorage.getItem(GROUP_CHATLIST_KEY)
@@ -111,7 +111,7 @@ function GroupChatList({
     if (messageType === "text") {
       return isUserSentThis ? "You:" : "";
     } else if (messageType === "system") {
-      return isUserSentThis ? "You" : retrieveFirstName(senderName);
+      return isUserSentThis ? "You " : retrieveFirstName(senderName);
     }
   };
   return (

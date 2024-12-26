@@ -12,7 +12,7 @@ import axios, { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
 import { APP_SERVER_URL } from "@/utils/serverUrl";
 import { useSession } from "next-auth/react";
-import { MailListSchema, SidebarSchema } from "@/types/app.types";
+import { MailListSchema } from "@/types/app.types";
 import { formatDistanceToNow } from "date-fns";
 import { AnimatePresence, motion } from "framer-motion";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -132,6 +132,7 @@ function MailList({ mailId }: { mailId: string }) {
         }
       }
     );
+    console.log(mailId);
     handleNotificationDecrement(queryClient, "totalUnreadMail", mailId);
   }
   function handleOpenMail(mailId: string, isAlreadyOpenMail: boolean) {

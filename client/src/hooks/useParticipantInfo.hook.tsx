@@ -3,12 +3,9 @@ import { useQuery, UseQueryResult } from "react-query";
 import axios, { AxiosError } from "axios";
 import { PRIVATE_SERVER_URL } from "@/utils/serverUrl";
 import { GetParticipantInfo } from "@/types/UserTypes";
-import { Session } from "next-auth";
-function useParticipantInfo(
-  conversationId: string,
-  status: string,
-  sessionData: Session | null
-) {
+import { useSession } from "next-auth/react";
+function useParticipantInfo(conversationId: string) {
+  const { data: session, status } = useSession();
   const {
     data,
     isLoading,
@@ -19,7 +16,7 @@ function useParticipantInfo(
     queryKey: ["participant-info", conversationId],
     queryFn: async () => {
       const response = await axios.get(
-        `${PRIVATE_SERVER_URL}/participant/info/${sessionData?.user.userId}/${conversationId}`
+        `${PRIVATE_SERVER_URL}/participant/info/${session?.user.userId}/${conversationId}`
       );
       console.log(response.data.message);
       return response.data.message;

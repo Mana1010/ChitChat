@@ -38,6 +38,7 @@ export function handlePrivateSocket(io: Server) {
     socket.on(
       "send-message",
       async ({ message, messageType, conversationId, participantId }) => {
+        console.log(message, messageType, conversationId, participantId);
         try {
           if (conversationId) {
             const createMessage = await Private.create({

@@ -75,7 +75,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
   const { ref, inView } = useInView();
 
   const { participantInfo, isLoading: participantInfoLoading } =
-    useParticipantInfo(conversationId, status, session);
+    useParticipantInfo(conversationId);
   const { data, fetchNextPage, error, isLoading, isError } = useInfiniteQuery({
     queryKey: ["private-messages", conversationId],
     queryFn: async ({ pageParam = 0 }): Promise<any> => {

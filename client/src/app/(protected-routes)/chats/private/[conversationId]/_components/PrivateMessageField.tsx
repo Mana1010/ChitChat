@@ -38,22 +38,15 @@ function PrivateMessageField({
 
   const handleFormSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!privateSocket || !scrollRef) return;
-    const data = [
-      { message, messageType: "text", conversationId, participantId },
-    ];
+    if (!privateSocket) return;
     privateSocket.emit("send-message", {
       message,
       messageType: "text",
       conversationId,
       participantId,
     });
-
     optimisticUpdateMessage(message, setAllMessages, session, "");
     privateSocket?.emit("stop-typing", conversationId);
-    setTimeout(() => {
-      scrollRef.scrollIntoView({ block: "end" }); //To bypass the closure nature of react :)
-    }, 0);
 
     updateConversationList(
       queryClient,
@@ -64,6 +57,9 @@ function PrivateMessageField({
       "chat-list",
       true
     );
+    setTimeout(() => {
+      scrollRef?.scrollIntoView({ block: "end" }); //To bypass the closure nature of react :)
+    }, 0);
     handleSeenUpdate(queryClient, ["participant-info", conversationId], false);
     setMessage("");
     queryClient.invalidateQueries(["sidebar"]);

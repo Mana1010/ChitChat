@@ -43,12 +43,18 @@ export async function handleGroupSocket(io: Server) {
         membersWhoReadMessage.set(groupId, []); //add the group in map
         await Promise.all(
           requestedUsers.map(async (requestedUser: RequestedUsers) => {
-            await Invitation.create({
+            const result = await Invitation.create({
               to: requestedUser.id,
               from: userId,
               body: groupId,
               type: "invitation",
             });
+            NOTIFICATION_NAMESPACE(io)
+              .to(requestedUser.id)
+              .emit("trigger-notification", {
+                sidebarKey: "totalUnreadMail",
+                notificationId: result._id,
+              });
           })
         );
 
@@ -57,9 +63,6 @@ export async function handleGroupSocket(io: Server) {
             sentAt: new Date(),
             isAlreadyRead: false,
             kind: "invitation",
-          });
-          NOTIFICATION_NAMESPACE(io).to(id).emit("trigger-mail-notification", {
-            sidebarKey: "totalUnreadMail",
           });
         });
       }

@@ -4,7 +4,9 @@ import { useQuery, UseQueryResult } from "react-query";
 import axios, { AxiosError } from "axios";
 import { GROUP_SERVER_URL } from "@/utils/serverUrl";
 import { GroupChatInfo } from "@/types/group.types";
-function useGroupInfo(groupId: string, status: string, userId: string) {
+import { useSession } from "next-auth/react";
+function useGroupInfo(groupId: string) {
+  const { data: session, status } = useSession();
   const {
     data,
     isLoading,
@@ -12,7 +14,7 @@ function useGroupInfo(groupId: string, status: string, userId: string) {
     queryKey: ["group-info", groupId],
     queryFn: async () => {
       const response = await axios.get(
-        `${GROUP_SERVER_URL}/group/info/${groupId}/${userId}`
+        `${GROUP_SERVER_URL}/group/info/${groupId}/${session?.user.userId}`
       );
 
       return response.data.message;

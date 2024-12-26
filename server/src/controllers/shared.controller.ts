@@ -5,14 +5,53 @@ import { Mail } from "../model/mail.model";
 import mongoose from "mongoose";
 import { User } from "../model/user.model";
 import { PrivateConversation } from "../model/privateConversation.model";
+import { Group } from "../model/group.model";
+import { appLogger } from "../utils/loggers.utils";
 
+const handleUserJoinedGroupChatList = async (
+  senderId: string,
+  groupId: string
+) => {
+  const result = await GroupConversation.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(groupId),
+      },
+    },
+    { $limit: 1 },
+    {
+      $lookup: {
+        from: "users",
+        localField: "lastMessage.sender",
+        foreignField: "_id",
+        as: "sender_details",
+      },
+    },
+    {
+      $project: {
+        groupName: 1,
+        groupPhoto: 1,
+        lastMessage: {
+          sender: {
+            name: { $first: "$sender_details.name" },
+            _id: { $first: "$sender_details._id" },
+          },
+          text: 1,
+          type: 1,
+          lastMessageCreatedAt: 1,
+        },
+        is_group_active: true,
+      },
+    },
+  ]);
+  return result[0];
+};
 const handleMailUpdate = async (
   groupId: string,
   userId: string,
   status: "accepted" | "declined"
 ) => {
-  console.log(`Status ${status}`);
-  const updated = await Mail.updateOne(
+  await Mail.updateOne(
     {
       body: new mongoose.Types.ObjectId(groupId),
       to: new mongoose.Types.ObjectId(userId),
@@ -22,7 +61,6 @@ const handleMailUpdate = async (
       $set: { status },
     }
   );
-  console.log(updated);
 };
 
 const handleAcceptInvitation = async (groupId: string, userId: string) => {
@@ -75,7 +113,12 @@ const handleAcceptRequest = async (
       },
     }
   );
+  const groupChatDetails = await handleUserJoinedGroupChatList(
+    requesterId,
+    groupId
+  );
   await handleMailUpdate(groupId, userId, "accepted");
+  return { groupChatDetails };
 };
 
 const handleDeclineRequest = async (
@@ -83,11 +126,14 @@ const handleDeclineRequest = async (
   userId: string,
   requesterId: string
 ) => {
+  console.log("Start Here");
+  console.log(groupId, userId, requesterId);
   await GroupConversation.findByIdAndUpdate(groupId, {
     $pull: {
       members: { memberInfo: requesterId },
     },
   });
+  console.log("Middle Here");
   await handleMailUpdate(groupId, userId, "declined");
 };
 
@@ -129,13 +175,21 @@ export const acceptRequest = asyncHandler(
   async (req: Request, res: Response) => {
     const { groupId, userId, requesterId } = req.params;
     try {
-      await handleAcceptRequest(groupId, userId, requesterId);
+      const { groupChatDetails } = await handleAcceptRequest(
+        groupId,
+        userId,
+        requesterId
+      );
+      console.log("Group Chat Details hehe");
+      console.log(groupChatDetails);
       res.status(201).json({
         message: "Request accepted successfully",
         groupId,
         requesterId,
+        groupChatDetails,
       });
     } catch (err) {
+      appLogger.error(err);
       res.status(400).json({
         message: "Failed to accept request",
       });
@@ -147,6 +201,7 @@ export const declineRequest = asyncHandler(
   async (req: Request, res: Response) => {
     const { groupId, userId, requesterId } = req.params;
     try {
+      console.log("Very Start Here");
       await handleDeclineRequest(groupId, userId, requesterId);
       res.status(201).json({
         message: "Request declined successfully",

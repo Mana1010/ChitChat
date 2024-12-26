@@ -160,7 +160,6 @@ export const getAllGroups = asyncHandler(
         },
       },
     ]);
-    console.log(getAllGroups);
     const hasNextPage = getAllGroups.length === LIMIT;
     const nextPage = hasNextPage ? PAGE + 1 : null;
     res.status(200).json({
@@ -225,7 +224,6 @@ export const getAllGroupChatConversation = asyncHandler(
       },
       {
         $addFields: {
-          sender: { $first: "$sender_details" },
           filter_out_you: {
             $filter: {
               input: "$member_details",
@@ -238,7 +236,6 @@ export const getAllGroupChatConversation = asyncHandler(
       },
       {
         $addFields: {
-          sender_name: { $first: "$sender_details.name" },
           is_group_active: {
             //This will check if there is atleast one user (excluded you) is online to be able to return true else false
             $anyElementTrue: {
@@ -260,9 +257,9 @@ export const getAllGroupChatConversation = asyncHandler(
           _id: 1,
           lastMessage: {
             sender: {
-              name: "$sender_name",
+              _id: { $first: "$sender_details._id" },
+              name: { $first: "$sender_details.name" },
             },
-            sender_name: 1,
             text: 1,
             type: 1,
             lastMessageCreatedAt: 1,
@@ -273,7 +270,6 @@ export const getAllGroupChatConversation = asyncHandler(
         },
       },
     ]);
-    console.log(getAllGroupChat);
     res.status(200).json({ message: getAllGroupChat });
   }
 );
