@@ -2,6 +2,7 @@ import { Server } from "socket.io";
 import { Invitation, Request } from "../model/mail.model";
 import { GroupConversation } from "../model/groupConversation.model";
 import { Group } from "../model/group.model";
+import { activeUsers } from "../utils/constant.utils";
 import {
   GROUP_NAMESPACE,
   MAIL_NAMESPACE,
@@ -141,7 +142,6 @@ export async function handleGroupSocket(io: Server) {
               select: ["name", "profilePic", "status", "_id"],
             })
           );
-
           const groupConversationResult =
             await GroupConversation.findByIdAndUpdate(
               groupId,
@@ -158,72 +158,54 @@ export async function handleGroupSocket(io: Server) {
                 new: true,
               }
             ).select("lastMessage");
-          socket.broadcast.to(groupId).emit("display-message", {
+          socket.broadcast.to(`active:${groupId}`).emit("display-message", {
             messageDetails: result,
           });
-
-          const memberIdList = [];
-          const getAllMembers: { member_details: { _id: string } }[] =
-            await GroupConversation.aggregate([
-              {
-                $match: { _id: new mongoose.Types.ObjectId(groupId) },
-              },
-              {
-                $unwind: "$members",
-              },
-              {
-                $lookup: {
-                  from: "users",
-                  localField: "members.memberInfo",
-                  foreignField: "_id",
-                  as: "member_details",
-                },
-              },
-              {
-                $match: {
-                  member_details: {
-                    $elemMatch: {
-                      _id: {
-                        $ne: new mongoose.Types.ObjectId(userId as string),
-                      },
-                      status: "Online",
-                    },
-                  },
-                },
-              },
-              {
-                $addFields: {
-                  member_details: { $first: "$member_details" },
-                },
-              },
-              {
-                $project: {
-                  _id: 0,
-                  member_details: {
-                    _id: 1,
-                  },
-                },
-              },
-            ]);
-
-          membersWhoReadMessage.set(groupId, [userId]);
-          for (let i = 0; i < getAllMembers.length; i++) {
-            socket.broadcast
-              .to(getAllMembers[i].member_details._id.toString())
-              .emit("update-chatlist", {
-                groupId,
-                lastMessage: groupConversationResult.lastMessage.text,
-                lastMessageCreatedAt:
-                  groupConversationResult.lastMessage.lastMessageCreatedAt,
-                type: "text",
-                senderId: userId,
-              });
-          }
+          socket.broadcast.to(groupId).emit("update-conversation-list", {
+            message,
+            groupId,
+            senderId: userId,
+            type: "text",
+            lastMessageCreatedAt:
+              groupConversationResult.lastMessage.lastMessageCreatedAt,
+            sender_details: {},
+          });
         } catch (err) {
           appLogger.error(err);
         }
       }
     );
+
+    socket.on("invitation-accepted", async ({ groupId, groupChatDetails }) => {
+      const groupResult = await Group.create({
+        sender: userId,
+        groupId,
+        type: "system",
+        message: "joined the group",
+      });
+
+      const result = await Group.findById(groupResult._id)
+        .populate({
+          path: "sender",
+          select: ["name", "profilePic", "status", "_id"],
+        })
+        .select(["-updatedAt"]);
+
+      socket.broadcast.to(`active:${groupId}`).emit("user-joined-group", {
+        messageDetails: result,
+      });
+      socket.broadcast.to(groupId).emit("update-conversation-list", {
+        message: groupChatDetails.text,
+        groupId,
+        senderId: groupChatDetails._id,
+        type: "system",
+        lastMessageCreatedAt: groupChatDetails.lastMessageCreatedAt,
+        sender_details: {
+          name: groupChatDetails.lastMessage.sender.name,
+          _id: groupChatDetails.lastMessage.sender._id,
+        },
+      });
+    });
     socket.on("read-message", async ({ groupId }) => {
       let getUserId = membersWhoReadMessage.get(groupId);
       if (!membersWhoReadMessage.has(groupId)) {
@@ -243,7 +225,7 @@ export async function handleGroupSocket(io: Server) {
 
     socket.on(
       "join-room",
-      async ({ userId }: { groupId: string; userId: string }) => {
+      async ({ groupId, userId }: { groupId: string; userId: string }) => {
         console.log("SUCCESSFULLY JOINED THE ROOM FOR GROUP");
         const allGroupJoinedIds = (await GroupConversation.find({
           members: {
@@ -253,18 +235,35 @@ export async function handleGroupSocket(io: Server) {
             },
           },
         }).select("_id")) as { _id: string }[];
-
         for (let i = 0; i < allGroupJoinedIds.length; i++) {
           socket.join(allGroupJoinedIds[i]._id.toString());
         }
-
+        if (!activeUsers.has(userId)) {
+          activeUsers.set(userId, `active:${groupId}`);
+        }
+        socket.join(activeUsers.get(userId));
         socket.join(userId);
       }
     );
     socket.on(
       "leave-room",
       async ({ groupId, userId }: { groupId: string; userId: string }) => {
-        socket.leave(groupId);
+        const allGroupJoinedIds = (await GroupConversation.find({
+          members: {
+            $elemMatch: {
+              status: "active",
+              memberInfo: new mongoose.Types.ObjectId(userId),
+            },
+          },
+        }).select("_id")) as { _id: string }[];
+
+        if (activeUsers.has(userId)) {
+          socket.leave(activeUsers.get(userId));
+          activeUsers.delete(userId);
+        }
+        for (let i = 0; i < allGroupJoinedIds.length; i++) {
+          socket.leave(allGroupJoinedIds[i]._id.toString());
+        }
         socket.leave(userId);
       }
     );

@@ -31,17 +31,24 @@ const handleUserJoinedGroupMessageAlert = async (
 export async function handleMailSocket(io: Server) {
   MAIL_NAMESPACE(io).on("connection", (socket) => {
     const { userId } = socket.handshake.auth;
-    socket.on("invitation-accepted", async ({ groupId }) => {
+    socket.on("invitation-accepted", async ({ groupId, groupChatDetails }) => {
       const result = await handleUserJoinedGroupMessageAlert(userId, groupId);
-      console.log("Invitation Request here");
-      console.log(result);
-      GROUP_NAMESPACE(io).to(groupId).emit("user-joined-group", {
+      GROUP_NAMESPACE(io).to(`active:${groupId}`).emit("user-joined-group", {
         messageDetails: result,
       });
-
-      GROUP_NAMESPACE(io).to(groupId).emit("user-joined-group", {
-        groupChatDetails: result.groupId,
-      });
+      GROUP_NAMESPACE(io)
+        .to(groupId)
+        .emit("update-conversation-list", {
+          message: groupChatDetails.text,
+          groupId,
+          senderId: groupChatDetails._id,
+          type: "system",
+          lastMessageCreatedAt: groupChatDetails.lastMessageCreatedAt,
+          sender_details: {
+            name: groupChatDetails.lastMessage.sender.name,
+            _id: groupChatDetails.lastMessage.sender._id,
+          },
+        });
     });
     socket.on(
       "request-accepted",
@@ -50,12 +57,14 @@ export async function handleMailSocket(io: Server) {
           requesterId,
           groupId
         );
-        console.log(result);
-        GROUP_NAMESPACE(io).to(groupId).emit("user-joined-group", {
+        GROUP_NAMESPACE(io).to(`active:${groupId}`).emit("user-joined-group", {
           messageDetails: result,
         });
 
-        GROUP_NAMESPACE(io).to(requesterId).emit("update-chatlist", {
+        GROUP_NAMESPACE(io).to(requesterId).emit("add-new-groupchat", {
+          groupChatDetails,
+        });
+        GROUP_NAMESPACE(io).to(requesterId).emit("update-groupchat-list", {
           groupChatDetails,
         });
       }

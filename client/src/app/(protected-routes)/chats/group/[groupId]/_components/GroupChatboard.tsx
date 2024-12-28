@@ -137,6 +137,7 @@ function GroupChatboard({ groupId }: { groupId: string }) {
     });
 
     groupSocket.on("user-joined-group", ({ messageDetails }) => {
+      alert("Joinedddd");
       console.log(messageDetails);
       setAllMessages((prevMessages) => [...prevMessages, messageDetails]);
       queryClient.setQueryData<GroupChatInfo | undefined>(

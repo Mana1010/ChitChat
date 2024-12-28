@@ -31,7 +31,7 @@ function GroupChatList({
   const chatListRef = useRef<HTMLDivElement | null>(null);
   const debounce = debounceScroll(GROUP_CHATLIST_KEY);
   const displayAllGroupChat: UseQueryResult<
-    GroupChatConversationList<User>[],
+    GroupChatConversationList<Pick<User, "name" | "_id">>[],
     AxiosError<{ message: string }>
   > = useQuery({
     queryKey: ["groupchat-list"],
@@ -47,23 +47,32 @@ function GroupChatList({
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (!groupSocket) return;
+    if (!groupSocket || status === "unauthenticated") return;
     groupSocket.on(
-      "update-chatlist",
-      ({ groupId, lastMessage, lastMessageCreatedAt, type, senderId }) => {
+      "update-conversation-list",
+      ({
+        message,
+        groupId,
+        senderId,
+        type,
+        lastMessageCreatedAt,
+        sender_details,
+      }) => {
         updateConversationList(
           queryClient,
-          lastMessage,
+          message,
           groupId,
           senderId,
           type,
           "groupchat-list",
-          lastMessageCreatedAt
+          false,
+          lastMessageCreatedAt,
+          sender_details
         );
       }
     );
     groupSocket.on(
-      "update-chatlist",
+      "add-new-groupchat",
       ({
         groupChatDetails,
       }: {
@@ -85,8 +94,8 @@ function GroupChatList({
     return () => {
       groupSocket.off("update-chatlist");
     };
-  }, [groupSocket, queryClient]);
-  console.log(displayAllGroupChat.data);
+  }, [groupSocket, queryClient, status]);
+
   useEffect(() => {
     if (chatListRef.current) {
       const scrollPosition = sessionStorage.getItem(GROUP_CHATLIST_KEY)
@@ -140,7 +149,10 @@ function GroupChatList({
           className="pt-2 flex flex-col w-full overflow-y-auto h-full flex-grow items-center px-1.5"
         >
           {searchResult?.map(
-            (groupchat: GroupChatConversationList<User>, index: number) => (
+            (
+              groupchat: GroupChatConversationList<Pick<User, "name" | "_id">>,
+              index: number
+            ) => (
               <button
                 onClick={() =>
                   router.push(`/chats/group/${groupchat._id}?type=chats`)

@@ -128,7 +128,8 @@ export const getSidebarNotificationAndCurrentConversation = asyncHandler(
       const result = Object.assign({}, ...handleNotificationQuery); //Format the result from [{}, {}] to {key1: value1, ...}
 
       keywords.forEach((key: string) => {
-        userNotificationObj[key as keyof NotificationObjSchema] = result[key] ?? [];
+        userNotificationObj[key as keyof NotificationObjSchema] =
+          result[key] ?? [];
       });
       if (checkIfNewUserPrivate?._id) {
         const getFirstPrivateConversationId = (await PrivateConversation.find({
@@ -209,14 +210,6 @@ export const updateMailStatus = asyncHandler(
     });
 
     res.status(204);
-  }
-);
-
-export const deleteMultipleMail = asyncHandler(
-  async (req: Request, res: Response) => {
-    const selectedMails: string[] = req.body;
-    await Mail.deleteMany({ _id: { $in: selectedMails } });
-    res.status(201).json({ message: "Deleted Successfully" });
   }
 );
 

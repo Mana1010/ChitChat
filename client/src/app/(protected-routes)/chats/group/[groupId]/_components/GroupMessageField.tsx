@@ -40,9 +40,6 @@ function GroupMessageField({
     });
     optimisticUpdateMessage(message, setAllMessages, session, []);
     groupSocket.emit("stop-typing", groupId);
-    setTimeout(() => {
-      scrollRef.scrollIntoView({ block: "end" }); //To bypass the closure nature of react :)
-    }, 0);
     updateConversationList(
       queryClient,
       message,
@@ -52,6 +49,9 @@ function GroupMessageField({
       "groupchat-list",
       false
     );
+    setTimeout(() => {
+      scrollRef.scrollIntoView({ block: "end" }); //To bypass the closure nature of react :)
+    }, 0);
     setMessage("");
   };
 

@@ -18,7 +18,8 @@ export function updateConversationList<
   type: string,
   queryKey: string,
   already_read_message: boolean,
-  lastMessageCreatedAt: string | Date = new Date()
+  lastMessageCreatedAt: string | Date = new Date(),
+  sender_details: any = {}
 ) {
   queryClient.setQueryData<ConversationType[] | undefined>(
     [queryKey],
@@ -30,7 +31,15 @@ export function updateConversationList<
               return {
                 ...chatlist,
                 lastMessage: {
-                  sender: senderId,
+                  sender:
+                    type === "system"
+                      ? {
+                          name: sender_details.name,
+                          _id: sender_details._id,
+                        }
+                      : {
+                          _id: senderId,
+                        },
                   text: userMessage,
                   type,
                   lastMessageCreatedAt,

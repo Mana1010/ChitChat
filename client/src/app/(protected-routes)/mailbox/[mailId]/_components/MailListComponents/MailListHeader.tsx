@@ -1,19 +1,12 @@
 import React, { Dispatch, SetStateAction } from "react";
 import { TbMessage } from "react-icons/tb";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { HiOutlineDotsVertical } from "react-icons/hi";
 
 interface MailListHeaderSchemaProps {
   selectOptionActivated: boolean;
@@ -45,14 +38,6 @@ function MailListHeader({
             ALL MAIL
           </h1>
         )}
-        {selectOptionActivated && (
-          <button
-            onClick={selectAllMail}
-            className="text-[#6486FF] font-extrabold self-end text-[0.83rem] rounded-sm"
-          >
-            SELECT ALL
-          </button>
-        )}
         <div className="flex space-x-2 items-center">
           <Select
             value={filteredBy}
@@ -67,18 +52,6 @@ function MailListHeader({
               <SelectItem value="unread">Unread</SelectItem>
             </SelectContent>
           </Select>
-          <DropdownMenu>
-            <DropdownMenuTrigger className="text-white text-lg">
-              <HiOutlineDotsVertical />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-[#454545] ml-2 text-white">
-              <DropdownMenuItem
-                onClick={() => setSelectOptionActivated((prev) => !prev)}
-              >
-                {selectOptionActivated ? "Undo" : "Select"}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       </div>
     </header>

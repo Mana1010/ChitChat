@@ -67,21 +67,6 @@ function MailList({ mailId }: { mailId: string }) {
       await axios.patch(`${APP_SERVER_URL}/update/mail/status/${mailId}`);
     },
   });
-  const deleteMail = useMutation({
-    mutationFn: async () => {
-      const response = await axios.delete(
-        `${APP_SERVER_URL}/delete/multiple/mail`,
-        {
-          data: selectedMail,
-        }
-      );
-      return response.data.message;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(["all-mail-list"]);
-      setSelectedMail([]);
-    },
-  });
 
   const queryClient = useQueryClient();
 
@@ -248,45 +233,6 @@ function MailList({ mailId }: { mailId: string }) {
           )}
         </div>
       )}
-      <AnimatePresence mode="wait">
-        <AlertDialog>
-          <AlertDialogTrigger
-            disabled={!selectedMail.length}
-            onClick={(e) => e.stopPropagation()}
-            className={`absolute ${
-              !selectOptionActivated && "hidden"
-            }  bottom-[20px] flex rounded-full w-12 h-12 text-lg text-[#6486FF] bg-[#6486FF]/20 disabled:bg-slate-600 items-center justify-center translate-x-[-50%] left-[50%]`}
-          >
-            <TbTrashX />
-          </AlertDialogTrigger>
-
-          <AlertDialogContent className="bg-[#171717]">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-[#6386FE]">
-                Are you absolutely sure?
-              </AlertDialogTitle>
-              <AlertDialogDescription className="text-slate-200">
-                This action cannot be undone. This will permanently delete your{" "}
-                {selectedMail.length > 1
-                  ? `${selectedMail.length} mails`
-                  : `${selectedMail.length} mail`}
-                .
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel className="bg-[#6386FE]/55 border-none text-white">
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={() => deleteMail.mutate()}
-                className="bg-[#6386FE]"
-              >
-                Continue
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </AnimatePresence>
     </div>
   );
 }

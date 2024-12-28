@@ -36,11 +36,14 @@ function useInvitationResponse(
         );
         return response.data;
       },
-      onSuccess: ({ message, groupId }) => {
+      onSuccess: ({ message, groupId, groupChatDetails }) => {
         if (invitationType === "in-mail" && mailSocket) {
-          mailSocket.emit("invitation-accepted", { groupId });
+          mailSocket.emit("invitation-accepted", { groupId, groupChatDetails });
         } else if (invitationType === "in-group-list" && groupSocket) {
-          groupSocket.emit("invitation-accepted", { groupId });
+          groupSocket.emit("invitation-accepted", {
+            groupId,
+            groupChatDetails,
+          });
         }
         queryClient.invalidateQueries(["groupchat-list"]);
         toast.success(message);

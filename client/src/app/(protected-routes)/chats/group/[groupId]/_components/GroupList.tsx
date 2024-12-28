@@ -36,7 +36,6 @@ function ParentDiv({ children }: { children: ReactNode }) {
   );
 }
 function GroupList({ searchGroup }: { searchGroup: string }) {
-  const router = useRouter();
   const { ref, inView } = useInView();
   const { setShowCreateGroupForm } = useModalStore();
   const { data: session, status } = useSession();
@@ -155,14 +154,9 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
 
   return (
     <ParentDiv>
-      <div className="flex space-x-2 p-2">
-        <button className="bg-[#3A3B3C] text-white px-5 py-2 rounded-md text-sm">
-          All
-        </button>
-        <button className="bg-[#3A3B3C] text-white px-5 py-2 rounded-md text-sm">
-          Invites & Requests
-        </button>
-      </div>
+      <button className="bg-[#3A3B3C] text-white px-5 py-2 rounded-md text-sm ">
+        All
+      </button>
       <div className="pt-2 flex flex-col w-full h-full items-center px-1.5 overflow-y-auto">
         {groupList?.map((group: GroupChatList) => (
           <div

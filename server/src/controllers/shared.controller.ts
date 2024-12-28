@@ -5,13 +5,9 @@ import { Mail } from "../model/mail.model";
 import mongoose from "mongoose";
 import { User } from "../model/user.model";
 import { PrivateConversation } from "../model/privateConversation.model";
-import { Group } from "../model/group.model";
 import { appLogger } from "../utils/loggers.utils";
 
-const handleUserJoinedGroupChatList = async (
-  senderId: string,
-  groupId: string
-) => {
+const handleUserJoinedGroupChatList = async (groupId: string) => {
   const result = await GroupConversation.aggregate([
     {
       $match: {
@@ -80,7 +76,9 @@ const handleAcceptInvitation = async (groupId: string, userId: string) => {
       },
     }
   );
+  const groupChatDetails = await handleUserJoinedGroupChatList(groupId);
   await handleMailUpdate(groupId, userId, "accepted");
+  return { groupChatDetails };
 };
 
 const handleDeclineInvitation = async (groupId: string, userId: string) => {
@@ -113,10 +111,7 @@ const handleAcceptRequest = async (
       },
     }
   );
-  const groupChatDetails = await handleUserJoinedGroupChatList(
-    requesterId,
-    groupId
-  );
+  const groupChatDetails = await handleUserJoinedGroupChatList(groupId);
   await handleMailUpdate(groupId, userId, "accepted");
   return { groupChatDetails };
 };
@@ -126,14 +121,11 @@ const handleDeclineRequest = async (
   userId: string,
   requesterId: string
 ) => {
-  console.log("Start Here");
-  console.log(groupId, userId, requesterId);
   await GroupConversation.findByIdAndUpdate(groupId, {
     $pull: {
       members: { memberInfo: requesterId },
     },
   });
-  console.log("Middle Here");
   await handleMailUpdate(groupId, userId, "declined");
 };
 
@@ -141,12 +133,17 @@ export const acceptInvitation = asyncHandler(
   async (req: Request, res: Response) => {
     const { groupId, userId } = req.params;
     try {
-      await handleAcceptInvitation(groupId, userId);
+      const { groupChatDetails } = await handleAcceptInvitation(
+        groupId,
+        userId
+      );
       res.status(201).json({
         message: "Invitation accepted successfully",
         groupId,
+        groupChatDetails,
       });
     } catch (err) {
+      console.log(err);
       res.status(400).json({
         message: "Failed to accept invitation",
       });
@@ -180,8 +177,6 @@ export const acceptRequest = asyncHandler(
         userId,
         requesterId
       );
-      console.log("Group Chat Details hehe");
-      console.log(groupChatDetails);
       res.status(201).json({
         message: "Request accepted successfully",
         groupId,

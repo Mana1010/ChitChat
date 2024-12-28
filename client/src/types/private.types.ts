@@ -7,7 +7,7 @@ export interface Conversation {
   // userReadMessage: string[];
   already_read_message: boolean;
   lastMessage: {
-    sender: User | string;
+    sender: Pick<User, "_id">;
     text: string;
     type: "text" | "system" | "file";
     lastMessageCreatedAt: Date;

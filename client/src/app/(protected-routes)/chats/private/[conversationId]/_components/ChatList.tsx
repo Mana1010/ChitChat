@@ -208,7 +208,7 @@ function ChatList({
                   }`}
                 >
                   {`${
-                    user.lastMessage.sender === session?.user.userId &&
+                    user.lastMessage.sender._id === session?.user.userId &&
                     user.lastMessage.type === "text"
                       ? "You:"
                       : ""

@@ -54,6 +54,7 @@ export const getAllUsersConversation = asyncHandler(
         {
           $sort: { "lastMessage.lastMessageCreatedAt": -1 },
         },
+
         {
           $addFields: {
             already_read_message: {
@@ -71,12 +72,20 @@ export const getAllUsersConversation = asyncHandler(
           $project: {
             receiver_details: { $first: "$receiver_details" },
             _id: 1,
-            lastMessage: 1,
+            lastMessage: {
+              sender: {
+                _id: "$lastMessage.sender",
+              },
+              text: 1,
+              type: 1,
+              lastMessageCreatedAt: 1,
+            },
             updatedAt: 1,
             already_read_message: 1,
           },
         },
       ]);
+      console.log(getAllConversation);
       res.status(200).json({ message: getAllConversation });
     } catch (err) {
       appLogger.error(err);
