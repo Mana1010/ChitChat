@@ -64,7 +64,7 @@ function InvitationText({ mailId }: { mailId: string }) {
           height={300}
           priority
         />
-        <div className="w-1/2 space-y-2 flex flex-col relative">
+        <div className="lg:w-1/2 w-full px-5 space-y-2 flex flex-col relative">
           <div className="flex flex-col ">
             <h3 className="text-[0.9rem] font-bold">
               Someone wants to join in groupchat
@@ -73,7 +73,7 @@ function InvitationText({ mailId }: { mailId: string }) {
               <span> Hi! 👋 </span>
               <span>
                 {" "}
-                I&apos;ve requested to join the group chat and am excited to
+                I&apos;ve requested to join the group chat and I am excited to
                 connect once accepted. Thanks for considering my request! 😊
               </span>
             </div>

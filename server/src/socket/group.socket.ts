@@ -10,6 +10,7 @@ import {
 } from "../utils/namespaces.utils";
 import { appLogger } from "../utils/loggers.utils";
 import mongoose from "mongoose";
+import { GroupChatDetails } from "../types/shared.types";
 
 type RequestedUsers = { id: string; name: string };
 const membersWhoReadMessage = new Map<string, string[]>();
@@ -176,36 +177,46 @@ export async function handleGroupSocket(io: Server) {
       }
     );
 
-    socket.on("invitation-accepted", async ({ groupId, groupChatDetails }) => {
-      const groupResult = await Group.create({
-        sender: userId,
+    socket.on(
+      "invitation-accepted",
+      async ({
         groupId,
-        type: "system",
-        message: "joined the group",
-      });
+        groupChatDetails,
+      }: {
+        groupId: string;
+        groupChatDetails: GroupChatDetails;
+      }) => {
+        const groupResult = await Group.create({
+          sender: userId,
+          groupId,
+          type: "system",
+          message: "joined the group",
+        });
 
-      const result = await Group.findById(groupResult._id)
-        .populate({
-          path: "sender",
-          select: ["name", "profilePic", "status", "_id"],
-        })
-        .select(["-updatedAt"]);
+        const result = await Group.findById(groupResult._id)
+          .populate({
+            path: "sender",
+            select: ["name", "profilePic", "status", "_id"],
+          })
+          .select(["-updatedAt"]);
 
-      socket.broadcast.to(`active:${groupId}`).emit("user-joined-group", {
-        messageDetails: result,
-      });
-      socket.broadcast.to(groupId).emit("update-conversation-list", {
-        message: groupChatDetails.text,
-        groupId,
-        senderId: groupChatDetails._id,
-        type: "system",
-        lastMessageCreatedAt: groupChatDetails.lastMessageCreatedAt,
-        sender_details: {
-          name: groupChatDetails.lastMessage.sender.name,
-          _id: groupChatDetails.lastMessage.sender._id,
-        },
-      });
-    });
+        socket.broadcast.to(`active:${groupId}`).emit("user-joined-group", {
+          messageDetails: result,
+        });
+        socket.broadcast.to(groupId).emit("update-conversation-list", {
+          message: groupChatDetails.lastMessage.text,
+          groupId,
+          senderId: groupChatDetails._id,
+          type: "system",
+          lastMessageCreatedAt:
+            groupChatDetails.lastMessage.lastMessageCreatedAt,
+          sender_details: {
+            name: groupChatDetails.lastMessage.sender.name,
+            _id: groupChatDetails.lastMessage.sender._id,
+          },
+        });
+      }
+    );
     socket.on("read-message", async ({ groupId }) => {
       let getUserId = membersWhoReadMessage.get(groupId);
       if (!membersWhoReadMessage.has(groupId)) {

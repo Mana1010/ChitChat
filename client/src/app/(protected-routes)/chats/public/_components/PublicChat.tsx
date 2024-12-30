@@ -115,6 +115,9 @@ function PublicChat() {
         }
       );
     }
+    return () => {
+      statusSocket?.off("display-user-status");
+    };
   }, [statusSocket]);
 
   useEffect(() => {

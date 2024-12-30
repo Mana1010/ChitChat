@@ -2,7 +2,7 @@ import { QueryClient } from "react-query";
 import { ConversationSchema, Message, Reaction } from "@/types/shared.types";
 import { Conversation } from "@/types/private.types";
 import { MailDetailsSchema } from "@/types/app.types";
-import React, { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction } from "react";
 import { GroupChatList } from "@/types/group.types";
 import { User } from "@/types/shared.types";
 import { Session } from "next-auth";
@@ -19,7 +19,8 @@ export function updateConversationList<
   queryKey: string,
   already_read_message: boolean,
   lastMessageCreatedAt: string | Date = new Date(),
-  sender_details: any = {}
+  sender_details: { name?: string; _id: string },
+  is_group_active: boolean = true
 ) {
   queryClient.setQueryData<ConversationType[] | undefined>(
     [queryKey],
@@ -44,6 +45,7 @@ export function updateConversationList<
                   type,
                   lastMessageCreatedAt,
                 },
+                is_group_active,
                 already_read_message,
               };
             } else {

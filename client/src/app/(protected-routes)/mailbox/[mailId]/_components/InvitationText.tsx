@@ -64,7 +64,7 @@ function InvitationText({ mailId }: { mailId: string }) {
           height={300}
           priority
         />
-        <div className="w-1/2 space-y-2 flex flex-col relative">
+        <div className="lg:w-1/2 w-full px-5 space-y-2 flex flex-col relative">
           <div className="flex flex-col ">
             <h3 className="text-[0.9rem] font-bold">Join Our Group Chat!</h3>
             <span className="leading-6 text-[0.9rem] py-3">

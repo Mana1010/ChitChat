@@ -47,7 +47,9 @@ function GroupMessageField({
       senderId,
       "text",
       "groupchat-list",
-      false
+      false,
+      new Date(),
+      { _id: senderId as string }
     );
     setTimeout(() => {
       scrollRef.scrollIntoView({ block: "end" }); //To bypass the closure nature of react :)

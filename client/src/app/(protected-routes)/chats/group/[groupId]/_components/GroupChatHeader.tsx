@@ -8,11 +8,11 @@ import { MdGroups } from "react-icons/md";
 function GroupChatHeader({
   groupInfo,
   isLoading,
-  setOpenProfileModal,
+  setOpenGroupDetailsModal,
 }: {
   groupInfo: GroupChatInfo | undefined;
   isLoading: boolean;
-  setOpenProfileModal: Dispatch<SetStateAction<boolean>>;
+  setOpenGroupDetailsModal: Dispatch<SetStateAction<boolean>>;
 }) {
   return (
     <header className="w-full shadow-md py-3 px-4 flex items-center justify-between">
@@ -49,7 +49,7 @@ function GroupChatHeader({
         </div>
       )}
       <button
-        onClick={() => setOpenProfileModal((prev) => !prev)}
+        onClick={() => setOpenGroupDetailsModal((prev) => !prev)}
         className="text-[1.5rem] text-[#6486FF]"
       >
         <HiOutlineDotsCircleHorizontal />

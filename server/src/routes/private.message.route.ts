@@ -14,6 +14,7 @@ router.get("/all/chat/list/:id", getAllUsersConversation);
 router.get("/all/user/:userId/list", getAllUsers);
 router.get("/participant/info/:userId/:conversationId", getParticipantInfo);
 router.get("/message/list/:conversationId", getPrivateMessages);
+
 router.post("/new/chat", chatUser);
 router.get(
   "/participant/name/:userId/conversation/:conversationId",

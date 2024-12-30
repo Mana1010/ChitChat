@@ -1,7 +1,6 @@
 "use client";
 import React, { ReactNode, useEffect, useMemo, useRef, useState } from "react";
-import { useMutation, useInfiniteQuery } from "react-query";
-import { useRouter } from "next/navigation";
+import { useMutation, useInfiniteQuery, useQueryClient } from "react-query";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
 import axios, { AxiosError } from "axios";
@@ -72,14 +71,17 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
     },
     refetchOnWindowFocus: false,
     onSuccess: (data) => {
-      console.log(data);
       setAllGroupChatList((prevData) => [
         ...prevData,
         ...data.pages[currentPageRef.current].getAllGroups,
       ]);
     },
+    onError: (data) => {
+      console.log("Error in Group List");
+      console.log(data);
+    },
   });
-
+  const queryClient = useQueryClient();
   const joinGroup = useMutation({
     mutationFn: async ({ groupId }: { groupId: string }) => {
       const response = await axios.patch(
@@ -109,11 +111,20 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
     return searchGroup.length ? debouncedSearchGroup : allGroupChatList;
   }, [searchGroup, debouncedSearchGroup, allGroupChatList]);
   useEffect(() => {
-    if (inView && hasNextPage) {
+    if (inView && hasNextPage && !isLoading) {
+      alert(inView);
+      alert(hasNextPage);
       currentPageRef.current++;
       fetchNextPage();
     }
-  }, [fetchNextPage, hasNextPage, inView]);
+  }, [fetchNextPage, hasNextPage, inView, isLoading]);
+
+  useEffect(() => {
+    return () => {
+      queryClient.resetQueries(["explore-group-list"]);
+    };
+  }, [queryClient]);
+
   if (isLoading) {
     return <ConversationListSkeleton />;
   }
@@ -154,9 +165,6 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
 
   return (
     <ParentDiv>
-      <button className="bg-[#3A3B3C] text-white px-5 py-2 rounded-md text-sm ">
-        All
-      </button>
       <div className="pt-2 flex flex-col w-full h-full items-center px-1.5 overflow-y-auto">
         {groupList?.map((group: GroupChatList) => (
           <div

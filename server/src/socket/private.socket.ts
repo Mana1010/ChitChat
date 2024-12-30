@@ -5,6 +5,7 @@ import {
   NOTIFICATION_NAMESPACE,
   PRIVATE_NAMESPACE,
 } from "../utils/namespaces.utils";
+import mongoose from "mongoose";
 
 interface Payload {
   conversationId: string;
@@ -125,19 +126,64 @@ export function handlePrivateSocket(io: Server) {
         console.log(err);
       }
     });
-    socket.on("add-conversation", async ({ conversationId, receiverId }) => {
-      console.log(conversationId, receiverId);
-      if (!conversationId || !receiverId) return;
-      const getConversation = await PrivateConversation.findById(
-        conversationId
-      ).select("createdAt");
-      socket.broadcast.to(receiverId).emit("display-updated-chatlist", {
-        newMessage: "💭 Conversation Started",
+    socket.on(
+      "add-conversation",
+      async ({
         conversationId,
-        participantId: "",
-        lastMessageCreatedAt: getConversation.createdAt,
-      });
-    });
+        senderId,
+      }: {
+        conversationId: string;
+        senderId: string;
+      }) => {
+        console.log("Running the add conversation sockett");
+        if (!conversationId || !senderId) return;
+        const getConversation = await PrivateConversation.aggregate([
+          {
+            $match: { _id: new mongoose.Types.ObjectId(conversationId) },
+          },
+          {
+            $limit: 1,
+          },
+          {
+            $unwind: "$participants",
+          },
+          {
+            $match: {
+              participants: new mongoose.Types.ObjectId(senderId),
+            },
+          },
+          {
+            $lookup: {
+              from: "users",
+              localField: "participants",
+              foreignField: "_id",
+              as: "participant_details",
+            },
+          },
+          {
+            $addFields: {
+              participant_details: { $first: "$participant_details" },
+            },
+          },
+          {
+            $project: {
+              lastMessage: 1,
+              already_read_message: true,
+              participant_details: {
+                name: 1,
+                profilePic: 1,
+                _id: 1,
+                status: 1,
+              },
+              is_user_already_seen_message: true,
+              updateAt: 1,
+            },
+          },
+        ]);
+        const conversationDetails = getConversation[0];
+        socket.broadcast.to(senderId).emit("add-chatlist", conversationDetails);
+      }
+    );
     socket.on(
       "send-reaction",
       async ({ reaction, messageId, conversationId }) => {

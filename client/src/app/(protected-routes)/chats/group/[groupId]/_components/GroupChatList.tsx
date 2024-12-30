@@ -1,5 +1,4 @@
 "use client";
-
 import { GROUP_SERVER_URL } from "@/utils/serverUrl";
 import axios, { AxiosError } from "axios";
 import React, { useRef } from "react";
@@ -49,7 +48,7 @@ function GroupChatList({
   useEffect(() => {
     if (!groupSocket || status === "unauthenticated") return;
     groupSocket.on(
-      "update-conversation-list",
+      "update-conversation-list", //For automatically sending update the conversation when someone send a message
       ({
         message,
         groupId,
@@ -72,7 +71,7 @@ function GroupChatList({
       }
     );
     groupSocket.on(
-      "add-new-groupchat",
+      "add-new-groupchat", //For the user who requested for automatic update the conversation
       ({
         groupChatDetails,
       }: {
@@ -93,6 +92,7 @@ function GroupChatList({
     );
     return () => {
       groupSocket.off("update-chatlist");
+      groupSocket.off("add-new-groupchat");
     };
   }, [groupSocket, queryClient, status]);
 

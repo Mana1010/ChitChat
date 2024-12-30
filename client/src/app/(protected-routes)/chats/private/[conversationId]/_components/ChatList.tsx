@@ -81,11 +81,25 @@ function ChatList({
           messageType,
           "chat-list",
           false,
-          lastMessageCreatedAt
+          lastMessageCreatedAt,
+          { _id: participantId }
         );
       }
     );
+    privateSocket.on("add-chatlist", (conversationDetails: Conversation) => {
+      alert(JSON.stringify(conversationDetails));
+      queryClient.setQueryData<Conversation[] | undefined>(
+        ["chat-list"],
+        (cachedData) => {
+          if (cachedData) {
+            return [conversationDetails, ...cachedData];
+          }
+        }
+      );
+    });
+
     return () => {
+      privateSocket.off("add-chatlist");
       privateSocket.off("display-updated-chatlist");
       privateSocket.off("seen-message");
     };
@@ -101,11 +115,11 @@ function ChatList({
             (cachedData: any) => {
               if (cachedData) {
                 return cachedData.map((chatlist: Conversation) => {
-                  if (chatlist.receiver_details._id === userId) {
+                  if (chatlist.participant_details._id === userId) {
                     return {
                       ...chatlist,
                       receiver_details: {
-                        ...chatlist.receiver_details,
+                        ...chatlist.participant_details,
                         status: {
                           type,
                           lastActiveAt,
@@ -124,10 +138,13 @@ function ChatList({
         }
       );
     }
+    return () => {
+      statusSocket?.off("display-user-status");
+    };
   }, [queryClient, statusSocket]);
 
   const searchResult = displayAllChats.data?.filter((user) =>
-    new RegExp(searchChat, "i").test(user.receiver_details.name as string)
+    new RegExp(searchChat, "i").test(user.participant_details.name as string)
   );
 
   if (displayAllChats.isLoading) {
@@ -181,7 +198,7 @@ function ChatList({
             <div className="flex items-center space-x-2 w-full overflow-hidden">
               <div className="w-[40px] h-[40px] relative rounded-full pr-2 shrink-0">
                 <Image
-                  src={user.receiver_details.profilePic}
+                  src={user.participant_details.profilePic}
                   alt="profile-pic"
                   fill
                   sizes="100%"
@@ -190,7 +207,7 @@ function ChatList({
                 />
                 <span
                   className={`${
-                    user.receiver_details.status.type === "online"
+                    user.participant_details.status.type === "online"
                       ? "bg-green-500"
                       : "bg-zinc-500"
                   } absolute bottom-[3px] right-[2px] w-2 h-2 rounded-full`}
@@ -198,7 +215,7 @@ function ChatList({
               </div>{" "}
               <div className="flex justify-start flex-col items-start w-full">
                 <h1 className="text-white font-bold text-sm truncate w-[90%] text-start">
-                  {user.receiver_details.name}
+                  {user.participant_details.name}
                 </h1>
                 <small
                   className={`text-[0.75rem] truncate w-[90%] text-start ${

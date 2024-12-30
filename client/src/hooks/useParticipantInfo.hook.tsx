@@ -2,7 +2,7 @@
 import { useQuery, UseQueryResult } from "react-query";
 import axios, { AxiosError } from "axios";
 import { PRIVATE_SERVER_URL } from "@/utils/serverUrl";
-import { GetParticipantInfo } from "@/types/UserTypes";
+import { GetParticipantInfo } from "@/types/user.types";
 import { useSession } from "next-auth/react";
 function useParticipantInfo(conversationId: string) {
   const { data: session, status } = useSession();

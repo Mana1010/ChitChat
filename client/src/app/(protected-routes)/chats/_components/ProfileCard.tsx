@@ -108,7 +108,7 @@ function ProfileCard({
                             fill="none"
                             xmlns="http://www.w3.org/2000/svg"
                             stroke="#000000"
-                            stroke-width="0.00024000000000000003"
+                            strokeWidth="0.00024000000000000003"
                           >
                             <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
                             <g
@@ -171,7 +171,7 @@ function ProfileCard({
                               stroke-linecap="round"
                               stroke-linejoin="round"
                               stroke="#CCCCCC"
-                              stroke-width="0.672"
+                              strokeWidth="0.672"
                             ></g>
                             <g id="SVGRepo_iconCarrier">
                               {" "}

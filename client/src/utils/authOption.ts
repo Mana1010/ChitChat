@@ -2,7 +2,7 @@ import { type NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { checkUser } from "./checkUser";
 import axios from "axios";
-import { serverUrl, AUTH_SERVER_URL } from "./serverUrl";
+import { AUTH_SERVER_URL } from "./serverUrl";
 const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({

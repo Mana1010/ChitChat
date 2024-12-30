@@ -14,7 +14,7 @@ import { useSession } from "next-auth/react";
 import { GROUP_SERVER_URL } from "@/utils/serverUrl";
 import NoGroup from "./NoGroup";
 import UserNotFound from "./UserNotFound";
-import { GetParticipantInfo } from "@/types/UserTypes";
+import { GetParticipantInfo } from "@/types/user.types";
 import { Message } from "@/types/shared.types";
 import { useSocketStore } from "@/utils/store/socket.store";
 import LoadingChat from "@/components/LoadingChat";
@@ -32,13 +32,14 @@ import { GroupChatInfo } from "@/types/group.types";
 import BackToBottomArrow from "../../../_components/BackToBottomArrow";
 import SystemChatBubbles from "../../../_components/SystemChatBubbles";
 import SystemTimeChatBubbles from "../../../_components/SystemTimeChatBubbles";
+import GroupDetails from "./GroupDetails";
 function GroupChatboard({ groupId }: { groupId: string }) {
   const { groupSocket } = useSocketStore();
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const currentPageRef = useRef(0);
   const scrollDivRef = useRef<HTMLDivElement | null>(null);
   const scrollPositionRef = useRef<number>(0);
-  const [openProfileModal, setOpenProfileModal] = useState(false);
+  const [openGroupDetailsModal, setOpenGroupDetailsModal] = useState(false);
   const [message, setMessage] = useState<string>("");
   const [openEmoji, setOpenEmoji] = useState(false);
   const { data: session, status } = useSession();
@@ -190,7 +191,7 @@ function GroupChatboard({ groupId }: { groupId: string }) {
         <GroupChatHeader
           groupInfo={groupInfo as any}
           isLoading={groupInfoLoading}
-          setOpenProfileModal={setOpenProfileModal}
+          setOpenGroupDetailsModal={setOpenGroupDetailsModal}
         />
         {isLoading || !data ? (
           <LoadingChat />
@@ -283,6 +284,12 @@ function GroupChatboard({ groupId }: { groupId: string }) {
         setOpenEmoji={setOpenEmoji}
         setOpenAttachmentModal={setOpenAttachmentModal}
       />
+      {
+        <GroupDetails
+          groupId={groupId}
+          setOpenGroupDetailsModal={setOpenGroupDetailsModal}
+        />
+      }
       {/* {openProfileModal && (
         <ProfileCard
           conversationId={groupId}

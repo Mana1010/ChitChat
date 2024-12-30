@@ -30,12 +30,13 @@ import PrivateMessageField from "./PrivateMessageField";
 import {
   handleNotificationDecrement,
   handleUnreadMessageSign,
+  optimisticUpdateMessage,
   updateConversationList,
 } from "@/utils/sharedUpdateFunction";
 import { handleSeenUpdate } from "@/utils/sharedUpdateFunction";
 import BackToBottomArrow from "../../../_components/BackToBottomArrow";
 import { Session } from "next-auth";
-import { GetParticipantInfo } from "@/types/UserTypes";
+import { GetParticipantInfo } from "@/types/user.types";
 import SystemTimeChatBubbles from "../../../_components/SystemTimeChatBubbles";
 import SystemChatBubbles from "../../../_components/SystemChatBubbles";
 function ParentDiv({
@@ -82,9 +83,9 @@ function Chatboard({ conversationId }: { conversationId: string }) {
       const response = await axios.get(
         `${PRIVATE_SERVER_URL}/message/list/${conversationId}?page=${pageParam}&limit=${20}`
       );
-
       return response.data.message;
     },
+
     getNextPageParam: (lastPage) => {
       if (lastPage.nextPage === null && hasNextPage) {
         setHasNextPage(false);
@@ -192,6 +193,9 @@ function Chatboard({ conversationId }: { conversationId: string }) {
         }
       );
     }
+    return () => {
+      statusSocket?.off("display-user-status");
+    };
   }, [conversationId, queryClient, statusSocket]);
   useEffect(() => {
     if (!privateSocket) return;
@@ -255,7 +259,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                       message: "👋",
                       messageType: "text",
                       conversationId,
-                      receiverId: participantInfo?.receiver_details._id,
+                      participantId: participantInfo?.receiver_details._id,
                     });
                     updateConversationList(
                       queryClient,
@@ -264,7 +268,17 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                       session?.user.userId,
                       "text",
                       "chat-list",
-                      true
+                      true,
+                      new Date(),
+                      { _id: session?.user.userId as string }
+                    );
+                    optimisticUpdateMessage(
+                      "👋",
+                      setAllMessages as Dispatch<
+                        SetStateAction<Message<User, Reaction[] | string>[]>
+                      >,
+                      session,
+                      ""
                     );
                   }}
                   className="bg-[#414141] text-lg px-3 py-1.5 rounded-md overflow-hidden"

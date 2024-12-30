@@ -9,6 +9,7 @@ import {
 } from "../validations/createGroupSchema.validation";
 import path from "path";
 import { uploadFileCloudinary } from "../utils/cloudinary.utils";
+import { appLogger } from "../utils/loggers.utils";
 
 export const getUserGroupChatStatus = asyncHandler(
   async (req: Request, res: Response) => {
@@ -471,3 +472,107 @@ export const joinGroup = asyncHandler(async (req: Request, res: Response) => {
     .status(201)
     .json({ message: "Successfully request to join the group", groupId });
 });
+
+export const groupChatDetails = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { groupId } = req.params;
+    console.log(groupId);
+    try {
+      const groupDetails = await GroupConversation.aggregate([
+        {
+          $match: {
+            _id: new mongoose.Types.ObjectId(groupId),
+          },
+        },
+        {
+          $addFields: {
+            active_members: {
+              $filter: {
+                input: "$members",
+                cond: {
+                  $eq: ["$$this.status", "active"],
+                },
+              },
+            },
+            requesting_members: {
+              $filter: {
+                input: "$members",
+                cond: {
+                  $eq: ["$$this.status", "requesting"],
+                },
+              },
+            },
+            inviting_members: {
+              $filter: {
+                input: "$members",
+                cond: {
+                  $eq: ["$$this.status", "pending"],
+                },
+              },
+            },
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "active_members.memberInfo",
+            foreignField: "_id",
+            as: "active_member_details",
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "requesting_members.memberInfo",
+            foreignField: "_id",
+            as: "requesting_member_details",
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "inviting_members.memberInfo",
+            foreignField: "_id",
+            as: "inviting_member_details",
+          },
+        },
+        {
+          $project: {
+            group_details: {
+              creator: 1,
+              groupName: 1,
+              groupPhoto: 1,
+              createdAt: 1,
+            },
+            active_member_details: {
+              _id: 1,
+              name: 1,
+              profilePic: 1,
+              status: 1,
+            },
+            requesting_member_details: {
+              _id: 1,
+              name: 1,
+              profilePic: 1,
+              status: 1,
+            },
+            inviting_member_details: {
+              _id: 1,
+              name: 1,
+              profilePic: 1,
+              status: 1,
+            },
+          },
+        },
+      ]);
+      res.status(200).json({
+        group_details: groupDetails[0].group_details,
+        active_member_list: groupDetails[0].active_member_details,
+        requesting_member_list: groupDetails[0].requesting_member_details,
+        inviting_member_list: groupDetails[0].inviting_member_details,
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  }
+);

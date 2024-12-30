@@ -8,12 +8,14 @@ import {
   getGroupChatInfo,
   getGroupMessages,
   joinGroup,
+  groupChatDetails,
 } from "../controllers/group.message.controller";
 
 export const router = express.Router();
 
 router.get("/user/group/status/:senderId", getUserGroupChatStatus);
 router.get("/explore/all/group/list/:userId", getAllGroups);
+router.get("/group/chat/details/:groupId", groupChatDetails);
 router.get("/all/groupchat/list/:id", getAllGroupChatConversation);
 router.get("/conversation/search/group", searchGroupResult);
 router.post("/create/groupchat", createGroupChat);

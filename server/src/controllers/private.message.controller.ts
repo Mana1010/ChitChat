@@ -48,7 +48,7 @@ export const getAllUsersConversation = asyncHandler(
             from: "users",
             localField: "participants",
             foreignField: "_id",
-            as: "receiver_details",
+            as: "participant_details",
           },
         },
         {
@@ -70,7 +70,7 @@ export const getAllUsersConversation = asyncHandler(
         },
         {
           $project: {
-            receiver_details: { $first: "$receiver_details" },
+            participant_details: { $first: "$participant_details" },
             _id: 1,
             lastMessage: {
               sender: {
@@ -113,7 +113,7 @@ export const chatUser = asyncHandler(async (req: Request, res: Response) => {
     });
     res.status(201).json({
       conversationId: addConversation._id,
-      receiverId,
+      senderId,
       is_already_chatting: false,
     });
     return;
@@ -151,6 +151,7 @@ export const getPrivateMessages = asyncHandler(
       .limit(LIMIT)
       .populate([{ path: "sender", select: ["name", "profilePic", "status"] }])
       .select(["sender", "message", "createdAt", "reactions", "type"]);
+
     const hasMoreMessages = getMessages.length === LIMIT;
     const messages = getMessages.reverse();
     const nextPage = hasMoreMessages ? CURRENTPAGE + 1 : null;
@@ -225,10 +226,13 @@ export const getParticipantInfo = asyncHandler(
       {
         $project: {
           receiver_details: {
-            name: "$receiver_details.name",
-            _id: "$receiver_details._id",
-            profilePic: "$receiver_details.profilePic",
-            status: "$receiver_details.status",
+            name: 1,
+            _id: 1,
+            profilePic: 1,
+            status: {
+              type: 1,
+              lastActiveAt: 1,
+            },
           },
           is_user_already_seen_message: 1,
         },

@@ -47,10 +47,17 @@ function UserList({ searchUser }: { searchUser: string }) {
     refetchOnWindowFocus: false,
     enabled: status === "authenticated",
     onSuccess: (data) => {
+      console.log("DATA in Private List");
+      console.log(data);
+      console.log(`Current Page ${currentPageRef.current}`);
       setAllUserList((prevData) => [
         ...prevData,
         ...data.pages[currentPageRef.current].getAllUsers,
       ]);
+    },
+    onError: (data) => {
+      console.log("Error in Private List");
+      console.log(data);
     },
   });
   const queryClient = useQueryClient();
@@ -60,9 +67,10 @@ function UserList({ searchUser }: { searchUser: string }) {
       const response = await axios.post(`${PRIVATE_SERVER_URL}/new/chat`, data);
       return response.data;
     },
-    onSuccess: ({ conversationId, is_already_chatting, receiverId }) => {
+    onSuccess: ({ conversationId, is_already_chatting, senderId }) => {
+      alert(`Sender Id ${senderId}`);
       if (!is_already_chatting) {
-        privateSocket?.emit("add-conversation", { conversationId, receiverId });
+        privateSocket?.emit("add-conversation", { conversationId, senderId });
         queryClient.invalidateQueries("chat-list");
         queryClient.invalidateQueries("sidebar");
       }
@@ -75,6 +83,10 @@ function UserList({ searchUser }: { searchUser: string }) {
   const userList = useMemo(() => {
     return searchUser.length ? debouncedSearchUser : allUserList;
   }, [searchUser, debouncedSearchUser, allUserList]);
+
+  useEffect(() => {
+    queryClient.resetQueries(["user-list"]);
+  }, [queryClient]);
 
   useEffect(() => {
     if (statusSocket) {
@@ -102,11 +114,11 @@ function UserList({ searchUser }: { searchUser: string }) {
   }, [statusSocket]);
 
   useEffect(() => {
-    if (inView && hasNextPage) {
+    if (inView && hasNextPage && !isLoading) {
       currentPageRef.current++;
       fetchNextPage();
     }
-  }, [fetchNextPage, hasNextPage, inView]);
+  }, [fetchNextPage, hasNextPage, inView, isLoading]);
   if (isLoading) {
     return <ConversationListSkeleton />;
   }

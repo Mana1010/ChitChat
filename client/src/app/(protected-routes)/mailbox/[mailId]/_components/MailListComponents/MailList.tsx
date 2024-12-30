@@ -14,24 +14,12 @@ import { APP_SERVER_URL } from "@/utils/serverUrl";
 import { useSession } from "next-auth/react";
 import { MailListSchema } from "@/types/app.types";
 import { formatDistanceToNow } from "date-fns";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { Checkbox } from "@/components/ui/checkbox";
-import { TbTrashX } from "react-icons/tb";
 import EmptyMail from "../EmptyMail";
 import ConversationListSkeleton from "@/app/(protected-routes)/chats/_components/ConversationListSkeleton";
 import MailListHeader from "./MailListHeader";
 import { handleNotificationDecrement } from "@/utils/sharedUpdateFunction";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { useSocketStore } from "@/utils/store/socket.store";
 import { nanoid } from "nanoid";
 import debounceScroll from "@/hooks/debounceScroll";
@@ -44,11 +32,9 @@ function MailList({ mailId }: { mailId: string }) {
   const [filteredBy, setFilteredBy] = useState("all");
   const { data: session, status } = useSession();
   const { mailSocket } = useSocketStore();
-  const [selectedMail, setSelectedMail] = useState<string[]>([]);
   const [selectOptionActivated, setSelectOptionActivated] = useState(false);
   const mailListRef = useRef<HTMLDivElement | null>(null);
   const debounce = debounceScroll(MAIL_LIST_SESSION_KEY);
-  const selectedMailSet = new Set(selectedMail);
   const getAllMail: UseQueryResult<
     MailListSchema[],
     AxiosError<{ message: string }>
@@ -98,6 +84,11 @@ function MailList({ mailId }: { mailId: string }) {
         }
       );
     });
+    return () => {
+      if (mailSocket) {
+        mailSocket.off("update-mail");
+      }
+    };
   }, [filteredBy, mailSocket, queryClient]);
   function handleMailStatusChange(mailId: string) {
     queryClient.setQueryData<MailListSchema[] | undefined>(
@@ -127,40 +118,10 @@ function MailList({ mailId }: { mailId: string }) {
     }
     router.push(`/mailbox/${mailId}`);
   }
-  function handleSelectedMail(mailId: string, ifMailAlreadySelected: boolean) {
-    if (!ifMailAlreadySelected) {
-      setSelectedMail((allSelectedMailId) =>
-        allSelectedMailId.filter((selectedMail) => selectedMail !== mailId)
-      );
-    } else {
-      setSelectedMail((prevSelectedMailId) => [...prevSelectedMailId, mailId]);
-    }
-  }
-  function handleCheckboxValue(mailId: string) {
-    return selectedMailSet.has(mailId);
-  }
-  function selectAllMail() {
-    const newSelectedMails: string[] = [];
-
-    getAllMail.data?.forEach((mail) => {
-      if (!selectedMailSet.has(mail._id)) {
-        newSelectedMails.push(mail._id);
-      }
-    });
-    if (newSelectedMails.length > 0) {
-      setSelectedMail((prevMail) => [...prevMail, ...newSelectedMails]);
-    }
-  }
 
   return (
     <div className="bg-[#222222] h-full rounded-md flex flex-col relative">
-      <MailListHeader
-        selectOptionActivated={selectOptionActivated}
-        setSelectOptionActivated={setSelectOptionActivated}
-        selectAllMail={selectAllMail}
-        filteredBy={filteredBy}
-        setFilteredBy={setFilteredBy}
-      />
+      <MailListHeader filteredBy={filteredBy} setFilteredBy={setFilteredBy} />
       {getAllMail.isLoading || !getAllMail.data ? (
         <ConversationListSkeleton />
       ) : (
@@ -177,8 +138,7 @@ function MailList({ mailId }: { mailId: string }) {
               className="pt-2 flex flex-col w-full h-full overflow-y-auto items-center px-1.5"
             >
               {getAllMail.data?.map((mail) => (
-                <motion.label
-                  htmlFor={`delete-mail-${mail._id}`}
+                <motion.button
                   layout
                   onClick={() => {
                     if (!selectOptionActivated) {
@@ -192,19 +152,6 @@ function MailList({ mailId }: { mailId: string }) {
                   }`}
                 >
                   <div className="flex items-center space-x-2">
-                    {selectOptionActivated && (
-                      <Checkbox
-                        checked={handleCheckboxValue(mail._id)}
-                        onCheckedChange={(ifMailAlreadySelected) =>
-                          handleSelectedMail(
-                            mail._id,
-                            ifMailAlreadySelected as boolean
-                          )
-                        }
-                        id={`delete-mail-${mail._id}`}
-                      />
-                    )}
-
                     <span className="text-3xl text-[#6486FF]">
                       {mail.isAlreadyRead ? <HiMailOpen /> : <HiMail />}
                     </span>
@@ -225,7 +172,7 @@ function MailList({ mailId }: { mailId: string }) {
                       mail.isAlreadyRead ? "hidden" : "flex"
                     }`}
                   ></span>
-                </motion.label>
+                </motion.button>
               ))}
             </div>
           ) : (

@@ -5,20 +5,13 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 
 interface MailListHeaderSchemaProps {
-  selectOptionActivated: boolean;
-  setSelectOptionActivated: Dispatch<SetStateAction<boolean>>;
-  selectAllMail: () => void;
   filteredBy: string;
   setFilteredBy: Dispatch<SetStateAction<string>>;
 }
 function MailListHeader({
-  selectOptionActivated,
-  setSelectOptionActivated,
-  selectAllMail,
   filteredBy,
   setFilteredBy,
 }: MailListHeaderSchemaProps) {
@@ -33,11 +26,9 @@ function MailListHeader({
         </h3>
       </div>
       <div className="w-full flex justify-between px-2.5">
-        {!selectOptionActivated && (
-          <h1 className="text-[#6486FF] font-extrabold self-end text-[0.83rem]">
-            ALL MAIL
-          </h1>
-        )}
+        <h1 className="text-[#6486FF] font-extrabold self-end text-[0.83rem]">
+          ALL MAIL
+        </h1>
         <div className="flex space-x-2 items-center">
           <Select
             value={filteredBy}
