@@ -284,12 +284,12 @@ function GroupChatboard({ groupId }: { groupId: string }) {
         setOpenEmoji={setOpenEmoji}
         setOpenAttachmentModal={setOpenAttachmentModal}
       />
-      {
+      {openGroupDetailsModal && (
         <GroupDetails
           groupId={groupId}
           setOpenGroupDetailsModal={setOpenGroupDetailsModal}
         />
-      }
+      )}
       {/* {openProfileModal && (
         <ProfileCard
           conversationId={groupId}

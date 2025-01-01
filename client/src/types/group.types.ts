@@ -1,4 +1,4 @@
-import { User } from "next-auth";
+import { User } from "./shared.types";
 import { BaseGroupChatSchema } from "./shared.types";
 export interface GroupChatList
   extends Pick<BaseGroupChatSchema, "_id" | "groupName" | "groupPhoto"> {
@@ -23,10 +23,4 @@ export interface GroupChatInfo
   extends Pick<BaseGroupChatSchema, "_id" | "groupName" | "groupPhoto"> {
   is_group_active: boolean;
   total_member: number;
-}
-
-export interface MemberListSchema {
-  active_member_list: User;
-  requesting_member_list: User;
-  inviting_member_list: User;
 }

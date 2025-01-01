@@ -475,38 +475,22 @@ export const joinGroup = asyncHandler(async (req: Request, res: Response) => {
 
 export const groupChatDetails = asyncHandler(
   async (req: Request, res: Response) => {
-    const { groupId } = req.params;
-    console.log(groupId);
+    const { groupId, userId } = req.params;
     try {
-      const groupDetails = await GroupConversation.aggregate([
+      const group_details = await GroupConversation.aggregate([
         {
-          $match: {
-            _id: new mongoose.Types.ObjectId(groupId),
-          },
+          $match: { _id: new mongoose.Types.ObjectId(groupId) },
         },
         {
           $addFields: {
-            active_members: {
+            excluded_you: {
               $filter: {
                 input: "$members",
                 cond: {
-                  $eq: ["$$this.status", "active"],
-                },
-              },
-            },
-            requesting_members: {
-              $filter: {
-                input: "$members",
-                cond: {
-                  $eq: ["$$this.status", "requesting"],
-                },
-              },
-            },
-            inviting_members: {
-              $filter: {
-                input: "$members",
-                cond: {
-                  $eq: ["$$this.status", "pending"],
+                  $ne: [
+                    "$$this.memberInfo",
+                    new mongoose.Types.ObjectId(userId),
+                  ],
                 },
               },
             },
@@ -515,62 +499,106 @@ export const groupChatDetails = asyncHandler(
         {
           $lookup: {
             from: "users",
-            localField: "active_members.memberInfo",
+            localField: "excluded_you.memberInfo",
             foreignField: "_id",
-            as: "active_member_details",
-          },
-        },
-        {
-          $lookup: {
-            from: "users",
-            localField: "requesting_members.memberInfo",
-            foreignField: "_id",
-            as: "requesting_member_details",
-          },
-        },
-        {
-          $lookup: {
-            from: "users",
-            localField: "inviting_members.memberInfo",
-            foreignField: "_id",
-            as: "inviting_member_details",
+            as: "member_details",
           },
         },
         {
           $project: {
-            group_details: {
-              creator: 1,
-              groupName: 1,
-              groupPhoto: 1,
-              createdAt: 1,
+            total_active_member: {
+              $size: {
+                $filter: {
+                  input: "$members",
+                  cond: { $eq: ["$$this.status", "active"] },
+                },
+              },
             },
-            active_member_details: {
-              _id: 1,
-              name: 1,
-              profilePic: 1,
-              status: 1,
+            is_group_active: {
+              $anyElementTrue: {
+                $map: {
+                  input: "$member_details",
+                  in: { $eq: ["$$this.status.type", "online"] },
+                },
+              },
             },
-            requesting_member_details: {
-              _id: 1,
-              name: 1,
-              profilePic: 1,
-              status: 1,
-            },
-            inviting_member_details: {
-              _id: 1,
-              name: 1,
-              profilePic: 1,
-              status: 1,
-            },
+            groupName: 1,
+            groupPhoto: 1,
+            createdAt: 1,
+            _id: 1,
           },
         },
       ]);
-      res.status(200).json({
-        group_details: groupDetails[0].group_details,
-        active_member_list: groupDetails[0].active_member_details,
-        requesting_member_list: groupDetails[0].requesting_member_details,
-        inviting_member_list: groupDetails[0].inviting_member_details,
-      });
+      res.status(200).json(group_details[0]);
+    } catch (err) {
+      console.log(err);
+    }
+  }
+);
+
+export const getGroupMembers = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { groupId, userId } = req.params;
+    const { member_status } = req.query;
+    try {
+      const user_role = await GroupConversation.findOne(
+        {
+          _id: groupId,
+          "members.memberInfo": userId,
+        },
+        {
+          "members.$": 1,
+        }
+      );
+      const formatted_user_role = user_role.members[0].role;
+
+      if (member_status !== "active" && formatted_user_role === "guest") {
+        res.status(403);
+        throw new Error("Only admin have access to this");
+      }
+      const group_member_list = await GroupConversation.aggregate([
+        {
+          $match: { _id: new mongoose.Types.ObjectId(groupId) },
+        },
+        {
+          $unwind: "$members",
+        },
+        {
+          $match: {
+            "members.status": member_status,
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "members.memberInfo",
+            foreignField: "_id",
+            as: "member_details",
+          },
+        },
+        {
+          $addFields: {
+            member_details: {
+              $map: {
+                input: "$member_details",
+                in: {
+                  _id: "$$this._id",
+                  role: "$members.role",
+                  name: "$$this.name",
+                  profilePic: "$$this.profilePic",
+                  status: "$$this.status",
+                },
+              },
+            },
+          },
+        },
+        {
+          $project: {
+            member_details: { $first: "$member_details" },
+          },
+        },
+      ]);
+      res.status(200).json(group_member_list);
     } catch (err) {
       console.log(err);
     }

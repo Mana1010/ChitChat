@@ -78,7 +78,7 @@ export interface BaseGroupChatSchema<
     groupId: string;
     photoUrl: string;
   };
-  createdAt: string;
+  createdAt: Date;
 }
 
 interface MessageFieldRefSchema {

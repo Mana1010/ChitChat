@@ -113,3 +113,7 @@
 .profile-container {
   background: url("./../assets/images/svg/profile-background.svg");
 }
+
+.side-background {
+  background: url("./../assets/images/svg/confetti-doodles-scale-mid.svg");
+}

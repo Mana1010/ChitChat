@@ -15,7 +15,7 @@ function ChatUsers({ conversationId }: { conversationId: string }) {
   const [search, setSearch] = useState<string>("");
 
   return (
-    <div className="bg-[#222222] h-full rounded-md flex flex-col">
+    <div className="bg-[#222222] h-full rounded-md flex flex-col side-background">
       <header className="w-full p-2.5 space-y-2 ">
         <div className="flex items-center space-x-2">
           <span className="text-[#6486FF] text-xl">
