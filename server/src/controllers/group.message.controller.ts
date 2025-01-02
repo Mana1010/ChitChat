@@ -540,67 +540,65 @@ export const getGroupMembers = asyncHandler(
   async (req: Request, res: Response) => {
     const { groupId, userId } = req.params;
     const { member_status } = req.query;
-    try {
-      const user_role = await GroupConversation.findOne(
-        {
-          _id: groupId,
-          "members.memberInfo": userId,
-        },
-        {
-          "members.$": 1,
-        }
-      );
-      const formatted_user_role = user_role.members[0].role;
 
-      if (member_status !== "active" && formatted_user_role === "guest") {
-        res.status(403);
-        throw new Error("Only admin have access to this");
+    const user_role = await GroupConversation.findOne(
+      {
+        _id: groupId,
+        "members.memberInfo": userId,
+      },
+      {
+        "members.$": 1,
       }
-      const group_member_list = await GroupConversation.aggregate([
-        {
-          $match: { _id: new mongoose.Types.ObjectId(groupId) },
+    );
+    const formatted_user_role = user_role.members[0].role;
+
+    if (member_status !== "active" && formatted_user_role === "guest") {
+      res.status(403);
+      throw new Error("Only admin have access to this");
+    }
+    const group_member_list = await GroupConversation.aggregate([
+      {
+        $match: { _id: new mongoose.Types.ObjectId(groupId) },
+      },
+      {
+        $unwind: "$members",
+      },
+      {
+        $match: {
+          "members.status": member_status,
         },
-        {
-          $unwind: "$members",
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "members.memberInfo",
+          foreignField: "_id",
+          as: "member_details",
         },
-        {
-          $match: {
-            "members.status": member_status,
-          },
-        },
-        {
-          $lookup: {
-            from: "users",
-            localField: "members.memberInfo",
-            foreignField: "_id",
-            as: "member_details",
-          },
-        },
-        {
-          $addFields: {
-            member_details: {
-              $map: {
-                input: "$member_details",
-                in: {
-                  _id: "$$this._id",
-                  role: "$members.role",
-                  name: "$$this.name",
-                  profilePic: "$$this.profilePic",
-                  status: "$$this.status",
-                },
+      },
+      {
+        $addFields: {
+          member_details: {
+            $map: {
+              input: "$member_details",
+              in: {
+                _id: "$$this._id",
+                role: "$members.role",
+                name: "$$this.name",
+                profilePic: "$$this.profilePic",
+                status: "$$this.status",
               },
             },
           },
         },
-        {
-          $project: {
-            member_details: { $first: "$member_details" },
-          },
+      },
+      {
+        $project: {
+          member_details: { $first: "$member_details" },
         },
-      ]);
-      res.status(200).json(group_member_list);
-    } catch (err) {
-      console.log(err);
-    }
+      },
+    ]);
+    console.log(group_member_list);
+    res.status(200).json(group_member_list);
   }
 );

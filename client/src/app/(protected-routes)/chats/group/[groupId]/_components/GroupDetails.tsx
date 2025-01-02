@@ -16,6 +16,7 @@ import {
 import { useSession } from "next-auth/react";
 import { BaseGroupChatSchema } from "@/types/shared.types";
 import { format } from "date-fns";
+import GroupMemberList from "./GroupMemberList";
 function ParentDiv({ children }: { children: ReactNode }) {
   return (
     <div className="w-full flex justify-end items-end bg-black/30 absolute inset-0 z-50 h-full">
@@ -30,10 +31,10 @@ function GroupDetails({
   groupId: string;
   setOpenGroupDetailsModal: Dispatch<SetStateAction<boolean>>;
 }) {
-  const { data: session, status } = useSession();
   const [memberFilterStatus, setMemberFilterStatus] = useState<
     "active" | "requesting" | "inviting"
   >("active");
+  const { data: session, status } = useSession();
   const getGroupDetails: UseQueryResult<
     Pick<
       BaseGroupChatSchema,
@@ -49,16 +50,6 @@ function GroupDetails({
       return response.data;
     },
     enabled: status === "authenticated",
-  });
-
-  const getAllMembers = useQuery({
-    queryKey: ["member-list", memberFilterStatus, groupId],
-    queryFn: async () => {
-      const response = await axios.get(
-        `${GROUP_SERVER_URL}/all/group/members/${groupId}/${session?.user.userId}?member_status=${memberFilterStatus}`
-      );
-      return response.data;
-    },
   });
   if (getGroupDetails.isLoading) {
     return (
@@ -282,7 +273,7 @@ function GroupDetails({
         </div>
 
         {/* Member List */}
-        <div className="flex-grow pt-16 px-2 profile-container w-full flex flex-col space-y-2">
+        <div className="flex-grow pt-16 px-2 profile-container w-full flex flex-col">
           <header className="flex justify-between items-center">
             <button
               onClick={() => {
@@ -315,13 +306,13 @@ function GroupDetails({
               Inviting
             </button>
           </header>
-          <div className="flex-grow flex space-y-2 flex-col items-center">
-            <div className="flex justify-between items-center">
-              {`User Profile`}
-              <div></div>
-            </div>
-          </div>
+          <GroupMemberList
+            groupId={groupId}
+            queryStatus={getGroupDetails.isSuccess}
+            memberFilterStatus={memberFilterStatus}
+          />
         </div>
+
         {/* The Exit button */}
         <div className="flex items-center justify-center w-full absolute bottom-8">
           <button

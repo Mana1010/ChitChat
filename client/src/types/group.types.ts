@@ -24,3 +24,10 @@ export interface GroupChatInfo
   is_group_active: boolean;
   total_member: number;
 }
+
+export interface MemberListSchema {
+  _id: string;
+  member_details: Pick<User, "_id" | "name" | "profilePic" | "status"> & {
+    role: string;
+  };
+}
