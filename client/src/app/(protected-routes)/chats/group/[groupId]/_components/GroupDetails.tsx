@@ -32,7 +32,7 @@ function GroupDetails({
   setOpenGroupDetailsModal: Dispatch<SetStateAction<boolean>>;
 }) {
   const [memberFilterStatus, setMemberFilterStatus] = useState<
-    "active" | "requesting" | "inviting"
+    "active" | "requesting" | "pending"
   >("active");
   const { data: session, status } = useSession();
   const getGroupDetails: UseQueryResult<
@@ -297,10 +297,10 @@ function GroupDetails({
             </button>
             <button
               onClick={() => {
-                setMemberFilterStatus("inviting");
+                setMemberFilterStatus("pending");
               }}
               className={`text-zinc-200 hover:bg-[#6486FF]/20 ${
-                memberFilterStatus === "inviting" && "bg-[#6486FF]/20"
+                memberFilterStatus === "pending" && "bg-[#6486FF]/20"
               } rounded-md w-full text-[0.9rem] font-bold py-1.5`}
             >
               Inviting

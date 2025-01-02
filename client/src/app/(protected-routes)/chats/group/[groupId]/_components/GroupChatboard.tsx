@@ -183,11 +183,10 @@ function GroupChatboard({ groupId }: { groupId: string }) {
     <div
       onClick={() => {
         setOpenEmoji(false);
-        // setOpenAttachmentModal(false);
       }}
       className="flex flex-grow w-full h-full flex-col relative bg-transparent"
     >
-      <div className="flex-grow w-full background-div flex flex-col">
+      <div className="flex-grow w-full groupchat-background-div flex flex-col">
         <GroupChatHeader
           groupInfo={groupInfo as any}
           isLoading={groupInfoLoading}

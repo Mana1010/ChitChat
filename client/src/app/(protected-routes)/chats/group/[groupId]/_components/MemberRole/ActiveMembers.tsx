@@ -13,7 +13,7 @@ function ActiveMembers({
   return (
     <div
       className={`w-full flex space-between items-center p-2 rounded-sm ${
-        member_details._id === userId && "bg-[#6486FF]/20"
+        member_details._id === userId && "bg-[#6486FF]/10"
       }`}
     >
       <div className="flex space-x-1 items-center w-full">
@@ -26,7 +26,13 @@ function ActiveMembers({
             className="absolute rounded-full"
             priority
           />
-          <span></span>
+          <span
+            className={`${
+              member_details.status.type === "online"
+                ? "bg-green-500"
+                : "bg-zinc-500"
+            } absolute bottom-[3px] right-[2px] w-2 h-2 rounded-full`}
+          ></span>
         </div>
         <div className="leading-tight">
           <h3 className="text-white text-sm font-bold ">
@@ -39,10 +45,11 @@ function ActiveMembers({
       </div>
       {/* Actions */}
       <div>
-        <button className="bg-[#6486FF] w-9 h-9 rounded-full flex items-center justify-center">
-          <span className="text-white text-md">
-            <TbMessage2 />
-          </span>
+        <button
+          aria-label="Start chatting"
+          className="bg-[#6486FF] w-9 h-9 rounded-full text-white text-md flex items-center justify-center"
+        >
+          <TbMessage2 />
         </button>
       </div>
     </div>

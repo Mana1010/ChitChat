@@ -120,7 +120,7 @@ function MailList({ mailId }: { mailId: string }) {
   }
 
   return (
-    <div className="bg-[#222222] h-full rounded-md flex flex-col relative">
+    <div className="side-background h-full rounded-md flex flex-col relative">
       <MailListHeader filteredBy={filteredBy} setFilteredBy={setFilteredBy} />
       {getAllMail.isLoading || !getAllMail.data ? (
         <ConversationListSkeleton />

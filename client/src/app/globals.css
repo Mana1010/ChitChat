@@ -96,7 +96,15 @@
 
 .background-div {
   background: linear-gradient(to left, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)),
-    url("./../assets/images/piltover-tower.png");
+    url("./../assets/images/private-chat-background.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+}
+
+.groupchat-background-div {
+  background: linear-gradient(to left, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)),
+    url("./../assets/images/group-chat-background.png");
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
@@ -104,7 +112,7 @@
 
 .public-background {
   background: linear-gradient(to left, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)),
-    url("./../assets/images/arcane-public-background.png");
+    url("./../assets/images/public-chat-background.png");
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;

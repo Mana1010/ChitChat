@@ -1,10 +1,9 @@
 "use client";
-import React, { Dispatch, ReactNode, SetStateAction, useEffect } from "react";
+import React, { Dispatch, ReactNode, SetStateAction } from "react";
 import { useQuery, UseQueryResult } from "react-query";
 import { MdOutlineTransitEnterexit } from "react-icons/md";
 import Image from "next/image";
-import { FcGoogle } from "react-icons/fc";
-import piltoverTower from "../../../../assets/images/piltover-tower.png";
+import hextech from "../../../../assets/images/private-profile-background.png";
 import axios, { AxiosError } from "axios";
 import { SHARED_SERVER_URL } from "@/utils/serverUrl";
 import { ProfileDetails } from "@/types/shared.types";
@@ -46,7 +45,6 @@ function ProfileCard({
     },
     enabled: !!participantId,
   });
-  console.log(participantId);
   const participant_details = getParticipantProfile.data?.participant_details;
   if (getParticipantProfile.isLoading) {
     return (
@@ -68,8 +66,8 @@ function ProfileCard({
       <div className="w-full flex flex-col h-full relative">
         <div className="w-full relative h-[150px] pb-10">
           <Image
-            src={piltoverTower}
-            alt="piltover-progress-img"
+            src={hextech}
+            alt="hextech-img"
             fill
             sizes="100%"
             className="absolute"
