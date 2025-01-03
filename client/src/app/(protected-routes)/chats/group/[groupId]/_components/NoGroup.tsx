@@ -1,19 +1,16 @@
 "use client";
 import React from "react";
-import newUser from "../../../../../../assets/images/new-user.png";
 import Image from "next/image";
-import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
 import noGroupYet from "../../../../../../assets/images/empty-group.png";
 import { useModalStore } from "@/utils/store/modal.store";
 function NoGroup() {
-  const { data: session } = useSession();
   const pathname = usePathname();
   const router = useRouter();
   const { setShowCreateGroupForm } = useModalStore();
   return (
-    <div className="flex items-center justify-center w-full h-full flex-col space-y-2">
+    <div className="flex items-center justify-center w-full h-full flex-col space-y-2 side-background">
       <Image
         src={noGroupYet}
         width={300}

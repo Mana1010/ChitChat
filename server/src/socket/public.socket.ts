@@ -2,7 +2,8 @@ import { Server, Socket } from "socket.io";
 import { Public } from "../model/public.model";
 import { User } from "../model/user.model";
 import mongoose from "mongoose";
-import { PUBLIC_NAMESPACE } from "../utils/namespaces.utils";
+import { PRIVATE_NAMESPACE, PUBLIC_NAMESPACE } from "../utils/namespaces.utils";
+import { PrivateConversation } from "../model/privateConversation.model";
 function stopTyping(
   socket: Socket,
   typingUsers: { userId: string; userImg: string }[],
@@ -137,6 +138,7 @@ export function handlePublicSocket(io: Server) {
         }
       }
     );
+
     socket.on("during-typing", ({ userImg }) => {
       const checkSocketId = typingUsers.some(
         (typeUser) => typeUser.userId === userId
@@ -148,6 +150,66 @@ export function handlePublicSocket(io: Server) {
       socket.broadcast.emit("display-during-typing", typingUsers);
     });
     stopTyping(socket, typingUsers, userId);
+
+    socket.on(
+      "add-conversation",
+      async ({
+        conversationId,
+        senderId,
+      }: {
+        conversationId: string;
+        senderId: string;
+      }) => {
+        if (!conversationId || !senderId) return;
+        const getConversation = await PrivateConversation.aggregate([
+          {
+            $match: { _id: new mongoose.Types.ObjectId(conversationId) },
+          },
+          {
+            $limit: 1,
+          },
+          {
+            $unwind: "$participants",
+          },
+          {
+            $match: {
+              participants: new mongoose.Types.ObjectId(senderId),
+            },
+          },
+          {
+            $lookup: {
+              from: "users",
+              localField: "participants",
+              foreignField: "_id",
+              as: "participant_details",
+            },
+          },
+          {
+            $addFields: {
+              participant_details: { $first: "$participant_details" },
+            },
+          },
+          {
+            $project: {
+              lastMessage: 1,
+              already_read_message: true,
+              participant_details: {
+                name: 1,
+                profilePic: 1,
+                _id: 1,
+                status: 1,
+              },
+              is_user_already_seen_message: true,
+              updateAt: 1,
+            },
+          },
+        ]);
+        const conversationDetails = getConversation[0];
+        PRIVATE_NAMESPACE(io)
+          .to(senderId)
+          .emit("add-chatlist", conversationDetails);
+      }
+    );
 
     socket.on("join-room", ({ userId }) => {
       socket.join(userId);

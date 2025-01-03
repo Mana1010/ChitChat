@@ -22,7 +22,7 @@ import MailListHeader from "./MailListHeader";
 import { handleNotificationDecrement } from "@/utils/sharedUpdateFunction";
 import { useSocketStore } from "@/utils/store/socket.store";
 import { nanoid } from "nanoid";
-import debounceScroll from "@/hooks/debounceScroll";
+import debounceScroll from "@/utils/debounceScroll";
 import {
   DEFAULT_SCROLL_VALUE,
   MAIL_LIST_SESSION_KEY,

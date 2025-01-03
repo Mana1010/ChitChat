@@ -3,6 +3,9 @@ import Image from "next/image";
 import { MemberListSchema } from "@/types/group.types";
 import { capitalizeFirstLetter } from "@/utils/capitalizeFirstLetter";
 import { TbMessage2 } from "react-icons/tb";
+import { useSocketStore } from "@/utils/store/socket.store";
+import { useRouter } from "next/navigation";
+import useAddConversation from "@/hooks/useAddConversation";
 function ActiveMembers({
   member_details,
   userId,
@@ -10,6 +13,9 @@ function ActiveMembers({
   member_details: MemberListSchema["member_details"];
   userId: string | undefined;
 }) {
+  const { groupSocket } = useSocketStore();
+  const { addConversation } = useAddConversation(groupSocket);
+
   return (
     <div
       className={`w-full flex space-between items-center p-2 rounded-sm ${
@@ -45,12 +51,20 @@ function ActiveMembers({
       </div>
       {/* Actions */}
       <div>
-        <button
-          aria-label="Start chatting"
-          className="bg-[#6486FF] w-9 h-9 rounded-full text-white text-md flex items-center justify-center"
-        >
-          <TbMessage2 />
-        </button>
+        {member_details._id !== userId && (
+          <button
+            onClick={() =>
+              addConversation({
+                senderId: userId as string,
+                receiverId: member_details._id,
+              })
+            }
+            aria-label="Start chatting"
+            className="bg-[#6486FF] w-9 h-9 rounded-full text-white text-md flex items-center justify-center"
+          >
+            <TbMessage2 />
+          </button>
+        )}
       </div>
     </div>
   );

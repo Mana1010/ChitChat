@@ -1,14 +1,21 @@
 "use client";
 import React, { Dispatch, SetStateAction, useState } from "react";
-import { useQuery, useMutation, UseQueryResult } from "react-query";
+import {
+  useQuery,
+  useMutation,
+  UseQueryResult,
+  useQueryClient,
+} from "react-query";
 import { FaXmark } from "react-icons/fa6";
-import { PRIVATE_SERVER_URL, PUBLIC_SERVER_URL } from "@/utils/serverUrl";
+import { SHARED_SERVER_URL, PUBLIC_SERVER_URL } from "@/utils/serverUrl";
 import axios, { AxiosError } from "axios";
 import { ReactionListSchema } from "@/types/shared.types";
 import Image from "next/image";
 import { TbMessage2 } from "react-icons/tb";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useSocketStore } from "@/utils/store/socket.store";
+import useAddConversation from "@/hooks/useAddConversation";
 function PublicReactionList({
   messageId,
   setOpenMessageIdReactionList,
@@ -21,6 +28,8 @@ function PublicReactionList({
   const [selectedReaction, setSelectedReaction] = useState("All");
   const [allReactions, setAllReactions] = useState<ReactionListSchema[]>([]);
   const router = useRouter();
+  const { publicSocket } = useSocketStore();
+  const { addConversation } = useAddConversation(publicSocket);
   const getReactionList: UseQueryResult<
     ReactionListSchema[],
     AxiosError<{ message: string }>
@@ -37,18 +46,6 @@ function PublicReactionList({
     enabled: messageId !== null,
   });
 
-  const chatUser = useMutation({
-    mutationFn: async (data: { senderId: string; receiverId: string }) => {
-      const response = await axios.post(`${PRIVATE_SERVER_URL}/new/chat`, data);
-      return response.data.message;
-    },
-    onSuccess: (id) => {
-      router.push(`/chats/private/${id}?type=chats`);
-    },
-    onError: (err: AxiosError<{ message: string }>) => {
-      toast.error(err.response?.data.message);
-    },
-  });
   const reactionOnly = getReactionList.data?.map(
     ({ reactions }) => reactions.reactionEmoji
   );
@@ -140,7 +137,7 @@ function PublicReactionList({
                 {reactionList.reactions.reactor !== userId && (
                   <button
                     onClick={() =>
-                      chatUser.mutate({
+                      addConversation({
                         senderId: userId,
                         receiverId: reactionList.reactions.reactor,
                       })

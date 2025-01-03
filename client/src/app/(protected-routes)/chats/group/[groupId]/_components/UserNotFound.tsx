@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 function UserNotFound({ errorMessage }: { errorMessage: string }) {
   const router = useRouter();
   return (
-    <div className="flex items-center justify-center w-full h-full flex-col space-y-2">
+    <div className="flex items-center justify-center w-full h-full flex-col space-y-2 side-background">
       <Image
         src={emptyChat}
         width={300}

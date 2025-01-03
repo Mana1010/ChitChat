@@ -13,7 +13,7 @@ import { useSocketStore } from "@/utils/store/socket.store";
 import ConversationListSkeleton from "../../../_components/ConversationListSkeleton";
 import NoItemFound from "@/components/NoItemFound";
 import { updateConversationList } from "@/utils/sharedUpdateFunction";
-import debounceScroll from "@/hooks/debounceScroll";
+import debounceScroll from "@/utils/debounceScroll";
 import {
   PRIVATE_CHATLIST_SESSION_KEY,
   DEFAULT_SCROLL_VALUE,

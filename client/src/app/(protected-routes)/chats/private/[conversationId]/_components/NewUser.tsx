@@ -10,7 +10,7 @@ function NewUser() {
   const pathname = usePathname();
   const router = useRouter();
   return (
-    <div className="flex items-center justify-center w-full h-full flex-col space-y-2">
+    <div className="flex items-center justify-center w-full h-full flex-col space-y-2 side-background">
       <Image src={newUser} width={300} height={300} alt="new-user" priority />
       <h1 className="text-white text-center">
         Hello{" "}

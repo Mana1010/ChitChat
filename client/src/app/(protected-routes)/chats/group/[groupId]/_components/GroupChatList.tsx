@@ -14,7 +14,7 @@ import EmptyConversation from "@/components/EmptyConversation";
 import { GroupChatConversationList } from "@/types/group.types";
 import { updateConversationList } from "@/utils/sharedUpdateFunction";
 import { retrieveFirstName } from "@/utils/retrieveFirstName";
-import debounceScroll from "@/hooks/debounceScroll";
+import debounceScroll from "@/utils/debounceScroll";
 import { DEFAULT_SCROLL_VALUE, GROUP_CHATLIST_KEY } from "@/utils/storageKey";
 import { User } from "@/types/shared.types";
 function GroupChatList({

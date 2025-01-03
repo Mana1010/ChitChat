@@ -1,14 +1,13 @@
 "use client";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useMutation, useQueryClient, useInfiniteQuery } from "react-query";
+import { useQueryClient, useInfiniteQuery } from "react-query";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import { PRIVATE_SERVER_URL } from "@/utils/serverUrl";
 import { User } from "@/types/shared.types";
 import LoadingChat from "@/components/LoadingChat";
-import { toast } from "sonner";
 import { TbMessage2 } from "react-icons/tb";
 import ConversationListSkeleton from "../../../_components/ConversationListSkeleton";
 import useDebounce from "@/hooks/useDebounce.hook";
@@ -17,6 +16,7 @@ import { useInView } from "react-intersection-observer";
 import NoItemFound from "@/components/NoItemFound";
 import { useSocketStore } from "@/utils/store/socket.store";
 import Skeleton from "../../../_components/Skeleton";
+import useAddConversation from "@/hooks/useAddConversation";
 function UserList({ searchUser }: { searchUser: string }) {
   const router = useRouter();
   const { privateSocket, statusSocket } = useSocketStore();
@@ -25,6 +25,8 @@ function UserList({ searchUser }: { searchUser: string }) {
   const [allUserList, setAllUserList] = useState<User[]>([]);
   const currentPageRef = useRef(0);
   const { data: session, status } = useSession();
+  const { addConversation } = useAddConversation(privateSocket);
+
   const debouncedValue = useDebounce(searchUser);
   const { searchUser: debouncedSearchUser, isLoading: loadingSearchUser } =
     useSearchUser(debouncedValue);
@@ -47,9 +49,6 @@ function UserList({ searchUser }: { searchUser: string }) {
     refetchOnWindowFocus: false,
     enabled: status === "authenticated",
     onSuccess: (data) => {
-      console.log("DATA in Private List");
-      console.log(data);
-      console.log(`Current Page ${currentPageRef.current}`);
       setAllUserList((prevData) => [
         ...prevData,
         ...data.pages[currentPageRef.current].getAllUsers,
@@ -62,24 +61,6 @@ function UserList({ searchUser }: { searchUser: string }) {
   });
   const queryClient = useQueryClient();
 
-  const chatUser = useMutation({
-    mutationFn: async (data: { senderId: string; receiverId: string }) => {
-      const response = await axios.post(`${PRIVATE_SERVER_URL}/new/chat`, data);
-      return response.data;
-    },
-    onSuccess: ({ conversationId, is_already_chatting, senderId }) => {
-      alert(`Sender Id ${senderId}`);
-      if (!is_already_chatting) {
-        privateSocket?.emit("add-conversation", { conversationId, senderId });
-        queryClient.invalidateQueries("chat-list");
-        queryClient.invalidateQueries("sidebar");
-      }
-      router.push(`/chats/private/${conversationId}?type=chats`);
-    },
-    onError: (err: AxiosError<{ message: string }>) => {
-      toast.error(err.response?.data.message);
-    },
-  });
   const userList = useMemo(() => {
     return searchUser.length ? debouncedSearchUser : allUserList;
   }, [searchUser, debouncedSearchUser, allUserList]);
@@ -177,7 +158,7 @@ function UserList({ searchUser }: { searchUser: string }) {
               </div>
               <button
                 onClick={() => {
-                  chatUser.mutate({
+                  addConversation({
                     senderId: session?.user.userId as string,
                     receiverId: user._id,
                   });

@@ -117,9 +117,8 @@ function GroupChatBubbles({
                   )}
                 </div>
 
-                {/* Reactions */}
                 <div className={`relative flex justify-center space-x-1`}>
-                  {messageDetails.sender._id !== session?.user.userId && (
+                  {/* {messageDetails.sender._id !== session?.user.userId && (
                     <button
                       onClick={() => {
                         setOpenReaction((prevData) =>
@@ -135,7 +134,7 @@ function GroupChatBubbles({
                         </span>
                       )}
                     </button>
-                  )}
+                  )} */}
 
                   {openReaction === messageDetails._id && (
                     <GroupReactions

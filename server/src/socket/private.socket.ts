@@ -135,7 +135,6 @@ export function handlePrivateSocket(io: Server) {
         conversationId: string;
         senderId: string;
       }) => {
-        console.log("Running the add conversation sockett");
         if (!conversationId || !senderId) return;
         const getConversation = await PrivateConversation.aggregate([
           {

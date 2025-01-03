@@ -7,10 +7,12 @@ import {
   GROUP_NAMESPACE,
   MAIL_NAMESPACE,
   NOTIFICATION_NAMESPACE,
+  PRIVATE_NAMESPACE,
 } from "../utils/namespaces.utils";
 import { appLogger } from "../utils/loggers.utils";
 import mongoose from "mongoose";
 import { GroupChatDetails } from "../types/shared.types";
+import { PrivateConversation } from "../model/privateConversation.model";
 
 type RequestedUsers = { id: string; name: string };
 const membersWhoReadMessage = new Map<string, string[]>();
@@ -233,6 +235,65 @@ export async function handleGroupSocket(io: Server) {
         getUserId?.push(userId);
       }
     });
+    socket.on(
+      "add-conversation",
+      async ({
+        conversationId,
+        senderId,
+      }: {
+        conversationId: string;
+        senderId: string;
+      }) => {
+        if (!conversationId || !senderId) return;
+        const getConversation = await PrivateConversation.aggregate([
+          {
+            $match: { _id: new mongoose.Types.ObjectId(conversationId) },
+          },
+          {
+            $limit: 1,
+          },
+          {
+            $unwind: "$participants",
+          },
+          {
+            $match: {
+              participants: new mongoose.Types.ObjectId(senderId),
+            },
+          },
+          {
+            $lookup: {
+              from: "users",
+              localField: "participants",
+              foreignField: "_id",
+              as: "participant_details",
+            },
+          },
+          {
+            $addFields: {
+              participant_details: { $first: "$participant_details" },
+            },
+          },
+          {
+            $project: {
+              lastMessage: 1,
+              already_read_message: true,
+              participant_details: {
+                name: 1,
+                profilePic: 1,
+                _id: 1,
+                status: 1,
+              },
+              is_user_already_seen_message: true,
+              updateAt: 1,
+            },
+          },
+        ]);
+        const conversationDetails = getConversation[0];
+        PRIVATE_NAMESPACE(io)
+          .to(senderId)
+          .emit("add-chatlist", conversationDetails);
+      }
+    );
 
     socket.on(
       "join-room",
@@ -256,6 +317,7 @@ export async function handleGroupSocket(io: Server) {
         socket.join(userId);
       }
     );
+
     socket.on(
       "leave-room",
       async ({ groupId, userId }: { groupId: string; userId: string }) => {

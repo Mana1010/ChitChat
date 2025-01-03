@@ -247,3 +247,34 @@ export const participantProfile = asyncHandler(
     }
   }
 );
+
+export const chatUser = asyncHandler(async (req: Request, res: Response) => {
+  const { senderId, receiverId } = req.body;
+  if (!senderId || !receiverId) {
+    res.status(401).json({ message: "Please provide senderId and receiverId" });
+    return;
+  }
+  const checkExistingConversation = await PrivateConversation.findOne({
+    participants: { $all: [senderId, receiverId] },
+  });
+  //Check first if the conversation already exist
+  if (!checkExistingConversation) {
+    const addConversation = await PrivateConversation.create({
+      participants: [senderId, receiverId],
+      lastMessage: {
+        sender: senderId,
+        type: "system",
+      },
+    });
+    res.status(201).json({
+      conversationId: addConversation._id,
+      senderId,
+      is_already_chatting: false,
+    });
+    return;
+  }
+  res.status(201).json({
+    conversationId: checkExistingConversation._id,
+    is_already_chatting: true,
+  });
+});

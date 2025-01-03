@@ -177,16 +177,22 @@ function Chatboard({ conversationId }: { conversationId: string }) {
             ["participant-info", conversationId],
             (cachedData) => {
               if (cachedData) {
-                return {
-                  ...cachedData,
-                  receiver_details: {
-                    ...cachedData.receiver_details,
-                    status: {
-                      type,
-                      lastActiveAt,
+                if (userId === participantInfo?.receiver_details._id) {
+                  return {
+                    ...cachedData,
+                    receiver_details: {
+                      ...cachedData.receiver_details,
+                      status: {
+                        type,
+                        lastActiveAt,
+                      },
                     },
-                  },
-                };
+                  };
+                } else {
+                  return cachedData;
+                }
+              } else {
+                return cachedData;
               }
             }
           );
@@ -196,7 +202,12 @@ function Chatboard({ conversationId }: { conversationId: string }) {
     return () => {
       statusSocket?.off("display-user-status");
     };
-  }, [conversationId, queryClient, statusSocket]);
+  }, [
+    conversationId,
+    participantInfo?.receiver_details._id,
+    queryClient,
+    statusSocket,
+  ]);
   useEffect(() => {
     if (!privateSocket) return;
     privateSocket.on("display-seen-user", ({ display_seen }) => {
