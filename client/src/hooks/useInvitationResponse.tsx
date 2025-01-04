@@ -12,7 +12,7 @@ import {
   updateMailDetails,
   updateGrouplist,
 } from "@/utils/sharedUpdateFunction";
-import { GroupChatList } from "@/types/group.types";
+import { GroupChatConversationList, GroupChatList } from "@/types/group.types";
 
 function useInvitationResponse(
   mailId: string | null,
@@ -38,14 +38,27 @@ function useInvitationResponse(
       },
       onSuccess: ({ message, groupId, groupChatDetails }) => {
         if (invitationType === "in-mail" && mailSocket) {
+          queryClient.invalidateQueries({ queryKey: ["groupchat-list"] });
           mailSocket.emit("invitation-accepted", { groupId, groupChatDetails });
         } else if (invitationType === "in-group-list" && groupSocket) {
+          queryClient.setQueryData<GroupChatConversationList[] | undefined>(
+            ["groupchat-list"],
+            (cachedData) => {
+              if (cachedData && groupChatDetails) {
+                const data = cachedData || [];
+                return [groupChatDetails, ...data];
+              } else {
+                return cachedData;
+              }
+            }
+          );
+
           groupSocket.emit("invitation-accepted", {
             groupId,
             groupChatDetails,
           });
         }
-        queryClient.invalidateQueries(["groupchat-list"]);
+
         toast.success(message);
         router.push(`/chats/group/${groupId}?type=chats`);
       },

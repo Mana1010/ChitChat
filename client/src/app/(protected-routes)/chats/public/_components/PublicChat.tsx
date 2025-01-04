@@ -145,25 +145,38 @@ function PublicChat() {
         setAllMessages((allMessages) => {
           return allMessages.map((messageDetails) => {
             if (messageDetails._id === data.messageId) {
-              alert("Running the message details reaction");
-              return {
-                ...messageDetails,
-                reactions: messageDetails.reactions?.map((reaction) => {
-                  if (reaction.reactor === data.reactor) {
-                    return {
-                      ...reaction,
+              if (messageDetails.reactions.length === 0) {
+                return {
+                  ...messageDetails,
+                  reactions: [
+                    ...messageDetails.reactions,
+                    {
                       reactionEmoji: data.reactionEmoji,
                       reactionCreatedAt: data.reactionCreatedAt,
-                    };
-                  } else {
-                    return {
-                      ...reaction,
-                      reactionEmoji: data.reactionEmoji,
-                      reactionCreatedAt: data.reactionCreatedAt,
-                    };
-                  }
-                }),
-              };
+                      reactor: data.reactor,
+                    },
+                  ],
+                };
+              } else {
+                return {
+                  ...messageDetails,
+                  reactions: messageDetails.reactions?.map((reaction) => {
+                    if (reaction.reactor === data.reactor) {
+                      return {
+                        ...reaction,
+                        reactionEmoji: data.reactionEmoji,
+                        reactionCreatedAt: data.reactionCreatedAt,
+                      };
+                    } else {
+                      return {
+                        ...reaction,
+                        reactionEmoji: data.reactionEmoji,
+                        reactionCreatedAt: data.reactionCreatedAt,
+                      };
+                    }
+                  }),
+                };
+              }
             } else {
               return messageDetails;
             }

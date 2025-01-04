@@ -87,7 +87,6 @@ function ChatList({
       }
     );
     privateSocket.on("add-chatlist", (conversationDetails: Conversation) => {
-      alert(JSON.stringify(conversationDetails));
       queryClient.setQueryData<Conversation[] | undefined>(
         ["chat-list"],
         (cachedData) => {

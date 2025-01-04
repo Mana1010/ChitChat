@@ -42,7 +42,6 @@ export function handlePrivateSocket(io: Server) {
         { message, messageType, conversationId, participantId },
         callback
       ) => {
-        console.log(message, messageType, conversationId, participantId);
         try {
           if (conversationId) {
             const createMessage = await Private.create({
@@ -108,7 +107,6 @@ export function handlePrivateSocket(io: Server) {
         ).select(["userReadMessage", "lastMessage.sender"]);
 
         if (!checkIfUserNotSeenMessage) return;
-        console.log(checkIfUserNotSeenMessage);
         const listConversationUser =
           checkIfUserNotSeenMessage.userReadMessage.map((user: string) =>
             user.toString()

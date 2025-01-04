@@ -7,8 +7,6 @@ const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
       profile(profile) {
-        console.log(`CLIENT ID: ${process.env.GOOGLE_CLIENT_ID}`);
-        console.log(profile.sub);
         return {
           id: profile.sub,
           name: profile.name,

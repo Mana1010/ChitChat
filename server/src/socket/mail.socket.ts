@@ -44,7 +44,6 @@ export async function handleMailSocket(io: Server) {
         GROUP_NAMESPACE(io).to(`active:${groupId}`).emit("user-joined-group", {
           messageDetails: result,
         });
-        console.log(groupChatDetails);
         GROUP_NAMESPACE(io)
           .to(groupId)
           .emit("update-conversation-list", {

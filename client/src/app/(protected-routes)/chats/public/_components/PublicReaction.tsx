@@ -67,8 +67,6 @@ function PublicReactions({
         <button
           onClick={() => {
             if (!socket) return;
-            alert(reaction.emoji);
-            alert(messageDetails._id);
             socket.emit("send-reaction", {
               reaction: reaction.emoji,
               messageId: messageDetails._id,

@@ -77,7 +77,6 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
       ]);
     },
     onError: (data) => {
-      console.log("Error in Group List");
       console.log(data);
     },
   });
@@ -202,7 +201,7 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger
-                      aria-label="Accept Request"
+                      aria-label="Accept Invitation"
                       className={`bg-[#6486FF] p-2 rounded-full text-white text-lg`}
                       onClick={() =>
                         acceptInvitation({
@@ -214,14 +213,14 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
                       <FaCheck />
                     </TooltipTrigger>
                     <TooltipContent className="bg-[#6486FF]">
-                      Accept Request
+                      Accept Invitation
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger
-                      aria-label="Decline Request"
+                      aria-label="Decline Invitation"
                       className={`bg-[#6486FF] p-2 rounded-full text-white text-lg`}
                       onClick={() =>
                         declineInvitation({
@@ -233,7 +232,7 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
                       <FaXmark />
                     </TooltipTrigger>
                     <TooltipContent className="bg-[#6486FF]">
-                      Decline Request
+                      Decline Invitation
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>

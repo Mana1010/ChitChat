@@ -57,7 +57,9 @@ function MailDetails({ mailId }: { mailId: string }) {
           case "request":
             return <RequestText mailId={mailId} />;
           default:
-            return <h1>No Mail created</h1>;
+            return (
+              <h1 className="text-white text-center pt-3">No Mail created</h1>
+            );
         }
       })()}
     </ParentDiv>

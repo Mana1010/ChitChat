@@ -18,7 +18,6 @@ function useParticipantInfo(conversationId: string) {
       const response = await axios.get(
         `${PRIVATE_SERVER_URL}/participant/info/${session?.user.userId}/${conversationId}`
       );
-      console.log(response.data.message);
       return response.data.message;
     },
     refetchOnWindowFocus: false,

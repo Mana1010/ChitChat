@@ -133,7 +133,10 @@ export async function handleGroupSocket(io: Server) {
 
     socket.on(
       "send-message",
-      async ({ message, groupId }: { message: string; groupId: string }) => {
+      async (
+        { message, groupId }: { message: string; groupId: string },
+        callback
+      ) => {
         try {
           const result = await Group.create({
             groupId,
@@ -161,6 +164,8 @@ export async function handleGroupSocket(io: Server) {
                 new: true,
               }
             ).select("lastMessage");
+
+          callback({ success: true, data: result._id });
           socket.broadcast.to(`active:${groupId}`).emit("display-message", {
             messageDetails: result,
           });
@@ -174,6 +179,7 @@ export async function handleGroupSocket(io: Server) {
             sender_details: {},
           });
         } catch (err) {
+          callback({ success: false, data: null });
           appLogger.error(err);
         }
       }

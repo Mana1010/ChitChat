@@ -8,7 +8,7 @@ import { GrAttachment } from "react-icons/gr";
 import { useQueryClient } from "react-query";
 import { MessageFieldPropsSchema } from "@/types/shared.types";
 import { optimisticUpdateMessage } from "@/utils/sharedUpdateFunction";
-import { nanoid } from "nanoid";
+import { toast } from "sonner";
 
 interface GroupMessageFieldSchema extends MessageFieldPropsSchema {
   groupSocket: Socket | null;
@@ -35,23 +35,39 @@ function GroupMessageField({
   const handleFormSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!groupSocket || !scrollRef) return;
-    groupSocket.emit("send-message", {
-      message,
-      groupId,
-    });
-    optimisticUpdateMessage(message, setAllMessages, session, [], nanoid());
-    groupSocket.emit("stop-typing", groupId);
-    updateConversationList(
-      queryClient,
-      message,
-      groupId,
-      senderId,
-      "text",
-      "groupchat-list",
-      false,
-      new Date(),
-      { _id: senderId as string }
+    groupSocket.emit(
+      "send-message",
+      {
+        message,
+        groupId,
+      },
+      (response: { success: boolean; data: string }) => {
+        if (response.success) {
+          optimisticUpdateMessage(
+            message,
+            setAllMessages,
+            session,
+            [],
+            response.data
+          );
+          updateConversationList(
+            queryClient,
+            message,
+            groupId,
+            senderId,
+            "text",
+            "groupchat-list",
+            false,
+            new Date(),
+            { _id: senderId as string }
+          );
+        } else {
+          toast.error("Cannot send a message, please try again");
+        }
+      }
     );
+
+    groupSocket.emit("stop-typing", groupId);
     setTimeout(() => {
       scrollRef.scrollIntoView({ block: "end" }); //To bypass the closure nature of react :)
     }, 0);

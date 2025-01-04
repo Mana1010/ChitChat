@@ -57,7 +57,6 @@ function UserList({ searchUser }: { searchUser: string }) {
       ]);
     },
     onError: (data) => {
-      console.log("Error in Private List");
       console.log(data);
     },
   });

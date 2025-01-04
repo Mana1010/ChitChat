@@ -12,7 +12,7 @@ A realtime chat application with 3 distinct sections (public, private and group)
 - Emoji support
 - Can react to a message (only in Public and Private)
 - Infinite Scrolling for chat history
-- Realtime Message and Mail notification
+- Realtime Private Message and Mail notification
 - Random Chatboard wallpaper background for private and group upon creation
 - Profile Card for User and Group Details
 

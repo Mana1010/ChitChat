@@ -34,12 +34,11 @@ import SystemChatBubbles from "../../../_components/SystemChatBubbles";
 import SystemTimeChatBubbles from "../../../_components/SystemTimeChatBubbles";
 import GroupDetails from "./GroupDetails";
 import styled from "styled-components";
-import bg from "./../../../../../../assets/images/group_details_background.png";
 
-const ChatBoardBackground = styled.div<{ bgUrl: string | null }>`
+const ChatBoardBackground = styled.div<{ bgurl: string | null }>`
   background: linear-gradient(to left, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)),
     url(${(props) =>
-      props.bgUrl ??
+      props.bgurl ??
       "./../../../../../../assets/images/group_details_background.png"});
   background-repeat: no-repeat;
   background-position: center;
@@ -150,8 +149,6 @@ function GroupChatboard({ groupId }: { groupId: string }) {
     });
 
     groupSocket.on("user-joined-group", ({ messageDetails }) => {
-      alert("Joinedddd");
-      console.log(messageDetails);
       setAllMessages((prevMessages) => [...prevMessages, messageDetails]);
       queryClient.setQueryData<GroupChatInfo | undefined>(
         ["group-info", groupId],
@@ -201,7 +198,7 @@ function GroupChatboard({ groupId }: { groupId: string }) {
     >
       <ChatBoardBackground
         className="flex flex-col flex-grow w-full"
-        bgUrl={groupInfo?.groupChatboardWallpaper as string | null}
+        bgurl={groupInfo?.groupChatboardWallpaper as string | null}
       >
         <GroupChatHeader
           groupInfo={groupInfo as any}

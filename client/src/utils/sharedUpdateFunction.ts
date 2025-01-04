@@ -19,8 +19,7 @@ export function updateConversationList<
   queryKey: string,
   already_read_message: boolean,
   lastMessageCreatedAt: string | Date = new Date(),
-  sender_details: { name?: string; _id: string },
-  is_group_active: boolean = true
+  sender_details: { name?: string; _id: string }
 ) {
   queryClient.setQueryData<ConversationType[] | undefined>(
     [queryKey],
@@ -45,7 +44,6 @@ export function updateConversationList<
                   type,
                   lastMessageCreatedAt,
                 },
-                is_group_active,
                 already_read_message,
               };
             } else {

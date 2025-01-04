@@ -600,7 +600,6 @@ export const getGroupMembers = asyncHandler(
         },
       },
     ]);
-    console.log(group_member_list);
     res.status(200).json(group_member_list);
   }
 );

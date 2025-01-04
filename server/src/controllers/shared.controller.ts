@@ -197,7 +197,6 @@ export const declineRequest = asyncHandler(
   async (req: Request, res: Response) => {
     const { groupId, userId, requesterId } = req.params;
     try {
-      console.log("Very Start Here");
       await handleDeclineRequest(groupId, userId, requesterId);
       res.status(201).json({
         message: "Request declined successfully",
