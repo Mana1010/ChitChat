@@ -1,9 +1,8 @@
 "use client";
-import React, { Dispatch, SetStateAction, useState } from "react";
-import { nanoid } from "nanoid";
+import React, { Dispatch, SetStateAction } from "react";
 import { useSocketStore } from "@/utils/store/socket.store";
 import { Message } from "@/types/shared.types";
-import { reactions } from "@/utils/reactions";
+import { reactions } from "@/utils/constants";
 import { User } from "@/types/shared.types";
 function PrivateReactions({
   messageId,
@@ -27,7 +26,6 @@ function PrivateReactions({
       conversationId,
     });
   }
-  console.log(messageDetails);
   return (
     <div className=" absolute -top-10 -left-10 rounded-md bg-[#414141] flex items-center justify-center h-[40px] z-[99999]">
       {reactions.map((reaction) => (

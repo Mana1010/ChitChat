@@ -5,6 +5,7 @@ import Picker from "emoji-picker-react";
 import { MdEmojiEmotions } from "react-icons/md";
 import { optimisticUpdateMessage } from "@/utils/sharedUpdateFunction";
 import { MessageFieldPropsSchema } from "@/types/shared.types";
+import { toast } from "sonner";
 
 type PublicMessageFieldSchema = MessageFieldPropsSchema & {
   publicSocket: Socket | null;
@@ -34,8 +35,24 @@ function PublicMessageField({
   const handleFormSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!publicSocket || !scrollRef) return;
-    publicSocket.emit("send-message", message);
-    optimisticUpdateMessage(message, setAllMessages, session, []);
+    publicSocket.emit(
+      "send-message",
+      message,
+      (response: { success: boolean; data: string }) => {
+        if (response.success) {
+          optimisticUpdateMessage(
+            message,
+            setAllMessages,
+            session,
+            [],
+            response.data
+          );
+        } else {
+          toast.error("Cannot send a message, please try again");
+        }
+      }
+    );
+
     setTimer(3);
     setMessage("");
     setTimeout(() => {

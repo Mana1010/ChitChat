@@ -13,6 +13,14 @@ import { Reaction } from "@/types/shared.types";
 import handleClipboard from "@/utils/clipboard";
 import { toast } from "sonner";
 import { MdOutlineContentCopy } from "react-icons/md";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { handleDateFormat } from "@/utils/dateChatFormat";
+
 function GroupChatBubbles({
   messageDetails,
   session,
@@ -88,37 +96,42 @@ function GroupChatBubbles({
                 {messageDetails?.sender?.name.split(" ")[0] ?? ""}
               </small>
               {/* ChatBox */}
-              <div
-                className={`flex items-center w-full  ${
-                  messageDetails.sender._id === session?.user.userId &&
-                  "flex-row-reverse"
-                }`}
-              >
-                <div
-                  className={`p-2 rounded-md flex items-center justify-center whitespace-pre-wrap relative ${
-                    messageDetails.sender._id === session?.user.userId
-                      ? "bg-[#6486FF]"
-                      : "bg-[#171717]"
-                  }`}
-                >
-                  <span className="text-white">{messageDetails?.message}</span>
-                  {messageDetails.reactions && (
-                    <button
-                      className={`absolute bottom-[-10px] text-[0.8rem] ${
-                        messageDetails.sender._id === session?.user.userId
-                          ? "left-0"
-                          : "right-0"
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger className="cursor-text">
+                    <div
+                      className={`flex items-center w-full  ${
+                        messageDetails.sender._id === session?.user.userId &&
+                        "flex-row-reverse"
                       }`}
                     >
-                      {messageDetails.reactions.length > 0
-                        ? messageDetails.reactions.length
-                        : null}
-                    </button>
-                  )}
-                </div>
+                      <div
+                        className={`p-2 rounded-md flex items-center justify-center whitespace-pre-wrap relative ${
+                          messageDetails.sender._id === session?.user.userId
+                            ? "bg-[#6486FF]"
+                            : "bg-[#171717]"
+                        }`}
+                      >
+                        <span className="text-white">
+                          {messageDetails?.message}
+                        </span>
+                        {messageDetails.reactions && (
+                          <button
+                            className={`absolute bottom-[-10px] text-[0.8rem] ${
+                              messageDetails.sender._id === session?.user.userId
+                                ? "left-0"
+                                : "right-0"
+                            }`}
+                          >
+                            {messageDetails.reactions.length > 0
+                              ? messageDetails.reactions.length
+                              : null}
+                          </button>
+                        )}
+                      </div>
 
-                <div className={`relative flex justify-center space-x-1`}>
-                  {/* {messageDetails.sender._id !== session?.user.userId && (
+                      <div className={`relative flex justify-center space-x-1`}>
+                        {/* {messageDetails.sender._id !== session?.user.userId && (
                     <button
                       onClick={() => {
                         setOpenReaction((prevData) =>
@@ -136,34 +149,44 @@ function GroupChatBubbles({
                     </button>
                   )} */}
 
-                  {openReaction === messageDetails._id && (
-                    <GroupReactions
-                      messageDetails={messageDetails}
-                      messageId={messageDetails._id ?? ""}
-                      conversationId={groupId}
-                      setMessage={setMessage}
-                      setOpenReaction={setOpenReaction}
-                    />
-                  )}
-                  <button
-                    onClick={async () => {
-                      const { message, type } = await handleClipboard(
-                        messageDetails.message
-                      );
+                        {openReaction === messageDetails._id && (
+                          <GroupReactions
+                            messageDetails={messageDetails}
+                            messageId={messageDetails._id ?? ""}
+                            conversationId={groupId}
+                            setMessage={setMessage}
+                            setOpenReaction={setOpenReaction}
+                          />
+                        )}
+                        <button
+                          onClick={async () => {
+                            const { message, type } = await handleClipboard(
+                              messageDetails.message
+                            );
 
-                      toast[type as "success" | "error"](message);
-                    }}
-                    className={`w-5 h-5 items-center justify-center flex `}
-                  >
-                    {messageDetails._id === hoveredMessage && (
-                      <span className={`text-slate-300 font-bold text-sm`}>
-                        {" "}
-                        <MdOutlineContentCopy />
-                      </span>
-                    )}
-                  </button>
-                </div>
-              </div>
+                            toast[type as "success" | "error"](message);
+                          }}
+                          className={`w-5 h-5 items-center justify-center flex `}
+                        >
+                          {messageDetails._id === hoveredMessage && (
+                            <span
+                              className={`text-slate-300 font-bold text-sm`}
+                            >
+                              {" "}
+                              <MdOutlineContentCopy />
+                            </span>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>
+                      {handleDateFormat(new Date(messageDetails.createdAt))}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
             <div
               className={`w-[32px] h-[32px] rounded-full relative px-4 py-2 ${

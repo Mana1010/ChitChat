@@ -16,10 +16,14 @@ import { useSocketStore } from "@/utils/store/socket.store";
 import { useQueryClient } from "react-query";
 import { useRouter } from "next/navigation";
 import { useModalStore } from "@/utils/store/modal.store";
-import { randomProfile } from "@/utils/randomProfile";
+import { randomizeData } from "@/utils/randomizeData";
 import { useSession } from "next-auth/react";
 import loadingAnimation from "../../../../../../assets/images/gif-animation/component-loading.gif";
 import Image from "next/image";
+import {
+  groupProfileList,
+  groupChatBoardBackgroundList,
+} from "@/utils/constants";
 const groupFormValidation = z.object({
   groupName: z
     .string()
@@ -43,9 +47,10 @@ export type ErrorMessageSchema = {
 type GroupPayloadSchema = Pick<CreateGroupChatSchema, "groupName"> & {
   creatorId: string | undefined;
   groupProfileIcon: string;
+  groupChatboardBackground: string;
 };
 function CreateGroupChat() {
-  const { data, status } = useSession();
+  const { data } = useSession();
   const router = useRouter();
   const { groupSocket } = useSocketStore();
   const [createGroupFormPayload, setCreateGroupFormPayload] =
@@ -96,7 +101,8 @@ function CreateGroupChat() {
       const updatedPayload = {
         groupName: createGroupFormPayload.groupName,
         creatorId: data?.user.userId,
-        groupProfileIcon: randomProfile(),
+        groupProfileIcon: randomizeData(groupProfileList),
+        groupChatboardBackground: randomizeData(groupChatBoardBackgroundList),
       };
       createGroup.mutate(updatedPayload);
     } else {

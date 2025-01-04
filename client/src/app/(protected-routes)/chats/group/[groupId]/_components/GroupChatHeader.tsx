@@ -22,7 +22,7 @@ function GroupChatHeader({
         <div className="flex items-center space-x-3">
           <div className="w-[40px] h-[40px] relative rounded-full">
             <Image
-              src={groupInfo?.groupPhoto.photoUrl}
+              src={groupInfo?.groupPhoto}
               alt="profile-image"
               fill
               sizes="100%"

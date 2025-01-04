@@ -25,7 +25,6 @@ function useRequestResponse(mailId: string) {
         return response.data;
       },
       onSuccess: ({ groupId, requesterId, message, groupChatDetails }) => {
-        console.log(groupChatDetails);
         toast.success(message);
         mailSocket?.emit("request-accepted", {
           requesterId,

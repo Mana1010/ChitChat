@@ -8,7 +8,10 @@ import {
   createGroupSchemaValidation,
 } from "../validations/createGroupSchema.validation";
 import path from "path";
-import { uploadFileCloudinary } from "../utils/cloudinary.utils";
+import {
+  retrieveFileCloudinary,
+  uploadFileCloudinary,
+} from "../utils/cloudinary.utils";
 import { appLogger } from "../utils/loggers.utils";
 
 export const getUserGroupChatStatus = asyncHandler(
@@ -277,36 +280,33 @@ export const getAllGroupChatConversation = asyncHandler(
 
 export const createGroupChat = asyncHandler(
   async (req: Request, res: Response) => {
-    const { groupName, groupProfileIcon, creatorId }: CreateGroupSchema =
-      req.body;
+    const {
+      groupName,
+      groupProfileIcon,
+      creatorId,
+      groupChatboardBackground,
+    }: CreateGroupSchema = req.body;
+
     const validateData = createGroupSchemaValidation.safeParse(req.body);
 
     if (!validateData.success) {
       res.status(422);
       throw new Error("Validation Failed");
     }
-
-    const groupIcon = path.join(
-      process.cwd(),
-      "public",
-      "assets",
-      "images",
-      "group-profile",
-      `${groupProfileIcon}.png`
-    );
-
     try {
-      const uploadedPhotoDetails = await uploadFileCloudinary(
-        groupIcon,
-        "groupchat-profile"
+      const retrieveGroupChatboardBg = await retrieveFileCloudinary(
+        `Chitchat/group-chatboard-background/${groupChatboardBackground}`
       );
+
+      const retrieveGroupProfile = await retrieveFileCloudinary(
+        `Chitchat/group-chat-profile/${groupProfileIcon}`
+      );
+
       const newGroupDetails = await GroupConversation.create({
         creator: creatorId,
         groupName,
-        groupPhoto: {
-          publicId: uploadedPhotoDetails.public_id,
-          photoUrl: uploadedPhotoDetails.secure_url,
-        },
+        groupPhoto: retrieveGroupProfile,
+        groupChatboardWallpaper: retrieveGroupChatboardBg,
         members: [
           {
             memberInfo: creatorId,
@@ -319,6 +319,7 @@ export const createGroupChat = asyncHandler(
           type: "system",
         },
       });
+
       await Group.create({
         groupId: newGroupDetails._id,
         sender: creatorId,
@@ -396,6 +397,7 @@ export const getGroupChatInfo = asyncHandler(
           groupName: 1,
           groupPhoto: 1,
           total_member: 1,
+          groupChatboardWallpaper: 1,
           createdAt: 1,
           is_group_active: {
             $anyElementTrue: {

@@ -219,22 +219,24 @@ export async function handleGroupSocket(io: Server) {
         });
       }
     );
-    socket.on("read-message", async ({ groupId }) => {
-      let getUserId = membersWhoReadMessage.get(groupId);
-      if (!membersWhoReadMessage.has(groupId)) {
-        membersWhoReadMessage.set(groupId, []);
-        getUserId = membersWhoReadMessage.get(groupId);
-      }
-      if (
-        membersWhoReadMessage.has(groupId) &&
-        !getUserId?.some((memberId) => userId === memberId)
-      ) {
-        await GroupConversation.findByIdAndUpdate(groupId, {
-          $push: { memberReadMessage: userId },
-        });
-        getUserId?.push(userId);
-      }
-    });
+
+    // socket.on("read-message", async ({ groupId }) => {
+    //   let getUserId = membersWhoReadMessage.get(groupId);
+    //   if (!membersWhoReadMessage.has(groupId)) {
+    //     membersWhoReadMessage.set(groupId, []);
+    //     getUserId = membersWhoReadMessage.get(groupId);
+    //   }
+    //   if (
+    //     membersWhoReadMessage.has(groupId) &&
+    //     !getUserId?.some((memberId) => userId === memberId)
+    //   ) {
+    //     await GroupConversation.findByIdAndUpdate(groupId, {
+    //       $push: { memberReadMessage: userId },
+    //     });
+    //     getUserId?.push(userId);
+    //   }
+    // });
+
     socket.on(
       "add-conversation",
       async ({

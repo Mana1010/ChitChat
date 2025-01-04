@@ -8,6 +8,7 @@ import { GrAttachment } from "react-icons/gr";
 import { useQueryClient } from "react-query";
 import { MessageFieldPropsSchema } from "@/types/shared.types";
 import { optimisticUpdateMessage } from "@/utils/sharedUpdateFunction";
+import { nanoid } from "nanoid";
 
 interface GroupMessageFieldSchema extends MessageFieldPropsSchema {
   groupSocket: Socket | null;
@@ -38,7 +39,7 @@ function GroupMessageField({
       message,
       groupId,
     });
-    optimisticUpdateMessage(message, setAllMessages, session, []);
+    optimisticUpdateMessage(message, setAllMessages, session, [], nanoid());
     groupSocket.emit("stop-typing", groupId);
     updateConversationList(
       queryClient,
@@ -63,12 +64,12 @@ function GroupMessageField({
       className=" py-2.5 flex items-center space-x-2 bg-[#171717]"
     >
       <textarea
-        onFocus={() => {
-          groupSocket?.emit("read-message", { groupId });
-          groupSocket?.emit("during-typing", { groupId });
-        }}
+        // onFocus={() => {
+        //   groupSocket?.emit("read-message", { groupId });
+        //   groupSocket?.emit("during-typing", { groupId });
+        // }}
         rows={1}
-        onBlur={() => groupSocket?.emit("stop-typing", groupId)}
+        // onBlur={() => groupSocket?.emit("stop-typing", groupId)}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         placeholder="Send a message"

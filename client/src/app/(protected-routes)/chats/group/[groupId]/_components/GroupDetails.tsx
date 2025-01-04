@@ -84,7 +84,7 @@ function GroupDetails({
             <div className=" flex space-x-2 items-end pl-3">
               <div className="w-20 h-20 relative rounded-full border-[#6486FF] border-2 flex-shrink-0">
                 <Image
-                  src={group_details?.groupPhoto.photoUrl as string}
+                  src={group_details?.groupPhoto as string}
                   alt={`${group_details?.groupName}'s profile picture`}
                   sizes="100%"
                   fill

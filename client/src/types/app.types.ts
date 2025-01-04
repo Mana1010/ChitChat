@@ -12,10 +12,7 @@ export interface MailDetailsSchema {
   status: "pending" | "accepted" | "declined" | "cancelled" | "none";
   group_details: {
     groupName: string;
-    groupPhoto: {
-      publicId: string;
-      photoUrl: string;
-    };
+    groupPhoto: string;
     _id: string;
     total_members: number;
   };

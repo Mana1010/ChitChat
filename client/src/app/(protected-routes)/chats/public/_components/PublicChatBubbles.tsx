@@ -7,7 +7,15 @@ import Linkify from "linkify-react";
 import { Socket } from "socket.io-client";
 import { MdOutlineContentCopy } from "react-icons/md";
 import handleClipboard from "@/utils/clipboard";
+import { handleDateFormat } from "@/utils/dateChatFormat";
+
 import { toast } from "sonner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 function PublicChatBubbles({
   messageDetails,
   socket,
@@ -65,99 +73,118 @@ function PublicChatBubbles({
                 {messageDetails.sender?.name}
               </small>
               {/* ChatBox */}
-
-              <div
-                onMouseMove={() => setHoveredMessage(messageDetails._id)}
-                onMouseLeave={() => {
-                  setHoveredMessage("");
-                  setOpenReaction("");
-                }}
-                className={`flex items-center w-full flex-grow ${
-                  messageDetails.sender?._id === userData.userId &&
-                  "flex-row-reverse"
-                }`}
-              >
-                <div
-                  className={`p-2 rounded-md flex items-center justify-center whitespace-pre-wrap relative ${
-                    messageDetails.sender?._id === userData.userId
-                      ? "bg-[#6486FF]"
-                      : "backdrop-blur-sm backdrop-brightness-75"
-                  }`}
-                >
-                  <span className="text-white">{messageDetails?.message}</span>
-                  {/* Display Reactions */}
-                  {messageDetails.reactions?.length ? (
-                    <button
-                      onClick={() =>
-                        setOpenMessageIdReactionList(messageDetails._id)
-                      }
-                      className={`absolute bottom-[-8px] text-[0.8rem] flex bg-[#3A3B3C] rounded-md px-1 items-center ${
-                        messageDetails.sender?._id === userData.userId
-                          ? "left-0"
-                          : "right-0"
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger className="cursor-text">
+                    {" "}
+                    <div
+                      onMouseMove={() => setHoveredMessage(messageDetails._id)}
+                      onMouseLeave={() => {
+                        setHoveredMessage("");
+                        setOpenReaction("");
+                      }}
+                      className={`flex items-center w-full flex-grow ${
+                        messageDetails.sender?._id === userData.userId &&
+                        "flex-row-reverse"
                       }`}
                     >
-                      <div className="pr-[0.2rem]">
-                        {Array.from(reactionList).map((reaction, index) => (
-                          <span key={index}>{reaction}</span>
-                        ))}
+                      <div
+                        className={`p-2 rounded-md flex items-center justify-center whitespace-pre-wrap relative ${
+                          messageDetails.sender?._id === userData.userId
+                            ? "bg-[#6486FF]"
+                            : "backdrop-blur-sm backdrop-brightness-75"
+                        }`}
+                      >
+                        <span className="text-white">
+                          {messageDetails?.message}
+                        </span>
+                        {/* Display Reactions */}
+                        {messageDetails.reactions?.length ? (
+                          <button
+                            onClick={() =>
+                              setOpenMessageIdReactionList(messageDetails._id)
+                            }
+                            className={`absolute bottom-[-8px] text-[0.8rem] flex bg-[#3A3B3C] rounded-md px-1 items-center ${
+                              messageDetails.sender?._id === userData.userId
+                                ? "left-0"
+                                : "right-0"
+                            }`}
+                          >
+                            <div className="pr-[0.2rem]">
+                              {Array.from(reactionList).map(
+                                (reaction, index) => (
+                                  <span key={index}>{reaction}</span>
+                                )
+                              )}
+                            </div>
+
+                            <span className="text-white text-[0.6rem]">
+                              {reactionOnly.length}
+                            </span>
+                          </button>
+                        ) : null}
                       </div>
 
-                      <span className="text-white text-[0.6rem]">
-                        {reactionOnly.length}
-                      </span>
-                    </button>
-                  ) : null}
-                </div>
+                      {/* Reactions */}
+                      <div className={`relative flex justify-center space-x-1`}>
+                        {messageDetails.sender?._id !== userData.userId && (
+                          <button
+                            onClick={() => {
+                              setOpenReaction((isOpen) =>
+                                isOpen ? "" : messageDetails._id
+                              );
+                              setHoveredMessage(messageDetails._id);
+                            }}
+                            className={`w-5 h-5 items-center justify-center flex `}
+                          >
+                            {messageDetails._id === hoveredMessage && (
+                              <span
+                                className={`text-slate-300 font-bold text-lg`}
+                              >
+                                <VscReactions />
+                              </span>
+                            )}
+                          </button>
+                        )}
+                        {openReaction === messageDetails._id && (
+                          <PublicReactions
+                            messageDetails={messageDetails as any}
+                            userId={userData.userId as string}
+                            socket={socket}
+                            setMessage={setMessage as any}
+                            setOpenReaction={setOpenReaction}
+                          />
+                        )}
 
-                {/* Reactions */}
-                <div className={`relative flex justify-center space-x-1`}>
-                  {messageDetails.sender?._id !== userData.userId && (
-                    <button
-                      onClick={() => {
-                        setOpenReaction((isOpen) =>
-                          isOpen ? "" : messageDetails._id
-                        );
-                        setHoveredMessage(messageDetails._id);
-                      }}
-                      className={`w-5 h-5 items-center justify-center flex `}
-                    >
-                      {messageDetails._id === hoveredMessage && (
-                        <span className={`text-slate-300 font-bold text-lg`}>
-                          <VscReactions />
-                        </span>
-                      )}
-                    </button>
-                  )}
-                  {openReaction === messageDetails._id && (
-                    <PublicReactions
-                      messageDetails={messageDetails as any}
-                      userId={userData.userId as string}
-                      socket={socket}
-                      setMessage={setMessage as any}
-                      setOpenReaction={setOpenReaction}
-                    />
-                  )}
+                        <button
+                          onClick={async () => {
+                            const { message, type } = await handleClipboard(
+                              messageDetails.message
+                            );
 
-                  <button
-                    onClick={async () => {
-                      const { message, type } = await handleClipboard(
-                        messageDetails.message
-                      );
-
-                      toast[type as "success" | "error"](message);
-                    }}
-                    className={`w-5 h-5 items-center justify-center flex `}
-                  >
-                    {messageDetails._id === hoveredMessage && (
-                      <span className={`text-slate-300 font-bold text-sm`}>
-                        {" "}
-                        <MdOutlineContentCopy />
-                      </span>
-                    )}
-                  </button>
-                </div>
-              </div>
+                            toast[type as "success" | "error"](message);
+                          }}
+                          className={`w-5 h-5 items-center justify-center flex `}
+                        >
+                          {messageDetails._id === hoveredMessage && (
+                            <span
+                              className={`text-slate-300 font-bold text-sm`}
+                            >
+                              {" "}
+                              <MdOutlineContentCopy />
+                            </span>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>
+                      {handleDateFormat(new Date(messageDetails.createdAt))}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
             <div className="w-[32px] h-[32px] rounded-full relative px-4 py-2">
               <Image

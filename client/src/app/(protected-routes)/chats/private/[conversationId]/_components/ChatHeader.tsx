@@ -14,7 +14,6 @@ function ChatHeader({
   isLoading: boolean;
   setOpenProfileModal: Dispatch<SetStateAction<boolean>>;
 }) {
-  console.log(participantInfo);
   return (
     <header className="w-full shadow-lg py-3 px-4 flex items-center justify-between ">
       {isLoading || !participantInfo ? (

@@ -16,7 +16,6 @@ function useGroupInfo(groupId: string) {
       const response = await axios.get(
         `${GROUP_SERVER_URL}/group/info/${groupId}/${session?.user.userId}`
       );
-
       return response.data.message;
     },
     enabled: status === "authenticated",

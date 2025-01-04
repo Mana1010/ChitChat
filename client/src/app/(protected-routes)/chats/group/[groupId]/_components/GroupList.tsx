@@ -112,8 +112,6 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
   }, [searchGroup, debouncedSearchGroup, allGroupChatList]);
   useEffect(() => {
     if (inView && hasNextPage && !isLoading) {
-      alert(inView);
-      alert(hasNextPage);
       currentPageRef.current++;
       fetchNextPage();
     }
@@ -174,7 +172,7 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
             <div className="flex items-center space-x-2">
               <div className="w-[40px] h-[40px] relative rounded-full">
                 <Image
-                  src={group.groupPhoto.photoUrl}
+                  src={group.groupPhoto}
                   alt="profile-pic"
                   fill
                   sizes="100%"

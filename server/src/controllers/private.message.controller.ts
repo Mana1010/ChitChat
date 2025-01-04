@@ -193,6 +193,7 @@ export const getParticipantInfo = asyncHandler(
       },
       {
         $project: {
+          privateChatboardWallpaper: 1,
           receiver_details: {
             name: 1,
             _id: 1,

@@ -13,6 +13,7 @@ import { useQueryClient } from "react-query";
 import { updateConversationList } from "@/utils/sharedUpdateFunction";
 import { MessageFieldPropsSchema } from "@/types/shared.types";
 import { optimisticUpdateMessage } from "@/utils/sharedUpdateFunction";
+import { toast } from "sonner";
 interface PrivateMessageFieldSchema extends MessageFieldPropsSchema {
   privateSocket: Socket | null;
   participantId: string | undefined;
@@ -39,26 +40,41 @@ function PrivateMessageField({
   const handleFormSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!privateSocket) return;
-    privateSocket.emit("send-message", {
-      message,
-      messageType: "text",
-      conversationId,
-      participantId,
-    });
-    optimisticUpdateMessage(message, setAllMessages, session, "");
-    privateSocket?.emit("stop-typing", conversationId);
-
-    updateConversationList(
-      queryClient,
-      message,
-      conversationId,
-      senderId,
-      "text",
-      "chat-list",
-      true,
-      new Date(),
-      { _id: senderId as string }
+    privateSocket.emit(
+      "send-message",
+      {
+        message,
+        messageType: "text",
+        conversationId,
+        participantId,
+      },
+      (response: { success: boolean; data: string }) => {
+        if (response.success) {
+          optimisticUpdateMessage(
+            message,
+            setAllMessages,
+            session,
+            "",
+            response.data
+          );
+          updateConversationList(
+            queryClient,
+            message,
+            conversationId,
+            senderId,
+            "text",
+            "chat-list",
+            true,
+            new Date(),
+            { _id: senderId as string }
+          );
+        } else {
+          toast.error("Cannot send a message, please try again");
+        }
+      }
     );
+
+    privateSocket?.emit("stop-typing", conversationId);
     setTimeout(() => {
       scrollRef?.scrollIntoView({ block: "end" }); //To bypass the closure nature of react :)
     }, 0);

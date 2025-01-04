@@ -6,6 +6,8 @@ import { TbMessage2 } from "react-icons/tb";
 import { useSocketStore } from "@/utils/store/socket.store";
 import { useRouter } from "next/navigation";
 import useAddConversation from "@/hooks/useAddConversation";
+import { randomizeData } from "@/utils/randomizeData";
+import { privateChatBoardBackgroundList } from "@/utils/constants";
 function ActiveMembers({
   member_details,
   userId,
@@ -57,6 +59,9 @@ function ActiveMembers({
               addConversation({
                 senderId: userId as string,
                 receiverId: member_details._id,
+                privateChatboardWallpaper: randomizeData(
+                  privateChatBoardBackgroundList
+                ),
               })
             }
             aria-label="Start chatting"

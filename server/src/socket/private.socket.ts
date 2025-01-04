@@ -38,7 +38,10 @@ export function handlePrivateSocket(io: Server) {
     const { userId } = socket.handshake.auth;
     socket.on(
       "send-message",
-      async ({ message, messageType, conversationId, participantId }) => {
+      async (
+        { message, messageType, conversationId, participantId },
+        callback
+      ) => {
         console.log(message, messageType, conversationId, participantId);
         try {
           if (conversationId) {
@@ -65,6 +68,7 @@ export function handlePrivateSocket(io: Server) {
               messageType,
               participantId: participantId,
             });
+            callback({ success: true, data: createMessage._id });
             socket.broadcast
               .to(participantId)
               .emit("display-unread-message", conversationId);
@@ -89,6 +93,7 @@ export function handlePrivateSocket(io: Server) {
               notificationId: conversationId,
             });
         } catch (err) {
+          callback({ success: false, data: null });
           console.log(err);
         }
       }

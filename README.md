@@ -10,9 +10,11 @@ A realtime chat application with 3 distinct sections (public, private and group)
 - Online/Offline tracking
 - User authentication powered by NextAuth
 - Emoji support
-- Can react to a message
+- Can react to a message (only in Public and Private)
 - Infinite Scrolling for chat history
 - Realtime Message and Mail notification
+- Random Chatboard wallpaper background for private and group upon creation
+- Profile Card for User and Group Details
 
 ## Tech Stack
 

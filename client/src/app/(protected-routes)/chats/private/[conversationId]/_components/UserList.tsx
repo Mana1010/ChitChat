@@ -17,6 +17,8 @@ import NoItemFound from "@/components/NoItemFound";
 import { useSocketStore } from "@/utils/store/socket.store";
 import Skeleton from "../../../_components/Skeleton";
 import useAddConversation from "@/hooks/useAddConversation";
+import { randomizeData } from "@/utils/randomizeData";
+import { privateChatBoardBackgroundList } from "@/utils/constants";
 function UserList({ searchUser }: { searchUser: string }) {
   const router = useRouter();
   const { privateSocket, statusSocket } = useSocketStore();
@@ -161,6 +163,9 @@ function UserList({ searchUser }: { searchUser: string }) {
                   addConversation({
                     senderId: session?.user.userId as string,
                     receiverId: user._id,
+                    privateChatboardWallpaper: randomizeData(
+                      privateChatBoardBackgroundList
+                    ),
                   });
                 }}
                 aria-label="Start chatting"

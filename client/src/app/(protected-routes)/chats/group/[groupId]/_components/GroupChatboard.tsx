@@ -33,6 +33,18 @@ import BackToBottomArrow from "../../../_components/BackToBottomArrow";
 import SystemChatBubbles from "../../../_components/SystemChatBubbles";
 import SystemTimeChatBubbles from "../../../_components/SystemTimeChatBubbles";
 import GroupDetails from "./GroupDetails";
+import styled from "styled-components";
+import bg from "./../../../../../../assets/images/group_details_background.png";
+
+const ChatBoardBackground = styled.div<{ bgUrl: string | null }>`
+  background: linear-gradient(to left, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)),
+    url(${(props) =>
+      props.bgUrl ??
+      "./../../../../../../assets/images/group_details_background.png"});
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+`;
 function GroupChatboard({ groupId }: { groupId: string }) {
   const { groupSocket } = useSocketStore();
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -179,6 +191,7 @@ function GroupChatboard({ groupId }: { groupId: string }) {
       return <UserNotFound errorMessage={errorMessage.response.data.message} />;
     }
   }
+
   return (
     <div
       onClick={() => {
@@ -186,7 +199,10 @@ function GroupChatboard({ groupId }: { groupId: string }) {
       }}
       className="flex flex-grow w-full h-full flex-col relative bg-transparent"
     >
-      <div className="flex-grow w-full groupchat-background-div flex flex-col">
+      <ChatBoardBackground
+        className="flex flex-col flex-grow w-full"
+        bgUrl={groupInfo?.groupChatboardWallpaper as string | null}
+      >
         <GroupChatHeader
           groupInfo={groupInfo as any}
           isLoading={groupInfoLoading}
@@ -265,7 +281,7 @@ function GroupChatboard({ groupId }: { groupId: string }) {
             </div>
           </div>
         )}
-      </div>
+      </ChatBoardBackground>
       <GroupMessageField
         groupSocket={groupSocket}
         groupId={groupId}

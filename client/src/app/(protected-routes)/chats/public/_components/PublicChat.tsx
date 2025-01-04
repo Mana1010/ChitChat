@@ -25,6 +25,7 @@ import typingAnimate from "../../../../../assets/images/gif-animation/typing-ani
 import { useSocketStore } from "@/utils/store/socket.store";
 import BackToBottomArrow from "../../_components/BackToBottomArrow";
 import { Session } from "next-auth";
+
 function PublicChat() {
   const [message, setMessage] = useState("");
   const { publicSocket, statusSocket } = useSocketStore();
@@ -144,6 +145,7 @@ function PublicChat() {
         setAllMessages((allMessages) => {
           return allMessages.map((messageDetails) => {
             if (messageDetails._id === data.messageId) {
+              alert("Running the message details reaction");
               return {
                 ...messageDetails,
                 reactions: messageDetails.reactions?.map((reaction) => {
@@ -154,7 +156,11 @@ function PublicChat() {
                       reactionCreatedAt: data.reactionCreatedAt,
                     };
                   } else {
-                    return reaction;
+                    return {
+                      ...reaction,
+                      reactionEmoji: data.reactionEmoji,
+                      reactionCreatedAt: data.reactionCreatedAt,
+                    };
                   }
                 }),
               };
@@ -190,6 +196,7 @@ function PublicChat() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [publicSocket]);
+
   return (
     <div className="h-full relative" onClick={() => setOpenEmoji(false)}>
       <div className="public-background h-[440px] w-full rounded-md relative">

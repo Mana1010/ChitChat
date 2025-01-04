@@ -165,7 +165,7 @@ function GroupChatList({
                 <div className="flex items-center space-x-2 w-full">
                   <div className="md:w-[40px] md:h-[40px] w-[30px] h-[30px] relative rounded-full pr-2 shrink-0">
                     <Image
-                      src={groupchat.groupPhoto.photoUrl}
+                      src={groupchat.groupPhoto}
                       alt="profile-pic"
                       fill
                       sizes="100%"

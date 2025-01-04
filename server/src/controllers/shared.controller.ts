@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import { User } from "../model/user.model";
 import { PrivateConversation } from "../model/privateConversation.model";
 import { appLogger } from "../utils/loggers.utils";
+import { retrieveFileCloudinary } from "../utils/cloudinary.utils";
 
 const handleUserJoinedGroupChatList = async (groupId: string) => {
   const result = await GroupConversation.aggregate([
@@ -212,7 +213,7 @@ export const declineRequest = asyncHandler(
 
 export const participantProfile = asyncHandler(
   async (req: Request, res: Response) => {
-    const { participantId } = req.params;
+    const { participantId, userId } = req.params;
     try {
       const participant_details = await User.findById(participantId)
         .select("-authId")
@@ -227,19 +228,29 @@ export const participantProfile = asyncHandler(
         },
       }).countDocuments();
 
+      const conversation_started_at = (await PrivateConversation.findOne({
+        participants: {
+          $all: [
+            new mongoose.Types.ObjectId(userId),
+            new mongoose.Types.ObjectId(participantId),
+          ],
+        },
+      })
+        .select(["createdAt", "-_id"])
+        .lean()) as { createdAt: Date };
+
       const total_participant_private_chat = await PrivateConversation.find({
         participants: {
           $in: [participantId],
         },
       }).countDocuments();
-      console.log("Done hehe");
+
       const responseData = {
         participant_details,
+        conversation_started_at: conversation_started_at.createdAt,
         total_participant_joined_group,
         total_participant_private_chat,
       };
-
-      console.log(responseData);
       res.status(200).json(responseData);
     } catch (err) {
       console.log(err);
@@ -249,18 +260,24 @@ export const participantProfile = asyncHandler(
 );
 
 export const chatUser = asyncHandler(async (req: Request, res: Response) => {
-  const { senderId, receiverId } = req.body;
-  if (!senderId || !receiverId) {
-    res.status(401).json({ message: "Please provide senderId and receiverId" });
+  const { senderId, receiverId, privateChatboardWallpaper } = req.body;
+  if (!senderId || !receiverId || !privateChatboardWallpaper) {
+    res.status(401).json({
+      message: "Please provide all of the request body and try again",
+    });
     return;
   }
   const checkExistingConversation = await PrivateConversation.findOne({
     participants: { $all: [senderId, receiverId] },
   });
+  const retrieveConversationWallpaper = await retrieveFileCloudinary(
+    `Chitchat/private-chatboard-background/${privateChatboardWallpaper}`
+  );
   //Check first if the conversation already exist
   if (!checkExistingConversation) {
     const addConversation = await PrivateConversation.create({
       participants: [senderId, receiverId],
+      privateChatboardWallpaper: retrieveConversationWallpaper,
       lastMessage: {
         sender: senderId,
         type: "system",

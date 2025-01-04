@@ -49,22 +49,28 @@ export function handlePublicSocket(io: Server) {
 
   PUBLIC_NAMESPACE(io).on("connection", async (socket: Socket) => {
     const { userId } = socket.handshake.auth;
-    socket.on("send-message", async (message: string) => {
-      const getId = await Public.create({
-        message,
-        sender: userId,
-        isMessageDeleted: false,
-      });
+    socket.on("send-message", async (message: string, callback) => {
+      try {
+        const getId = await Public.create({
+          message,
+          sender: userId,
+          isMessageDeleted: false,
+        });
+        const getUser = await Public.findById(getId._id) //Retrieving the Public messages
+          .populate({
+            path: "sender",
+            select: ["name", "profilePic", "status"],
+          })
+          .select(["-updatedAt", "-__v"])
+          .lean();
 
-      const getUser = await Public.findById(getId._id) //Retrieving the Public messages
-        .populate({
-          path: "sender",
-          select: ["name", "profilePic", "status"],
-        })
-        .select(["-updatedAt", "-__v"])
-        .lean();
-      socket.broadcast.emit("get-message", getUser);
+        callback({ success: true, data: getId._id });
+        socket.broadcast.emit("get-message", getUser);
+      } catch (err) {
+        callback({ success: false, data: null });
+      }
     });
+
     socket.on(
       "send-reaction",
       async ({

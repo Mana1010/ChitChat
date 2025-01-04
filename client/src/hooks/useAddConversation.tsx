@@ -9,7 +9,11 @@ function useAddConversation(socket: Socket | null) {
   const router = useRouter();
 
   const { mutate, isLoading } = useMutation({
-    mutationFn: async (data: { senderId: string; receiverId: string }) => {
+    mutationFn: async (data: {
+      senderId: string;
+      receiverId: string;
+      privateChatboardWallpaper: string;
+    }) => {
       const response = await axios.post(`${SHARED_SERVER_URL}/new/chat`, data);
       return response.data;
     },

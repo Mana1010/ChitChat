@@ -3,7 +3,7 @@ import React, { Dispatch, SetStateAction, useState } from "react";
 import { nanoid } from "nanoid";
 import { useSocketStore } from "@/utils/store/socket.store";
 import { Message, Reaction, User } from "@/types/shared.types";
-import { reactions } from "@/utils/reactions";
+import { reactions } from "@/utils/constants";
 function GroupReactions({
   messageDetails,
   messageId,

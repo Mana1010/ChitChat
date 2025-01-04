@@ -2,6 +2,7 @@ import mongoose, { Schema } from "mongoose";
 import { referenceModel } from "../utils/referenceModel";
 const privateConversationSchema = new mongoose.Schema({
   participants: [referenceModel("User")],
+  privateChatboardWallpaper: { type: String, required: true },
   userReadMessage: {
     type: [referenceModel("User")],
     default: [],

@@ -1,10 +1,7 @@
 export interface GroupChatDetails {
   _id: string;
   groupName: string;
-  groupPhoto: {
-    publicId: string;
-    photoUrl: string;
-  };
+  groupPhoto: string;
   lastMessage: {
     sender: { name: string; _id: string };
     type: string;

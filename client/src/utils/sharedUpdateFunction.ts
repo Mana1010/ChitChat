@@ -141,7 +141,8 @@ export function optimisticUpdateMessage(
     SetStateAction<Message<User, Reaction[] | string>[]>
   >,
   session: Session | null,
-  reactionDefault: string | Reaction[]
+  reactionDefault: string | Reaction[],
+  messageId: string
 ) {
   const userData = {
     name: session?.user.name.split(" ")[0],
@@ -162,7 +163,7 @@ export function optimisticUpdateMessage(
         type: "text",
         createdAt: new Date(),
         isMessageDeleted: false,
-        _id: nanoid(),
+        _id: messageId,
         reactions: reactionDefault,
       },
     ];

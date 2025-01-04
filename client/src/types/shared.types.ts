@@ -46,6 +46,7 @@ interface ExtendUser extends User {
 }
 export interface ProfileDetails {
   participant_details: ExtendUser;
+  conversation_started_at: Date;
   total_participant_joined_group: number;
   total_participant_private_chat: number;
 }
@@ -74,10 +75,8 @@ export interface BaseGroupChatSchema<
   creator: AdminUserType;
   members: { memberInfo: MemberUserType; role: string; joinedAt: string }[];
   groupName: string;
-  groupPhoto: {
-    groupId: string;
-    photoUrl: string;
-  };
+  groupPhoto: string;
+  groupChatboardWallpaper: string;
   createdAt: Date;
 }
 

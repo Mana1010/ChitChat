@@ -39,6 +39,18 @@ import { Session } from "next-auth";
 import { GetParticipantInfo } from "@/types/user.types";
 import SystemTimeChatBubbles from "../../../_components/SystemTimeChatBubbles";
 import SystemChatBubbles from "../../../_components/SystemChatBubbles";
+import { toast } from "sonner";
+import styled from "styled-components";
+
+const ChatBoardBackground = styled.div<{ bgUrl: string | null }>`
+  background: linear-gradient(to left, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)),
+    url(${(props) =>
+      props.bgUrl ??
+      "./../../../../../../assets/images/group_details_background.png"});
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+`;
 function ParentDiv({
   children,
   setOpenEmoji,
@@ -249,7 +261,10 @@ function Chatboard({ conversationId }: { conversationId: string }) {
 
   return (
     <ParentDiv setOpenEmoji={setOpenEmoji}>
-      <div className="flex-grow flex flex-col w-full background-div">
+      <ChatBoardBackground
+        bgUrl={participantInfo?.privateChatboardWallpaper as string | null}
+        className="flex-grow flex flex-col w-full"
+      >
         <ChatHeader
           participantInfo={participantInfo?.receiver_details}
           isLoading={participantInfoLoading}
@@ -266,30 +281,44 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                 </h3>
                 <button
                   onClick={() => {
-                    privateSocket?.emit("send-message", {
-                      message: "👋",
-                      messageType: "text",
-                      conversationId,
-                      participantId: participantInfo?.receiver_details._id,
-                    });
-                    updateConversationList(
-                      queryClient,
-                      "👋",
-                      conversationId,
-                      session?.user.userId,
-                      "text",
-                      "chat-list",
-                      true,
-                      new Date(),
-                      { _id: session?.user.userId as string }
-                    );
-                    optimisticUpdateMessage(
-                      "👋",
-                      setAllMessages as Dispatch<
-                        SetStateAction<Message<User, Reaction[] | string>[]>
-                      >,
-                      session,
-                      ""
+                    privateSocket?.emit(
+                      "send-message",
+                      {
+                        message: "👋",
+                        messageType: "text",
+                        conversationId,
+                        participantId: participantInfo?.receiver_details._id,
+                      },
+                      (response: { success: boolean; data: string }) => {
+                        if (response.success) {
+                          updateConversationList(
+                            queryClient,
+                            "👋",
+                            conversationId,
+                            session?.user.userId,
+                            "text",
+                            "chat-list",
+                            true,
+                            new Date(),
+                            { _id: session?.user.userId as string }
+                          );
+                          optimisticUpdateMessage(
+                            "👋",
+                            setAllMessages as Dispatch<
+                              SetStateAction<
+                                Message<User, Reaction[] | string>[]
+                              >
+                            >,
+                            session,
+                            "",
+                            response.data
+                          );
+                        } else {
+                          toast.error(
+                            "Cannot send a message, please try again"
+                          );
+                        }
+                      }
                     );
                   }}
                   className="bg-[#414141] text-lg px-3 py-1.5 rounded-md overflow-hidden"
@@ -385,7 +414,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
             )}
           </div>
         )}
-      </div>
+      </ChatBoardBackground>
       <PrivateMessageField
         privateSocket={privateSocket}
         conversationId={conversationId}

@@ -4,7 +4,7 @@ import { ReactionSchema } from "@/types/shared.types";
 import { Message } from "@/types/shared.types";
 import { User } from "next-auth";
 import { Socket } from "socket.io-client";
-import { reactions } from "@/utils/reactions";
+import { reactions } from "@/utils/constants";
 import { Reaction } from "@/types/shared.types";
 function PublicReactions({
   messageDetails,
@@ -62,11 +62,13 @@ function PublicReactions({
     (reaction) => reaction.reactor === userId
   );
   return (
-    <div className="absolute -top-10 -left-32 rounded-md bg-[#414141] flex items-center justify-center h-[40px] z-[99999]">
+    <div className="absolute -top-10 -left-10 rounded-md bg-[#414141] flex items-center justify-center h-[40px] z-[99999]">
       {reactions.map((reaction) => (
         <button
           onClick={() => {
             if (!socket) return;
+            alert(reaction.emoji);
+            alert(messageDetails._id);
             socket.emit("send-reaction", {
               reaction: reaction.emoji,
               messageId: messageDetails._id,

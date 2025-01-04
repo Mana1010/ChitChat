@@ -21,7 +21,7 @@ function RequestGroupChatInfo({ getGroupInfo, requester }: GroupChatInfoProps) {
         <div className="flex items-center space-x-3">
           <div className="w-14 h-14 relative rounded-full border border-[#6486FF] flex items-center justify-center">
             <Image
-              src={getGroupInfo?.groupPhoto.photoUrl as string}
+              src={getGroupInfo?.groupPhoto as string}
               alt={`${getGroupInfo?.groupName}'s groupchat profile`}
               priority
               width={50}

@@ -16,3 +16,7 @@ export const deleteFileCloudinary = async (publicId: string[]) => {
     resource_type: "image",
   });
 };
+
+export const retrieveFileCloudinary = async (publicId: string) => {
+  return cloudinary.url(publicId);
+};

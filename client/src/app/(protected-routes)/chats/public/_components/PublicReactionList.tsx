@@ -16,6 +16,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useSocketStore } from "@/utils/store/socket.store";
 import useAddConversation from "@/hooks/useAddConversation";
+import { randomizeData } from "@/utils/randomizeData";
+import { privateChatBoardBackgroundList } from "@/utils/constants";
 function PublicReactionList({
   messageId,
   setOpenMessageIdReactionList,
@@ -140,6 +142,9 @@ function PublicReactionList({
                       addConversation({
                         senderId: userId,
                         receiverId: reactionList.reactions.reactor,
+                        privateChatboardWallpaper: randomizeData(
+                          privateChatBoardBackgroundList
+                        ),
                       })
                     }
                     aria-label="Start chatting"

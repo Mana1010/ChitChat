@@ -20,7 +20,10 @@ export interface GroupChatConversationList<SenderType = string>
 }
 
 export interface GroupChatInfo
-  extends Pick<BaseGroupChatSchema, "_id" | "groupName" | "groupPhoto"> {
+  extends Pick<
+    BaseGroupChatSchema,
+    "_id" | "groupName" | "groupPhoto" | "groupChatboardWallpaper"
+  > {
   is_group_active: boolean;
   total_member: number;
 }
