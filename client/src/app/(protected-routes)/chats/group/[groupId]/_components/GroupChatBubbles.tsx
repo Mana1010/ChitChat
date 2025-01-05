@@ -98,7 +98,7 @@ function GroupChatBubbles({
               {/* ChatBox */}
               <TooltipProvider>
                 <Tooltip>
-                  <TooltipTrigger className="cursor-text">
+                  <TooltipTrigger className="cursor-text text-start">
                     <div
                       className={`flex items-center w-full  ${
                         messageDetails.sender._id === session?.user.userId &&

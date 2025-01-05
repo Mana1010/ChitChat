@@ -24,10 +24,9 @@ async function handleUpdateStatus(
   )
     .lean()
     .select("status")) as { status: { type: string; lastActiveAt: Date } };
-
   return {
-    status: result.status.type,
-    lastActiveAt: result.status.lastActiveAt,
+    status: result?.status.type,
+    lastActiveAt: result?.status.lastActiveAt,
   };
 }
 

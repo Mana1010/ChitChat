@@ -20,7 +20,6 @@ import useAddConversation from "@/hooks/useAddConversation";
 import { randomizeData } from "@/utils/randomizeData";
 import { privateChatBoardBackgroundList } from "@/utils/constants";
 function UserList({ searchUser }: { searchUser: string }) {
-  const router = useRouter();
   const { privateSocket, statusSocket } = useSocketStore();
   const { ref, inView } = useInView();
   const [hasNextPage, setHasNextPage] = useState(true);
@@ -93,11 +92,16 @@ function UserList({ searchUser }: { searchUser: string }) {
   }, [statusSocket]);
 
   useEffect(() => {
-    if (inView && hasNextPage && !isLoading) {
+    if (
+      inView &&
+      hasNextPage &&
+      !isLoading &&
+      data?.pages?.[currentPageRef.current]?.getAllUsers
+    ) {
       currentPageRef.current++;
       fetchNextPage();
     }
-  }, [fetchNextPage, hasNextPage, inView, isLoading]);
+  }, [data?.pages, fetchNextPage, hasNextPage, inView, isLoading]);
   if (isLoading) {
     return <ConversationListSkeleton />;
   }

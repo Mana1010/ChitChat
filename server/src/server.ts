@@ -27,7 +27,11 @@ const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:3000", "https://admin.socket.io"],
+    origin: [
+      "http://localhost:3000",
+      "https://admin.socket.io",
+      "https://chitchat.vercel.app",
+    ],
   },
   pingInterval: 10000,
   pingTimeout: 5000,
@@ -43,7 +47,7 @@ app.use(express.json());
 app.use(morgan("dev"));
 app.use(
   cors({
-    origin: ["http://localhost:3000"],
+    origin: ["http://localhost:3000", "https://chitchat.vercel.app"],
     credentials: true,
   })
 );
@@ -63,9 +67,11 @@ handleMailSocket(io as any);
 handleStatusSocket(io as any);
 handleNotificationSocket(io as any);
 
+console.log(process.env.MONGO_URI);
 async function connectDb() {
   try {
     await mongoose.connect(process.env.MONGO_URI!);
+    console.log("Connected to mongodb successfully");
   } catch (err) {
     process.exit(1);
   }

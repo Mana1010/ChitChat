@@ -96,7 +96,7 @@ function PrivateChatBubbles({
               {/* ChatBox */}
               <TooltipProvider>
                 <Tooltip>
-                  <TooltipTrigger>
+                  <TooltipTrigger className="text-start">
                     {" "}
                     <div
                       className={`flex items-center w-full cursor-text ${

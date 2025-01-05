@@ -75,7 +75,7 @@ function PublicChatBubbles({
               {/* ChatBox */}
               <TooltipProvider>
                 <Tooltip>
-                  <TooltipTrigger className="cursor-text">
+                  <TooltipTrigger className="cursor-text text-start">
                     {" "}
                     <div
                       onMouseMove={() => setHoveredMessage(messageDetails._id)}

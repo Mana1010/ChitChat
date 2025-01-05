@@ -4,7 +4,7 @@ A realtime chat application with 3 distinct sections (public, private and group)
 
 ## Features
 
-- Public chat/Private Chat/Group Chat support
+- Public chat/Private Chat/Group Chat/Mail support
 - Realtime mail support for invitation/requesting
 - Real time messaging
 - Online/Offline tracking
@@ -13,7 +13,7 @@ A realtime chat application with 3 distinct sections (public, private and group)
 - Can react to a message (only in Public and Private)
 - Infinite Scrolling for chat history
 - Realtime Private Message and Mail notification
-- Random Chatboard wallpaper background for private and group upon creation
+- Random Chatboard wallpaper background for private and group chat upon creation
 - Profile Card for User and Group Details
 
 ## Tech Stack
@@ -24,7 +24,7 @@ A realtime chat application with 3 distinct sections (public, private and group)
 
 ## Optimizations
 
-Using parallel routes for the private and group message, implementing use infinite scrolling, using aggregation for the complex query and lastly indexing.
+Using parallel routes for the private and group message, implementing use infinite scrolling, using aggregation for the complex query, using debouncing and lastly indexing.
 
 ## Installation
 
@@ -52,13 +52,22 @@ npm install
 - Add the following variables:
 
 ```bash
-MONGO_URI=mongodb:
+For Client:
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 NEXTAUTH_SECRET=
-UPLOADTHING_TOKEN=
-UPLOADTHING_SECRET=
-UPLOADTHING_APP_ID=
+# UPLOADTHING_TOKEN=
+# UPLOADTHING_SECRET=
+# UPLOADTHING_APP_ID=
+
+For Server:
+# MONGODB KEY
+MONGO_URI=
+# CLOUDINARY KEY
+CLOUDINARY_CLOUD_NAME =
+CLOUDINARY_API_KEY =
+CLOUDINARY_API_SECRET =
+
 ```
 
 5. Start the development server:

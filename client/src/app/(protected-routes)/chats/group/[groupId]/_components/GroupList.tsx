@@ -106,12 +106,18 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
   const groupList = useMemo(() => {
     return searchGroup.length ? debouncedSearchGroup : allGroupChatList;
   }, [searchGroup, debouncedSearchGroup, allGroupChatList]);
+
   useEffect(() => {
-    if (inView && hasNextPage && !isLoading) {
+    if (
+      inView &&
+      hasNextPage &&
+      !isLoading &&
+      data?.pages?.[currentPageRef.current]?.getAllGroups
+    ) {
       currentPageRef.current++;
       fetchNextPage();
     }
-  }, [fetchNextPage, hasNextPage, inView, isLoading]);
+  }, [data?.pages, fetchNextPage, hasNextPage, inView, isLoading]);
 
   useEffect(() => {
     return () => {

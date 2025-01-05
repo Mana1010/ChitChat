@@ -25,7 +25,6 @@ const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       const { user_data, status } = await checkUser(token?.sub);
-
       if (status === "exist") {
         session.user.name = user_data.name;
         session.user.id = token?.sub || "";
