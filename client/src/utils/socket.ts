@@ -1,6 +1,7 @@
 import { io, Socket } from "socket.io-client";
 
-const URL = "http://localhost:5000";
+// const URL = "http://localhost:5000";
+const URL = "https://chitchat-g4qv.onrender.com";
 
 export const initializePublicChatSocket = (userId: string): Socket => {
   return io(URL, {

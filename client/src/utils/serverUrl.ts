@@ -1,5 +1,5 @@
 // export const serverUrl = "http://localhost:5000";
-export const serverUrl = "https://chitchat.onrender.com";
+export const serverUrl = "https://chitchat-g4qv.onrender.com";
 
 export const PUBLIC_SERVER_URL = `${serverUrl}/api/public`;
 export const PRIVATE_SERVER_URL = `${serverUrl}/api/private`;
