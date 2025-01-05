@@ -41,6 +41,7 @@ import SystemTimeChatBubbles from "../../../_components/SystemTimeChatBubbles";
 import SystemChatBubbles from "../../../_components/SystemChatBubbles";
 import { toast } from "sonner";
 import styled from "styled-components";
+import Forbidden from "../../../_components/Forbidden";
 
 const ChatBoardBackground = styled.div<{ bgurl: string | null }>`
   background: linear-gradient(to left, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)),
@@ -93,7 +94,9 @@ function Chatboard({ conversationId }: { conversationId: string }) {
     queryKey: ["private-messages", conversationId],
     queryFn: async ({ pageParam = 0 }): Promise<any> => {
       const response = await axios.get(
-        `${PRIVATE_SERVER_URL}/message/list/${conversationId}?page=${pageParam}&limit=${20}`
+        `${PRIVATE_SERVER_URL}/message/list/${conversationId}/${
+          session?.user.userId
+        }?page=${pageParam}&limit=${20}`
       );
       return response.data.message;
     },
@@ -161,6 +164,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
     privateSocket,
     status,
   ]);
+
   useEffect(() => {
     if (statusSocket) {
       statusSocket.on(
@@ -256,6 +260,8 @@ function Chatboard({ conversationId }: { conversationId: string }) {
     const errorMessage = error as AxiosError<{ message: string }>;
     if (errorMessage.response?.status === 404) {
       return <UserNotFound errorMessage={errorMessage.response.data.message} />;
+    } else if (errorMessage.response?.status === 403) {
+      return <Forbidden errorMessage={errorMessage.response.data.message} />;
     }
   }
 

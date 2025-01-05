@@ -144,7 +144,6 @@ export const acceptInvitation = asyncHandler(
         groupChatDetails,
       });
     } catch (err) {
-      console.log(err);
       res.status(400).json({
         message: "Failed to accept invitation",
       });
@@ -252,7 +251,6 @@ export const participantProfile = asyncHandler(
       };
       res.status(200).json(responseData);
     } catch (err) {
-      console.log(err);
       res.status(400).json({ message: err });
     }
   }

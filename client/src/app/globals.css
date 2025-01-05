@@ -102,10 +102,22 @@
   background-size: cover;
 }
 
+.reaction-list-background {
+  background: linear-gradient(to left, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)),
+    url("./../assets/images/reaction-list-background.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+}
+
 .profile-container {
   background: url("./../assets/images/svg/profile-background.svg");
 }
 
 .side-background {
   background: url("./../assets/images/svg/confetti-doodles-scale-mid.svg");
+}
+
+.mail-details-background {
+  background: url("./../assets/images/svg/mail-details-background.svg");
 }

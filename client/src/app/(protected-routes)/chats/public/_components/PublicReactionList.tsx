@@ -78,7 +78,7 @@ function PublicReactionList({
 
   return (
     <div className="absolute bg-black/60 flex items-center justify-center w-full inset-0 z-[9999999] px-3">
-      <div className="bg-[#222222] md:w-1/2 w-full h-[70%] rounded-sm">
+      <div className="reaction-list-background md:w-1/2 w-full h-[70%] rounded-sm">
         <div className="flex flex-col w-full h-full py-3.5 px-3">
           <header className="flex space-x-2 justify-between items-center w-full">
             <div className="space-x-2 flex items-center overflow-x-auto">
@@ -112,7 +112,7 @@ function PublicReactionList({
               <FaXmark />
             </button>
           </header>
-          <div className="pt-3 flex flex-col overflow-auto-y flex-grow">
+          <div className="pt-3 flex flex-col overflow-y-auto flex-grow h-1">
             {allReactions.map((reactionList) => (
               <div
                 key={reactionList._id}

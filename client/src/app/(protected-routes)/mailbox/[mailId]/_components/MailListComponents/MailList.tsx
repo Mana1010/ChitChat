@@ -108,7 +108,6 @@ function MailList({ mailId }: { mailId: string }) {
         }
       }
     );
-    console.log(mailId);
     handleNotificationDecrement(queryClient, "totalUnreadMail", mailId);
   }
   function handleOpenMail(mailId: string, isAlreadyOpenMail: boolean) {

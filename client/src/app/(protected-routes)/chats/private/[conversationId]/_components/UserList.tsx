@@ -56,9 +56,6 @@ function UserList({ searchUser }: { searchUser: string }) {
         ...data.pages[currentPageRef.current].getAllUsers,
       ]);
     },
-    onError: (data) => {
-      console.log(data);
-    },
   });
   const queryClient = useQueryClient();
 

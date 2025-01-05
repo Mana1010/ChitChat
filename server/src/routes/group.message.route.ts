@@ -18,7 +18,7 @@ router.get("/explore/all/group/list/:userId", getAllGroups);
 router.get("/all/groupchat/list/:id", getAllGroupChatConversation);
 router.get("/conversation/search/group", searchGroupResult);
 router.get("/group/info/:groupId/:userId", getGroupChatInfo);
-router.get("/message/list/:groupId", getGroupMessages);
+router.get("/message/list/:groupId/:userId", getGroupMessages);
 router.get("/group/chat/full/details/:groupId/:userId", groupChatDetails);
 router.get("/all/group/members/:groupId/:userId", getGroupMembers);
 

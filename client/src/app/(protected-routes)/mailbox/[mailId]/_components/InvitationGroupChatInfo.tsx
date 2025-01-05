@@ -15,7 +15,7 @@ function GroupChatInfo({ getGroupDetails, inviterInfo }: GroupChatInfoProps) {
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.1 }}
       exit={{ scale: 0, opacity: 0.3 }}
-      className="absolute inset-x-0 rounded-sm bg-[#414141] bottom-[70px] px-3 flex flex-col"
+      className="absolute inset-x-0 rounded-sm mail-details-background bottom-[70px] px-3 flex flex-col"
     >
       <div className="flex justify-between items-center py-3">
         <div className="flex items-center space-x-3">

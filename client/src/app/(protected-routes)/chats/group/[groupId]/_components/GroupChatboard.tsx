@@ -34,6 +34,7 @@ import SystemChatBubbles from "../../../_components/SystemChatBubbles";
 import SystemTimeChatBubbles from "../../../_components/SystemTimeChatBubbles";
 import GroupDetails from "./GroupDetails";
 import styled from "styled-components";
+import Forbidden from "../../../_components/Forbidden";
 
 const ChatBoardBackground = styled.div<{ bgurl: string | null }>`
   background: linear-gradient(to left, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)),
@@ -68,7 +69,9 @@ function GroupChatboard({ groupId }: { groupId: string }) {
     queryKey: ["group-messages", groupId],
     queryFn: async ({ pageParam = 0 }): Promise<any> => {
       const response = await axios.get(
-        `${GROUP_SERVER_URL}/message/list/${groupId}?page=${pageParam}&limit=${20}`
+        `${GROUP_SERVER_URL}/message/list/${groupId}/${
+          session?.user.userId
+        }?page=${pageParam}&limit=${20}`
       );
 
       return response.data.message;
@@ -186,6 +189,8 @@ function GroupChatboard({ groupId }: { groupId: string }) {
     const errorMessage = error as AxiosError<{ message: string }>;
     if (errorMessage.response?.status === 404) {
       return <UserNotFound errorMessage={errorMessage.response.data.message} />;
+    } else if (errorMessage.response?.status === 403) {
+      return <Forbidden errorMessage={errorMessage.response.data.message} />;
     }
   }
 

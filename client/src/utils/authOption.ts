@@ -50,7 +50,6 @@ const authOptions: NextAuthOptions = {
         }
         return true;
       } catch (err) {
-        console.log(JSON.stringify(err));
         return false;
       }
     },

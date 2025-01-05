@@ -76,9 +76,6 @@ function GroupList({ searchGroup }: { searchGroup: string }) {
         ...data.pages[currentPageRef.current].getAllGroups,
       ]);
     },
-    onError: (data) => {
-      console.log(data);
-    },
   });
   const queryClient = useQueryClient();
   const joinGroup = useMutation({

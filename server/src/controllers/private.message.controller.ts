@@ -94,11 +94,21 @@ export const getAllUsersConversation = asyncHandler(
 
 export const getPrivateMessages = asyncHandler(
   async (req: Request, res: Response) => {
-    const { conversationId } = req.params;
+    const { conversationId, userId } = req.params;
     const { page, limit } = req.query;
     if (!mongoose.Types.ObjectId.isValid(conversationId)) {
       res.status(404);
       throw new Error("Conversation does not exist");
+    }
+
+    const checkIfUserIsPartOfConversation = await PrivateConversation.exists({
+      _id: conversationId,
+      participants: { $in: [userId] },
+    });
+
+    if (!checkIfUserIsPartOfConversation) {
+      res.status(403);
+      throw new Error("You are forbidden to access this private conversation");
     }
     const checkConversationAvailability = await PrivateConversation.findById(
       conversationId

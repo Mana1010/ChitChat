@@ -423,22 +423,37 @@ export const getGroupChatInfo = asyncHandler(
 
 export const getGroupMessages = asyncHandler(
   async (req: Request, res: Response) => {
-    const { groupId } = req.params;
+    const { groupId, userId } = req.params;
     const { page, limit } = req.query;
     if (!mongoose.Types.ObjectId.isValid(groupId)) {
       res.status(404);
-      throw new Error("Conversation does not exist");
+      throw new Error("Group does not exist");
+    }
+
+    const checkIfUserIsPartOfGroup = await GroupConversation.exists({
+      _id: groupId,
+      members: {
+        $elemMatch: {
+          memberInfo: userId,
+          status: "active",
+        },
+      },
+    });
+
+    if (!checkIfUserIsPartOfGroup) {
+      res.status(403);
+      throw new Error("You are forbidden to access this group conversation");
     }
     const checkConversationAvailability = await GroupConversation.findById(
       groupId
     );
     if (!checkConversationAvailability) {
       res.status(404);
-      throw new Error("Conversation does not exist");
+      throw new Error("Group does not exist");
     }
     if (!page || !limit) {
       res.status(403);
-      throw new Error("Forbidden");
+      throw new Error("No page and limit provided.");
     }
     const LIMIT = +limit;
     const CURRENTPAGE = +page;

@@ -93,7 +93,6 @@ export function handlePrivateSocket(io: Server) {
             });
         } catch (err) {
           callback({ success: false, data: null });
-          console.log(err);
         }
       }
     );
