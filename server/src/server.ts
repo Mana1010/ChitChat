@@ -30,7 +30,7 @@ const io = new Server(server, {
     origin: [
       "http://localhost:3000",
       "https://admin.socket.io",
-      "https://chitchat.vercel.app",
+      "https://chit-chat-omega-dun.vercel.app",
     ],
   },
   pingInterval: 10000,
@@ -47,7 +47,7 @@ app.use(express.json());
 app.use(morgan("dev"));
 app.use(
   cors({
-    origin: ["http://localhost:3000", "https://chitchat.vercel.app"],
+    origin: ["http://localhost:3000", "https://chit-chat-omega-dun.vercel.app"],
     credentials: true,
   })
 );
