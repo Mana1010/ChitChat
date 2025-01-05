@@ -1,7 +1,7 @@
 import React, { useState, useEffect, FormEvent } from "react";
 import { LuSend, LuTimer } from "react-icons/lu";
 import { Socket } from "socket.io-client";
-import Picker from "emoji-picker-react";
+import Picker, { Theme } from "emoji-picker-react";
 import { MdEmojiEmotions } from "react-icons/md";
 import { optimisticUpdateMessage } from "@/utils/sharedUpdateFunction";
 import { MessageFieldPropsSchema } from "@/types/shared.types";
@@ -119,7 +119,7 @@ function PublicMessageField({
               setMessage((prev) => `${prev}${emoji.emoji}`);
             }}
             open={openEmoji}
-            theme="dark"
+            theme={Theme.DARK}
           />
         </div>
       </div>

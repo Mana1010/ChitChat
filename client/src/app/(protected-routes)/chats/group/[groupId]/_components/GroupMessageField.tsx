@@ -1,5 +1,5 @@
 import React, { Dispatch, FormEvent, SetStateAction } from "react";
-import Picker from "emoji-picker-react";
+import Picker, { Theme } from "emoji-picker-react";
 import { MdEmojiEmotions } from "react-icons/md";
 import { LuSend } from "react-icons/lu";
 import { Socket } from "socket.io-client";
@@ -120,7 +120,7 @@ function GroupMessageField({
               setMessage((prev: string) => `${prev}${emoji.emoji}`);
             }}
             open={openEmoji}
-            theme="dark"
+            theme={Theme.DARK}
           />
         </div>
       </div>
