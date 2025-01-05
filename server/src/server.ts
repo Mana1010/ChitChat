@@ -32,9 +32,9 @@ const io = new Server(server, {
       "https://admin.socket.io",
       "https://chit-chat-omega-dun.vercel.app",
     ],
+    methods: ["GET", "POST"],
+    credentials: true,
   },
-  pingInterval: 10000,
-  pingTimeout: 5000,
 });
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
