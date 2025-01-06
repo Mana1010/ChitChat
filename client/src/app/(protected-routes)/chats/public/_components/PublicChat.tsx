@@ -211,8 +211,11 @@ function PublicChat() {
   }, [publicSocket]);
 
   return (
-    <div className="h-full relative" onClick={() => setOpenEmoji(false)}>
-      <div className="public-background h-[440px] w-full rounded-md relative">
+    <div
+      className="h-full relative flex flex-col"
+      onClick={() => setOpenEmoji(false)}
+    >
+      <div className="public-background flex-grow w-full rounded-md relative h-1">
         {isLoading ? (
           <LoadingChat />
         ) : (

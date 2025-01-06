@@ -199,7 +199,7 @@ function GroupChatboard({ groupId }: { groupId: string }) {
       onClick={() => {
         setOpenEmoji(false);
       }}
-      className="flex flex-grow w-full h-full flex-col relative bg-transparent"
+      className="flex w-full h-full flex-col relative bg-transparent"
     >
       <ChatBoardBackground
         className="flex flex-col flex-grow w-full"
@@ -213,7 +213,7 @@ function GroupChatboard({ groupId }: { groupId: string }) {
         {isLoading || !data ? (
           <LoadingChat />
         ) : (
-          <div className="h-full w-full relative">
+          <div className="w-full relative flex-grow h-1">
             {" "}
             <div
               onScroll={() => {
@@ -230,7 +230,7 @@ function GroupChatboard({ groupId }: { groupId: string }) {
                 }
               }}
               ref={scrollDivRef}
-              className="w-full max-h-[450px] overflow-y-auto flex flex-col space-y-3 relative px-3"
+              className="w-full overflow-y-auto h-full flex flex-col space-y-3 relative px-3"
             >
               {hasNextPage && (
                 <div ref={ref} className="w-full z-50">

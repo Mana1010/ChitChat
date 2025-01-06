@@ -6,6 +6,7 @@ import { MdEmojiEmotions } from "react-icons/md";
 import { optimisticUpdateMessage } from "@/utils/sharedUpdateFunction";
 import { MessageFieldPropsSchema } from "@/types/shared.types";
 import { toast } from "sonner";
+import { MAX_TEXT_LENGTH } from "@/utils/constants";
 
 type PublicMessageFieldSchema = MessageFieldPropsSchema & {
   publicSocket: Socket | null;
@@ -63,11 +64,15 @@ function PublicMessageField({
   return (
     <form
       onSubmit={handleFormSubmit}
-      className="flex-grow flex space-x-2 items-center pt-3 justify-between"
+      className=" flex space-x-2 items-center pt-2 justify-between"
     >
       <textarea
         onChange={(e) => {
-          setMessage(e.target.value);
+          if (e.target.value.length >= MAX_TEXT_LENGTH) {
+            setMessage(e.target.value.slice(0, MAX_TEXT_LENGTH));
+          } else {
+            setMessage(e.target.value);
+          }
         }}
         onFocus={() => {
           publicSocket?.emit("during-typing", {

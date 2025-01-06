@@ -124,7 +124,7 @@ function GroupChatList({
     }
   };
   return (
-    <div className="flex-grow flex h-[200px]">
+    <div className="flex-grow h-1">
       {displayAllGroupChat.data?.length === 0 && searchChat === "" ? (
         <EmptyConversation>
           <h2 className="text-zinc-300 text-[1.1rem] break-all text-center">
@@ -146,7 +146,7 @@ function GroupChatList({
               debounce(scroll, 200);
             }
           }}
-          className="pt-2 flex flex-col w-full overflow-y-auto h-full flex-grow items-center px-1.5"
+          className="pt-2 flex flex-col w-full overflow-y-auto h-full items-center px-1.5"
         >
           {searchResult?.map(
             (

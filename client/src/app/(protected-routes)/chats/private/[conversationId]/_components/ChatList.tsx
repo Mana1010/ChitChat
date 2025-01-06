@@ -19,7 +19,7 @@ import {
   DEFAULT_SCROLL_VALUE,
 } from "@/utils/storageKey";
 function ParentDiv({ children }: { children: ReactNode }) {
-  return <div className="w-full flex-grow flex h-[200px]">{children}</div>;
+  return <div className="flex-grow h-1">{children}</div>;
 }
 function ChatList({
   searchChat,
@@ -212,7 +212,7 @@ function ChatList({
                   } absolute bottom-[3px] right-[2px] w-2 h-2 rounded-full`}
                 ></span>
               </div>{" "}
-              <div className="flex justify-start flex-col items-start w-full">
+              <div className="flex justify-start flex-col items-start w-full overflow-hidden">
                 <h1 className="text-white font-bold text-sm truncate w-[90%] text-start">
                   {user.participant_details.name}
                 </h1>

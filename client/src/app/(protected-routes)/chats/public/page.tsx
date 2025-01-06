@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 };
 async function Page() {
   return (
-    <div className="p-5 flex flex-col w-full space-y-2">
+    <div className="pr-4 flex flex-col w-full space-y-2">
       <header>
         <div className="flex flex-col">
           <div className="flex items-center space-x-2">

@@ -9,6 +9,7 @@ import { useQueryClient } from "react-query";
 import { MessageFieldPropsSchema } from "@/types/shared.types";
 import { optimisticUpdateMessage } from "@/utils/sharedUpdateFunction";
 import { toast } from "sonner";
+import { MAX_TEXT_LENGTH } from "@/utils/constants";
 
 interface GroupMessageFieldSchema extends MessageFieldPropsSchema {
   groupSocket: Socket | null;
@@ -87,7 +88,13 @@ function GroupMessageField({
         rows={1}
         // onBlur={() => groupSocket?.emit("stop-typing", groupId)}
         value={message}
-        onChange={(e) => setMessage(e.target.value)}
+        onChange={(e) => {
+          if (e.target.value.length >= MAX_TEXT_LENGTH) {
+            setMessage(e.target.value.slice(0, MAX_TEXT_LENGTH));
+          } else {
+            setMessage(e.target.value);
+          }
+        }}
         placeholder="Send a message"
         className="rounded-md bg-[#414141] flex-grow px-3 py-2.5 text-white resize-none"
       />

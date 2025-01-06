@@ -279,9 +279,9 @@ function Chatboard({ conversationId }: { conversationId: string }) {
         {isLoading || !data ? (
           <LoadingChat />
         ) : (
-          <div className="h-full w-full relative">
+          <div className=" w-full relative flex-grow h-1">
             {allMessages.length === 0 ? (
-              <div className=" flex items-center flex-col justify-end h-full w-full pb-5 space-y-2">
+              <div className="flex items-center flex-col justify-end h-full w-full pb-5 space-y-2">
                 <h3 className="text-zinc-300 text-[0.78rem]">
                   Wave to {participantInfo?.receiver_details.name}
                 </h3>
@@ -348,7 +348,7 @@ function Chatboard({ conversationId }: { conversationId: string }) {
                   }
                 }}
                 ref={scrollDivRef}
-                className="w-full max-h-[460px] overflow-y-auto flex flex-col space-y-3 relative px-3"
+                className="w-full h-full overflow-y-auto flex flex-col space-y-3 relative px-3"
               >
                 {hasNextPage && (
                   <div ref={ref} className="w-full z-50">

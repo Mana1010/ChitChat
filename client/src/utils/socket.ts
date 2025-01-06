@@ -5,6 +5,7 @@ const URL = "https://chitchat-g4qv.onrender.com";
 
 export const initializePublicChatSocket = (userId: string): Socket => {
   return io(URL, {
+    withCredentials: true,
     auth: { userId },
   });
 };

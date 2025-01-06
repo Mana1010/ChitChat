@@ -3,7 +3,7 @@ import Image from "next/image";
 import noSearchFoundImg from "../assets/images/not-found.png";
 function NoItemFound({ children }: { children: ReactNode }) {
   return (
-    <div className="flex w-full items-center justify-center flex-col space-y-2 px-2">
+    <div className="flex w-full items-center justify-center flex-col space-y-2 px-2 h-full">
       <Image
         src={noSearchFoundImg}
         width={100}

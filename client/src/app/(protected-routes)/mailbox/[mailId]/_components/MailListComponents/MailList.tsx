@@ -124,7 +124,7 @@ function MailList({ mailId }: { mailId: string }) {
       {getAllMail.isLoading || !getAllMail.data ? (
         <ConversationListSkeleton />
       ) : (
-        <div className="flex-grow w-full h-[200px]">
+        <div className="flex-grow w-full h-1">
           {(getAllMail.data?.length as number) > 0 ? (
             <div
               ref={mailListRef}

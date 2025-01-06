@@ -30,9 +30,7 @@ import { useSocketStore } from "@/utils/store/socket.store";
 import useInvitationResponse from "@/hooks/useInvitationResponse";
 
 function ParentDiv({ children }: { children: ReactNode }) {
-  return (
-    <div className="flex-grow w-full flex flex-col h-[200px]">{children}</div>
-  );
+  return <div className="flex-grow h-1">{children}</div>;
 }
 function GroupList({ searchGroup }: { searchGroup: string }) {
   const { ref, inView } = useInView();

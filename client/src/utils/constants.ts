@@ -72,3 +72,5 @@ export const privateChatBoardBackgroundList = [
   "private-chat-9-background_uhx0bh",
   "private-chat-10-background_tpyxzp",
 ];
+
+export const MAX_TEXT_LENGTH = 10000;

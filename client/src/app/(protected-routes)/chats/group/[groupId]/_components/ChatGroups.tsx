@@ -24,7 +24,7 @@ function ChatGroups({ groupId }: { groupId: string }) {
   const { setShowCreateGroupForm } = useModalStore();
 
   return (
-    <div className=" h-full rounded-md flex flex-col side-background">
+    <div className="h-full rounded-md flex flex-col side-background">
       <header className="w-full p-2.5 space-y-2">
         <div className="flex items-center justify-between ">
           <div className="flex space-x-2 items-center">
